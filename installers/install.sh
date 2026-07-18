@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-VERSION="1.0.7"
+VERSION="1.0.8"
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 ROOT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 SOURCE_DIR="$ROOT_DIR/addons/mapa-cto"
@@ -50,9 +50,25 @@ printf '%s\n' "$VERSION" > "$ADDON_DIR/VERSION"
 if grep -q 'GERENCIADOR FTTH - Caixas' "$ADDON_JS"; then
     sed -i '/GERENCIADOR FTTH - Caixas/,+2d' "$ADDON_JS"
 fi
+if grep -q '^// Mapa CTO$' "$ADDON_JS"; then
+    sed -i '/^\/\/ Mapa CTO$/,+1d' "$ADDON_JS"
+fi
+
+tmp_menu=$(mktemp /tmp/mkauth-addon-js.XXXXXX)
+awk '
+    /addons\/caixas\// {
+        seen++
+        if (seen > 1) {
+            next
+        }
+    }
+    { print }
+' "$ADDON_JS" > "$tmp_menu"
+cat "$tmp_menu" > "$ADDON_JS"
+rm -f "$tmp_menu"
 
 if grep -q 'addons/caixas/' "$ADDON_JS"; then
-    printf 'Menu Mapa CTO ja existe em %s; nao foi duplicado.\n' "$ADDON_JS"
+    printf 'Menu Mapa CTO ja existe em %s; duplicados foram removidos.\n' "$ADDON_JS"
 else
     cat >> "$ADDON_JS" <<'MENU_SNIPPET'
 
@@ -64,6 +80,6 @@ fi
 php -l "$ADDON_DIR/index.php" >/dev/null
 php -l "$ADDON_DIR/src/cto/componente/mapadectos/mapadectos.view.php" >/dev/null
 php -l "$ADDON_DIR/src/cto/config/api.php" >/dev/null
-grep -q 'GERENCIADOR FTTH - Caixas' "$ADDON_JS"
+grep -q 'addons/caixas/' "$ADDON_JS"
 
 printf 'Instalacao concluida.\nVersao: %s\nAddon: %s\nMenu: %s\nBackup: %s\n' "$VERSION" "$ADDON_DIR" "$ADDON_JS" "$BACKUP_DIR"
