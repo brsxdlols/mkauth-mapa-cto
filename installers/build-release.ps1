@@ -28,7 +28,7 @@ $Header = @(
     'LINE=$(awk ''/^__ARCHIVE_BELOW__$/ { print NR + 1; exit }'' "$SELF")',
     '[ -n "$LINE" ] || { echo "ERRO: pacote invalido" >&2; exit 1; }',
     'tail -n +"$LINE" "$SELF" | tar -xzf - -C "$TMP"',
-    "exec sh `"$TMP/$Name/installers/install.sh`"",
+    ('exec sh "$TMP/' + $Name + '/installers/install.sh"'),
     'exit 0',
     '__ARCHIVE_BELOW__',
     ''
