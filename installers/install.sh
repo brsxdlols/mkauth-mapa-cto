@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-VERSION="1.0.5"
+VERSION="1.0.6"
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 ROOT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 SOURCE_DIR="$ROOT_DIR/addons/mapa-cto"
@@ -52,9 +52,8 @@ if grep -q 'GERENCIADOR FTTH - Caixas' "$ADDON_JS"; then
 fi
 cat >> "$ADDON_JS" <<'MENU_SNIPPET'
 
-/** GERENCIADOR FTTH - Caixas **/
-const caixas = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ":" + window.location.port : "") + "/admin/addons/caixas/";
-add_menu.opcoes(JSON.stringify({plink: caixas + "?_route=painel", ptext: "Gerenciador FTTH"}));
+// Mapa CTO
+add_menu.provedor('{"plink": "' + minha_url + 'addons/caixas/", "ptext": "📦 Mapa Das CTO"}');
 MENU_SNIPPET
 
 php -l "$ADDON_DIR/index.php" >/dev/null
