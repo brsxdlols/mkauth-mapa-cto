@@ -78,7 +78,7 @@ if ($rsTab = $connection->query("SHOW TABLES LIKE 'sis_adicional'")) {
 
 $ctos = [];
 $sqlCtos = "
-    SELECT id, nome, endereco, capacidade, olt, tipo, sinal
+    SELECT id, nome, endereco, latitude, longitude, capacidade, olt, tipo, sinal
     FROM mp_caixa
     ORDER BY nome
 ";
