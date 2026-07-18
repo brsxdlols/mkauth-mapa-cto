@@ -1,0 +1,6 @@
+dist/
+work/
+*.tar.gz
+*.run
+*.sha256
+

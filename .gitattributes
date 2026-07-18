@@ -1,0 +1,8 @@
+*.sh text eol=lf
+*.php text eol=lf
+*.hhvm text eol=lf
+*.js text eol=lf
+*.css text eol=lf
+*.json text eol=lf
+*.sql text eol=lf
+*.ps1 text eol=crlf

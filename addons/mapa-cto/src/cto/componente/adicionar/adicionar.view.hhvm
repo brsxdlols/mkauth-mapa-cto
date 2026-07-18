@@ -1,0 +1,1079 @@
+<?php // A sessão já foi iniciada no app.hhvm ?>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <title>Adicionar CTO</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        .content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group.full {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .coord-group {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .map-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 20px;
+            transition: transform 0.2s ease;
+        }
+
+        .map-icon:hover {
+            transform: scale(1.05);
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-back {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            border: 2px solid white;
+        }
+
+        .btn-back:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <a href="?_route=inicio" class="btn-back">← Voltar à Listagem</a>
+        <h1>➕ Adicionar CTO</h1>
+        <p>Preencha os dados para adicionar uma nova Caixa de Terminação Óptica</p>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+        <form id="form" name="form" method="post" action="#" autocomplete="off">
+            <input type="hidden" name="_tipoAcao" id="_tipoAcao" value="ad" />
+            <input type="hidden" name="_route" id="_route" value="adicionar" />
+            <input type="hidden" name="LATITUDEPADRAO" id="LATITUDEPADRAO" value="<?= htmlspecialchars($LATITUDEPADRAO ?? '', ENT_QUOTES, 'UTF-8') ?>" />
+            <input type="hidden" name="LONGITUDEPADRAO" id="LONGITUDEPADRAO" value="<?= htmlspecialchars($LONGITUDEPADRAO ?? '', ENT_QUOTES, 'UTF-8') ?>" />
+
+            <div class="form-grid">
+                <!-- Nome -->
+                <div class="form-group full">
+                    <label for="NOME">Nome da CTO *</label>
+                    <input type="text" id="NOME" name="NOME" required>
+                </div>
+
+                <!-- Localização -->
+                <div class="form-group full">
+                    <label>Localização</label>
+                    <div class="coord-group">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; flex: 1;">
+                            <div>
+                                <input type="text" id="LATITUDE" name="LATITUDE" placeholder="Latitude" required>
+                            </div>
+                            <div>
+                                <input type="text" id="LONGITUDE" name="LONGITUDE" placeholder="Longitude" required>
+                            </div>
+                        </div>
+                        <div class="map-icon" onclick="abrirBuscaEndereco()" title="Buscar no mapa">🗺️</div>
+                    </div>
+                </div>
+
+                <!-- Endereço -->
+                <div class="form-group full">
+                    <label for="ENDERECO">Endereço</label>
+                    <textarea id="ENDERECO" name="ENDERECO"></textarea>
+                </div>
+
+                <!-- Tipo e Capacidade -->
+                <div class="form-group">
+                    <label for="TIPO">Tipo *</label>
+                    <select id="TIPO" name="TIPO" required>
+                        <option value="">Selecione...</option>
+                        <option value="FTHA">FTHA</option>
+                        <option value="FTTB">FTTB</option>
+                        <option value="FTTC">FTTC</option>
+                        <option value="FTTD">FTTD</option>
+                        <option value="FTTH">FTTH</option>
+                        <option value="FTTN">FTTN</option>
+                        <option value="FTTO">FTTO</option>
+                        <option value="FTTP">FTTP</option>
+                        <option value="FTTX">FTTX</option>
+                        <option value="CTO">CTO</option>
+                        <option value="PON">PON</option>
+                        <option value="LAN">LAN</option>
+                        <option value="ETH">ETH</option>
+                        <option value="CEO">CEO</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="CAPACIDADE">Capacidade *</label>
+                    <input type="number" id="CAPACIDADE" name="CAPACIDADE" required>
+                </div>
+
+                <!-- Sinal e OLT -->
+                <div class="form-group">
+                    <label for="SINAL">Sinal (dBm)</label>
+                    <input type="text" id="SINAL" name="SINAL">
+                </div>
+
+                <div class="form-group">
+                    <label for="OLT">OLT</label>
+                    <input type="text" id="OLT" name="OLT">
+                </div>
+
+                <!-- FSP -->
+                <div class="form-group">
+                    <label for="FSP">FSP</label>
+                    <input type="text" id="FSP" name="FSP">
+                </div>
+            </div>
+
+            <div class="buttons">
+                <button type="submit" class="btn btn-primary" onclick="document.getElementById('_tipoAcao').value='ad'">✓ Gravar CTO</button>
+                <button type="submit" class="btn btn-success" onclick="document.getElementById('_tipoAcao').value='adc'">✓ Gravar e Adicionar Outra</button>
+                <button type="reset" class="btn btn-secondary">🔄 Limpar</button>
+                <a href="?_route=inicio" class="btn btn-secondary">✕ Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+window.keyGoogleMaps = <?php echo json_encode($keyGoogleMaps); ?>;
+window.mapaProvider = <?php echo json_encode($mapProvider); ?>;
+
+    window.keyGoogleMaps = <?php echo json_encode($keyGoogleMaps); ?>;
+    window.mapaProvider = <?php echo json_encode($mapProvider); ?>;
+    // Função para abrir busca de endereço (integração com Google Maps)
+    function abrirBuscaEndereco() {
+        // Carregar Google Maps se ainda não estiver carregado
+        if (!window.google || !window.google.maps) {
+            const script = document.createElement('script');
+            const apiKey = window.keyGoogleMaps || '';
+            
+            if (!apiKey) {
+                alert('⚠️ Chave da API do Google Maps não configurada. Por favor, configure em Configurações > Google Maps API');
+                return;
+            }
+            
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&language=pt-BR`;
+            script.onload = () => criarModalMapa();
+            script.onerror = () => {
+                alert('❌ Erro ao carregar Google Maps. Verifique a chave da API.');
+            };
+            document.head.appendChild(script);
+        } else {
+            criarModalMapa();
+        }
+    }
+
+    function criarModalMapa() {
+        const modal = document.createElement('div');
+        modal.id = 'modalBuscaEndereco';
+        modal.style.cssText = `
+            display: flex;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+        `;
+        
+        modal.innerHTML = `
+            <div style="
+                background: white;
+                padding: 20px;
+                border-radius: 12px;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+                width: 95%;
+                max-width: 900px;
+                height: 80vh;
+                display: flex;
+                flex-direction: column;
+                box-sizing: border-box;
+            ">
+                <h3 style="margin: 0 0 15px 0; color: #333; font-size: 18px;">🗺️ Buscar Endereço no Mapa</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; flex: 0 0 auto;">
+                    <div>
+                        <p style="color: #666; font-size: 13px; margin: 0 0 8px 0;">Digite o endereço:</p>
+                        <input 
+                            type="text" 
+                            id="campoBuscaEndereco" 
+                            placeholder="Ex: Rua Padre Nestor, 472 - Luzia, Aracaju - SE"
+                            style="
+                                width: 100%;
+                                padding: 10px 12px;
+                                border: 2px solid #e5e7eb;
+                                border-radius: 8px;
+                                font-size: 13px;
+                                box-sizing: border-box;
+                                font-family: inherit;
+                            "
+                            onkeypress="if(event.key==='Enter') buscarEndereco(event)"
+                        />
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: flex-end;">
+                        <button type="button" onclick="buscarEndereco()" style="
+                            flex: 1;
+                            padding: 10px 15px;
+                            border: none;
+                            border-radius: 6px;
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            color: white;
+                            cursor: pointer;
+                            font-weight: 600;
+                            transition: all 0.2s ease;
+                            font-size: 13px;
+                        " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 15px rgba(102, 126, 234, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow=''">
+                            🔍 Buscar
+                        </button>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 300px; gap: 15px; flex: 1; min-height: 0;">
+                    <!-- MAPA GOOGLE -->
+                    <div id="mapaBuscaEndereco" style="
+                        border-radius: 8px;
+                        border: 2px solid #e5e7eb;
+                        background: #f9f9f9;
+                        position: relative;
+                    "></div>
+                    
+                    <!-- PAINEL LATERAL -->
+                    <div style="
+                        display: flex;
+                        flex-direction: column;
+                        border: 2px solid #e5e7eb;
+                        border-radius: 8px;
+                        background: #f9f9f9;
+                        overflow: hidden;
+                    ">
+                        <div style="padding: 12px; border-bottom: 1px solid #e5e7eb; font-weight: 600; color: #333; font-size: 13px;">
+                            📍 Resultados
+                        </div>
+                        <div id="resultadoBusca" style="
+                            flex: 1;
+                            overflow-y: auto;
+                            padding: 12px;
+                        "></div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px; flex: 0 0 auto;">
+                    <button type="button" onclick="
+                        const modal = document.getElementById('modalBuscaEndereco');
+                        if (modal) {
+                            modal.remove();
+                            document.body.style.overflow = 'auto';
+                        }
+                    " style="
+                        padding: 10px 20px;
+                        border: none;
+                        border-radius: 6px;
+                        background: #f0f0f0;
+                        color: #333;
+                        cursor: pointer;
+                        font-weight: 600;
+                        transition: all 0.2s ease;
+                    " onmouseover="this.style.background='#e0e0e0'" onmouseout="this.style.background='#f0f0f0'">
+                        Cancelar
+                    </button>
+                    <button type="button" id="btnConfirmarEndereco" onclick="
+                        const modal = document.getElementById('modalBuscaEndereco');
+                        if (modal) {
+                            modal.remove();
+                            document.body.style.overflow = 'auto';
+                        }
+                    " style="
+                        padding: 10px 20px;
+                        border: none;
+                        border-radius: 6px;
+                        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                        color: white;
+                        cursor: pointer;
+                        font-weight: 600;
+                        transition: all 0.2s ease;
+                        display: none;
+                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 15px rgba(16, 185, 129, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow=''">
+                        ✓ Confirmar
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        document.body.style.overflow = 'hidden';
+        
+        const mapContainer = document.getElementById('mapaBuscaEndereco');
+        const preventDefault = (e) => {
+            if (mapContainer && !mapContainer.contains(e.target)) {
+                e.preventDefault();
+            }
+        };
+        
+        document.addEventListener('wheel', preventDefault, { passive: false });
+        
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+                document.body.style.overflow = 'auto';
+                document.removeEventListener('wheel', preventDefault);
+            }
+        });
+        
+        const btnCancelar = modal.querySelector('button:first-of-type');
+        btnCancelar.addEventListener('click', () => {
+            document.body.style.overflow = 'auto';
+            document.removeEventListener('wheel', preventDefault);
+        });
+        
+        // Inicializar mapa Google Maps
+        setTimeout(() => {
+            const aracaju = { lat: -10.2105, lng: -36.8044 };
+            
+            const mapa = new google.maps.Map(document.getElementById('mapaBuscaEndereco'), {
+                zoom: 13,
+                center: aracaju,
+                mapTypeControl: true,
+                streetViewControl: false,
+                fullscreenControl: true
+            });
+            
+            let marcador = null;
+            let infoWindowAberta = null;
+            window.mapaGeocodificacao = { geocoder: new google.maps.Geocoder(), mapa: mapa };
+            
+            // Buscar endereço ao digitar
+            const campoBusca = document.getElementById('campoBuscaEndereco');
+            campoBusca.addEventListener('keyup', (e) => {
+                if (e.key !== 'Enter') return;
+                buscarEndereco();
+            });
+            
+            // Clicar no mapa para selecionar coordenadas
+            mapa.addListener('click', (e) => {
+                const lat = e.latLng.lat();
+                const lng = e.latLng.lng();
+                
+                document.getElementById('LATITUDE').value = lat.toFixed(4);
+                document.getElementById('LONGITUDE').value = lng.toFixed(4);
+                
+                const geocoder = window.mapaGeocodificacao.geocoder;
+                geocoder.geocode({ location: e.latLng }, (results, status) => {
+                    if (status === 'OK' && results.length > 0) {
+                        const address = results[0].formatted_address;
+                        document.getElementById('ENDERECO').value = address;
+                        
+                        // Mostrar botão Confirmar (Mapa - Reverse Geocoding)
+                        const btnConfirmar = document.getElementById('btnConfirmarEndereco');
+                        if (btnConfirmar) {
+                            btnConfirmar.style.display = 'block';
+                        }
+                        
+                        document.getElementById('resultadoBusca').innerHTML = `
+                            <div style="padding: 8px; background: #e8f5e9; border-radius: 6px; border-left: 4px solid #4caf50;">
+                                <div style="font-weight: 600; color: #2e7d32; font-size: 13px;">✅ Localização Selecionada</div>
+                                <div style="color: #555; font-size: 12px; margin-top: 6px;">
+                                    <strong>Endereço:</strong><br>${address}<br><br>
+                                    <strong>Coordenadas:</strong><br>
+                                    Lat: ${lat} | Lon: ${lng}
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        document.getElementById('resultadoBusca').innerHTML = '<div style="color: #d32f2f; font-size: 12px;">❌ Não foi possível obter o endereço</div>';
+                    }
+                });
+                
+                if (marcador) marcador.setMap(null);
+                marcador = new google.maps.Marker({
+                    position: e.latLng,
+                    map: mapa,
+                    title: 'Localização Selecionada'
+                });
+            });
+            
+            // Armazenar função de busca globalmente
+            window.buscarEndereco = function() {
+                const endereco = document.getElementById('campoBuscaEndereco').value.trim();
+                if (!endereco) {
+                    alert('Digite um endereço para buscar');
+                    return;
+                }
+                
+                const geocoder = window.mapaGeocodificacao.geocoder;
+                geocoder.geocode({ address: endereco }, (results, status) => {
+                    if (status === 'OK' && results.length > 0) {
+                        const result = results[0];
+                        const lat = result.geometry.location.lat();
+                        const lng = result.geometry.location.lng();
+                        
+                        document.getElementById('LATITUDE').value = lat.toFixed(4);
+                        document.getElementById('LONGITUDE').value = lng.toFixed(4);
+                        document.getElementById('ENDERECO').value = result.formatted_address;
+                        
+                        // Mostrar botão Confirmar (Google Maps)
+                        const btnConfirmar = document.getElementById('btnConfirmarEndereco');
+                        if (btnConfirmar) {
+                            btnConfirmar.style.display = 'block';
+                        }
+                        
+                        mapa.setCenter({ lat: lat, lng: lng });
+                        mapa.setZoom(15);
+                        
+                        if (marcador) marcador.setMap(null);
+                        marcador = new google.maps.Marker({
+                            position: { lat: lat, lng: lng },
+                            map: mapa,
+                            title: result.formatted_address
+                        });
+                        
+                        document.getElementById('resultadoBusca').innerHTML = `
+                            <div style="padding: 10px; background: #e3f2fd; border-radius: 6px; border-left: 4px solid #667eea; cursor: pointer;" onclick="
+                                document.getElementById('LATITUDE').value = ${lat.toFixed(4)};
+                                document.getElementById('LONGITUDE').value = ${lng.toFixed(4)};
+                                document.getElementById('ENDERECO').value = '${result.formatted_address}';
+                                
+                                const btnConfirmar = document.getElementById('btnConfirmarEndereco');
+                                if (btnConfirmar) {
+                                    btnConfirmar.style.display = 'block';
+                                }
+                                
+                                this.style.background = '#c8e6c9';
+                                this.style.borderColor = '#4caf50';
+                            ">
+                                <div style="font-weight: 600; color: #1565c0; font-size: 13px;">📍 ${result.formatted_address}</div>
+                                <div style="color: #666; font-size: 11px; margin-top: 4px;">Lat: ${lat.toFixed(4)} | Lon: ${lng.toFixed(4)}</div>
+                            </div>
+                        `;
+                    } else {
+                        document.getElementById('resultadoBusca').innerHTML = '<div style="color: #d32f2f; font-size: 12px;">❌ Endereço não encontrado</div>';
+                    }
+                });
+            };
+        }, 100);
+    }
+    
+    // Carregar API Key do servidor
+    window.keyGoogleMaps = '<?php echo isset($keyGoogleMaps) ? $keyGoogleMaps : ''; ?>';
+
+
+// CODEX map-provider override: usa Google quando configurado e OpenStreetMap como fallback.
+function caixasCarregarGoogleMaps(callback, fallback) {
+    const apiKey = String(window.keyGoogleMaps || '').trim();
+    if (!apiKey) {
+        fallback();
+        return;
+    }
+    if (window.google && window.google.maps) {
+        callback();
+        return;
+    }
+    const existing = document.querySelector('script[data-caixas-google-maps="1"]');
+    if (existing) {
+        existing.addEventListener('load', callback, {once:true});
+        existing.addEventListener('error', fallback, {once:true});
+        return;
+    }
+    const script = document.createElement('script');
+    script.dataset.caixasGoogleMaps = '1';
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&language=pt-BR&region=BR`;
+    script.onload = callback;
+    script.onerror = fallback;
+    document.head.appendChild(script);
+}
+
+function abrirBuscaEndereco() {
+    const provider = String(window.mapaProvider || '').toLowerCase();
+    const abrirOpenStreet = () => criarModalMapa('openstreet');
+    const abrirGoogle = () => criarModalMapa('google');
+
+    if (provider !== 'google') {
+        caixasCarregarGoogleMaps(abrirOpenStreet, abrirOpenStreet);
+        return;
+    }
+
+    caixasCarregarGoogleMaps(abrirGoogle, abrirOpenStreet);
+}
+
+function caixasEscapeHtml(value) {
+    return String(value || '').replace(/[&<>"']/g, function(char) {
+        return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'})[char];
+    });
+}
+
+
+const CAIXAS_MAP_LAYER_KEY = 'caixas_modo_visualizacao_mapa';
+
+function caixasModoMapaAtual() {
+    const modo = localStorage.getItem(CAIXAS_MAP_LAYER_KEY) || 'mapa';
+    return modo === 'satelite' ? 'satelite' : 'mapa';
+}
+
+function caixasSalvarModoMapa(modo) {
+    localStorage.setItem(CAIXAS_MAP_LAYER_KEY, modo === 'satelite' ? 'satelite' : 'mapa');
+}
+
+function caixasCamadasLeaflet() {
+    return {
+        mapa: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19, attribution:'&copy; OpenStreetMap'}),
+        satelite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom:19, attribution:'Tiles &copy; Esri'})
+    };
+}
+
+function caixasCentroAtual() {
+    const lat = parseFloat(String(document.getElementById('LATITUDE').value || '').replace(',', '.'));
+    const lng = parseFloat(String(document.getElementById('LONGITUDE').value || '').replace(',', '.'));
+    return (!Number.isNaN(lat) && !Number.isNaN(lng)) ? {lat, lng} : {lat: -9.30667, lng: -65.48562};
+}
+
+function caixasCarregarLeaflet(callback) {
+    if (window.L) { callback(); return; }
+    if (!document.querySelector('link[data-caixas-leaflet="1"]')) {
+        const css = document.createElement('link');
+        css.rel = 'stylesheet';
+        css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        css.dataset.caixasLeaflet = '1';
+        document.head.appendChild(css);
+    }
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    script.dataset.caixasLeaflet = '1';
+    script.onload = callback;
+    script.onerror = () => alert('Nao foi possivel carregar o mapa OpenStreetMap.');
+    document.head.appendChild(script);
+}
+
+function caixasFecharModalMapa() {
+    const modal = document.getElementById('modalBuscaEndereco');
+    if (modal) modal.remove();
+    document.body.style.overflow = 'auto';
+}
+
+function caixasPreencherLocal(lat, lng, endereco) {
+    lat = Number(lat); lng = Number(lng);
+    document.getElementById('LATITUDE').value = lat.toFixed(6);
+    document.getElementById('LONGITUDE').value = lng.toFixed(6);
+    if (endereco) document.getElementById('ENDERECO').value = endereco;
+    const btn = document.getElementById('btnConfirmarEndereco');
+    if (btn) btn.style.display = 'block';
+    const geo = window.mapaGeocodificacao || {};
+    if (geo.provider === 'openstreet' && geo.mapa && window.L) {
+        const pos = [lat, lng];
+        geo.mapa.setView(pos, 16);
+        if (geo.marcador) geo.marcador.setLatLng(pos);
+        else geo.marcador = L.marker(pos, {draggable:true}).addTo(geo.mapa);
+        window.mapaGeocodificacao.marcador = geo.marcador;
+        caixasVincularArrasteMarcador();
+    } else if (geo.provider === 'google' && geo.mapa && window.google) {
+        const pos = {lat, lng};
+        geo.mapa.setCenter(pos);
+        geo.mapa.setZoom(16);
+        if (geo.marcador) geo.marcador.setPosition(pos);
+        else geo.marcador = new google.maps.Marker({position: pos, map: geo.mapa, draggable:true});
+        window.mapaGeocodificacao.marcador = geo.marcador;
+        caixasVincularArrasteMarcador();
+    }
+}
+
+function caixasResultadoSelecionado(lat, lng, endereco) {
+    const htmlEndereco = endereco ? `<strong>Endereco:</strong><br>${caixasEscapeHtml(endereco)}<br><br>` : '';
+    document.getElementById('resultadoBusca').innerHTML = `<div style="padding:10px;background:#e8f5e9;border-radius:6px;border-left:4px solid #4caf50;"><div style="font-weight:600;color:#2e7d32;font-size:13px;">Localizacao selecionada</div><div style="color:#555;font-size:12px;margin-top:6px;">${htmlEndereco}<strong>Coordenadas:</strong><br>Lat: ${Number(lat).toFixed(6)} | Lon: ${Number(lng).toFixed(6)}<br><span style="color:#666;display:block;margin-top:6px;">Voce pode arrastar o ponto no mapa para ajustar a localizacao sem alterar o endereco escolhido.</span></div></div>`;
+}
+
+function caixasAtualizarPontoArrastado(lat, lng) {
+    lat = Number(lat); lng = Number(lng);
+    document.getElementById('LATITUDE').value = lat.toFixed(6);
+    document.getElementById('LONGITUDE').value = lng.toFixed(6);
+    const btn = document.getElementById('btnConfirmarEndereco');
+    if (btn) btn.style.display = 'block';
+    caixasResultadoSelecionado(lat, lng, document.getElementById('ENDERECO').value || '');
+}
+
+function caixasVincularArrasteMarcador() {
+    const geo = window.mapaGeocodificacao || {};
+    if (!geo.marcador || geo.marcador.__caixasDragBound) return;
+    geo.marcador.__caixasDragBound = true;
+    if (geo.provider === 'google' && geo.marcador.addListener) {
+        geo.marcador.setDraggable(true);
+        geo.marcador.addListener('dragend', e => caixasAtualizarPontoArrastado(e.latLng.lat(), e.latLng.lng()));
+    } else if (geo.provider === 'openstreet' && geo.marcador.on) {
+        if (geo.marcador.dragging) geo.marcador.dragging.enable();
+        geo.marcador.on('dragend', e => {
+            const pos = e.target.getLatLng();
+            caixasAtualizarPontoArrastado(pos.lat, pos.lng);
+        });
+    }
+}
+
+function criarModalMapa(provider) {
+    const old = document.getElementById('modalBuscaEndereco');
+    if (old) old.remove();
+    const modal = document.createElement('div');
+    modal.id = 'modalBuscaEndereco';
+    modal.style.cssText = 'display:flex;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.5);align-items:center;justify-content:center;';
+    modal.innerHTML = `<div style="background:white;padding:20px;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.3);width:95%;max-width:980px;height:84vh;display:flex;flex-direction:column;box-sizing:border-box;"><h3 style="margin:0 0 15px;color:#333;font-size:18px;">Buscar endereco no mapa</h3><div style="display:grid;grid-template-columns:1fr 150px;gap:12px;margin-bottom:12px;"><input type="text" id="campoBuscaEndereco" placeholder="Digite o endereco" style="width:100%;padding:10px 12px;border:2px solid #e5e7eb;border-radius:8px;font-size:13px;box-sizing:border-box;font-family:inherit;" onkeypress="if(event.key==='Enter') buscarEndereco(event)"><button type="button" onclick="buscarEndereco()" style="padding:10px 15px;border:0;border-radius:6px;background:linear-gradient(135deg,#667eea,#764ba2);color:white;cursor:pointer;font-weight:600;font-size:13px;">Buscar</button></div><div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:15px;flex:1;min-height:0;"><div id="mapaBuscaEndereco" style="border-radius:8px;border:2px solid #e5e7eb;background:#f9f9f9;position:relative;min-height:360px;"></div><div style="display:flex;flex-direction:column;border:2px solid #e5e7eb;border-radius:8px;background:#f9f9f9;overflow:hidden;"><div style="padding:12px;border-bottom:1px solid #e5e7eb;font-weight:600;color:#333;font-size:13px;">Resultados</div><div id="resultadoBusca" style="flex:1;overflow-y:auto;padding:12px;"></div></div></div><div style="display:flex;gap:10px;justify-content:flex-end;margin-top:15px;"><button type="button" onclick="caixasFecharModalMapa()" style="padding:10px 20px;border:0;border-radius:6px;background:#f0f0f0;color:#333;cursor:pointer;font-weight:600;">Cancelar</button><button type="button" id="btnConfirmarEndereco" onclick="caixasFecharModalMapa()" style="padding:10px 20px;border:0;border-radius:6px;background:linear-gradient(135deg,#10b981,#059669);color:white;cursor:pointer;font-weight:600;display:none;">Confirmar</button></div></div>`;
+    document.body.appendChild(modal);
+    document.body.style.overflow = 'hidden';
+    modal.addEventListener('click', e => { if (e.target === modal) caixasFecharModalMapa(); });
+    const center = caixasCentroAtual();
+    if (provider === 'google' && window.google && window.google.maps) caixasInicializarGoogle(center);
+    else caixasCarregarLeaflet(() => caixasInicializarOpenStreet(center));
+    const campoBuscaEndereco = document.getElementById('campoBuscaEndereco');
+    campoBuscaEndereco.focus();
+    let caixasTimerBuscaEndereco = null;
+    campoBuscaEndereco.addEventListener('input', () => {
+        clearTimeout(caixasTimerBuscaEndereco);
+        const texto = campoBuscaEndereco.value.trim();
+        const box = document.getElementById('resultadoBusca');
+        if (texto.length < 4) {
+            box.innerHTML = '<p style="color:#777;font-size:12px;padding:10px;">Digite pelo menos 4 caracteres para listar sugestoes.</p>';
+            return;
+        }
+        box.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">Buscando sugestoes...</p>';
+        caixasTimerBuscaEndereco = setTimeout(() => buscarEndereco(), 450);
+    });
+}
+
+function caixasInicializarGoogle(center) {
+    const mapa = new google.maps.Map(document.getElementById('mapaBuscaEndereco'), {
+        zoom:15,
+        center,
+        mapTypeControl:true,
+        mapTypeControlOptions: { mapTypeIds: ['roadmap', 'satellite'] },
+        streetViewControl:false,
+        fullscreenControl:true,
+        mapTypeId: caixasModoMapaAtual() === 'satelite' ? google.maps.MapTypeId.SATELLITE : google.maps.MapTypeId.ROADMAP
+    });
+    mapa.addListener('maptypeid_changed', () => caixasSalvarModoMapa(mapa.getMapTypeId() === google.maps.MapTypeId.SATELLITE ? 'satelite' : 'mapa'));
+    const marcador = new google.maps.Marker({position:center, map:mapa, draggable:true});
+    window.mapaGeocodificacao = {provider:'google', mapa, marcador, geocoder:new google.maps.Geocoder()};
+    caixasVincularArrasteMarcador();
+    mapa.addListener('click', e => {
+        const lat = e.latLng.lat(), lng = e.latLng.lng();
+        caixasPreencherLocal(lat, lng, '');
+        window.mapaGeocodificacao.geocoder.geocode({location:e.latLng}, (results, status) => {
+            const endereco = status === 'OK' && results.length ? results[0].formatted_address : '';
+            caixasPreencherLocal(lat, lng, endereco);
+            caixasResultadoSelecionado(lat, lng, endereco);
+        });
+    });
+}
+
+function caixasInicializarOpenStreet(center) {
+    const mapa = L.map('mapaBuscaEndereco').setView([center.lat, center.lng], 15);
+    const camadas = caixasCamadasLeaflet();
+    const camadaInicial = caixasModoMapaAtual() === 'satelite' ? camadas.satelite : camadas.mapa;
+    camadaInicial.addTo(mapa);
+    L.control.layers({'Mapa': camadas.mapa, 'Satelite': camadas.satelite}, null, {collapsed:false, position:'topright'}).addTo(mapa);
+    mapa.on('baselayerchange', e => caixasSalvarModoMapa(e.name === 'Satelite' ? 'satelite' : 'mapa'));
+    const marcador = L.marker([center.lat, center.lng], {draggable:true}).addTo(mapa);
+    window.mapaGeocodificacao = {provider:'openstreet', mapa, marcador};
+    caixasVincularArrasteMarcador();
+    mapa.on('click', e => {
+        const lat = e.latlng.lat, lng = e.latlng.lng;
+        caixasPreencherLocal(lat, lng, '');
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}`).then(r => r.json()).then(data => {
+            const endereco = data && data.display_name ? data.display_name : '';
+            caixasPreencherLocal(lat, lng, endereco);
+            caixasResultadoSelecionado(lat, lng, endereco);
+        }).catch(() => caixasResultadoSelecionado(lat, lng, ''));
+    });
+    setTimeout(() => mapa.invalidateSize(), 150);
+}
+
+async function caixasPrepararEnderecoBusca(endereco) {
+    const cepMatch = String(endereco).match(/\b\d{5}-?\d{3}\b/);
+    if (!cepMatch) {
+        return {texto: endereco, viaCep: null, numero: caixasExtrairNumeroEndereco(endereco)};
+    }
+
+    const cep = cepMatch[0].replace(/\D/g, '');
+    const numero = caixasExtrairNumeroEndereco(endereco.replace(cepMatch[0], ''));
+
+    try {
+        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        const data = await response.json();
+        if (!data || data.erro) {
+            return {texto: endereco, viaCep: null, numero};
+        }
+
+        const partes = [];
+        if (data.logradouro) partes.push(numero ? `${data.logradouro}, ${numero}` : data.logradouro);
+        if (data.bairro) partes.push(data.bairro);
+        if (data.localidade) partes.push(data.localidade);
+        if (data.uf) partes.push(data.uf);
+        partes.push(cep);
+        partes.push('Brasil');
+
+        return {texto: partes.filter(Boolean).join(', '), viaCep: data, numero};
+    } catch (error) {
+        return {texto: endereco, viaCep: null, numero};
+    }
+}
+
+function caixasExtrairNumeroEndereco(endereco) {
+    const texto = String(endereco || '');
+    const match = texto.match(/(?:,|\s)\s*(\d{1,6}[A-Za-z]?)\b/);
+    return match ? match[1] : '';
+}
+
+function caixasMontarUrlNominatim(enderecoInfo) {
+    const params = new URLSearchParams({format:'json', addressdetails:'1', dedupe:'0', countrycodes:'br', limit:'10', polygon_geojson:'1'});
+    const viaCep = enderecoInfo.viaCep;
+    if (viaCep && viaCep.logradouro) {
+        params.set('street', enderecoInfo.numero ? `${enderecoInfo.numero} ${viaCep.logradouro}` : viaCep.logradouro);
+        if (viaCep.localidade) params.set('city', viaCep.localidade);
+        if (viaCep.uf) params.set('state', viaCep.uf);
+        if (viaCep.cep) params.set('postalcode', viaCep.cep);
+        params.set('country', 'Brasil');
+    } else {
+        params.set('q', enderecoInfo.texto || '');
+    }
+    return `https://nominatim.openstreetmap.org/search?${params.toString()}`;
+}
+
+
+function caixasNormalizarTexto(value) {
+    return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+}
+
+function caixasEnderecoTemNumero(endereco) {
+    return !!caixasExtrairNumeroEndereco(endereco);
+}
+
+function caixasPontoInterpolado(coords, numero) {
+    if (!coords || coords.length < 2) return null;
+    const n = parseInt(String(numero || '').replace(/\D/g, ''), 10);
+    if (!n) return null;
+
+    const pontos = coords.map(c => Array.isArray(c) ? {lng:Number(c[0]), lat:Number(c[1])} : {lat:Number(c.lat), lng:Number(c.lon)}).filter(p => !Number.isNaN(p.lat) && !Number.isNaN(p.lng));
+    if (pontos.length < 2) return null;
+
+    const distancia = (a, b) => Math.hypot((a.lat - b.lat) * 111320, (a.lng - b.lng) * 111320 * Math.cos(a.lat * Math.PI / 180));
+    const total = pontos.slice(1).reduce((sum, p, i) => sum + distancia(pontos[i], p), 0);
+    if (!total) return null;
+
+    const base = n > 2000 ? (n % 2000) / 2000 : n / 2000;
+    const alvo = Math.max(0.06, Math.min(0.94, base || 0.5)) * total;
+    let acumulado = 0;
+
+    for (let i = 1; i < pontos.length; i++) {
+        const ini = pontos[i - 1];
+        const fim = pontos[i];
+        const seg = distancia(ini, fim);
+        if (acumulado + seg >= alvo) {
+            const ratio = seg ? (alvo - acumulado) / seg : 0;
+            const lat = ini.lat + (fim.lat - ini.lat) * ratio;
+            const lng = ini.lng + (fim.lng - ini.lng) * ratio;
+
+            const dx = fim.lng - ini.lng;
+            const dy = fim.lat - ini.lat;
+            const len = Math.hypot(dx, dy) || 1;
+            const lado = n % 2 === 0 ? 1 : -1;
+            const offset = 0.000035 * lado;
+            return {lat: lat + (dx / len) * offset, lng: lng - (dy / len) * offset};
+        }
+        acumulado += seg;
+    }
+
+    return pontos[pontos.length - 1];
+}
+
+function caixasCoordsGeoJson(geojson) {
+    if (!geojson) return null;
+    if (geojson.type === 'LineString') return geojson.coordinates;
+    if (geojson.type === 'MultiLineString' && geojson.coordinates && geojson.coordinates.length) return geojson.coordinates.sort((a,b) => b.length - a.length)[0];
+    if (geojson.type === 'Polygon' && geojson.coordinates && geojson.coordinates.length) return geojson.coordinates[0];
+    if (geojson.type === 'MultiPolygon' && geojson.coordinates && geojson.coordinates.length) return geojson.coordinates[0][0];
+    return null;
+}
+
+async function caixasBuscarGeometriaRuaOpenStreet(rua, cidade, estado) {
+    rua = String(rua || '').trim();
+    cidade = String(cidade || '').trim();
+    if (!rua || !cidade) return null;
+
+    const ruaLimpa = rua.replace(/^Rua\s+/i, '').trim();
+    const areaName = cidade.replace(/["\\]/g, '');
+    const roadRegex = ruaLimpa.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const query = `[out:json][timeout:8];area["name"="${areaName}"]["boundary"="administrative"]->.searchArea;(way["highway"]["name"~"${roadRegex}",i](area.searchArea););out geom 3;`;
+
+    try {
+        const response = await fetch('https://overpass-api.de/api/interpreter', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'},
+            body: 'data=' + encodeURIComponent(query)
+        });
+        const data = await response.json();
+        const ways = (data && data.elements ? data.elements : []).filter(el => el.type === 'way' && el.geometry && el.geometry.length > 1);
+        if (!ways.length) return null;
+        ways.sort((a,b) => b.geometry.length - a.geometry.length);
+        return ways[0].geometry;
+    } catch (error) {
+        return null;
+    }
+}
+
+async function caixasAprimorarResultadosOpenStreet(data, info) {
+    const numero = info && info.numero ? info.numero : caixasExtrairNumeroEndereco(info && info.texto ? info.texto : '');
+    if (!numero || !data || !data.length) return data;
+
+    const melhorados = [];
+    for (const item of data.slice(0, 10)) {
+        const address = item.address || {};
+        const rua = address.road || address.pedestrian || address.footway || (info && info.viaCep && info.viaCep.logradouro) || '';
+        const cidade = address.city || address.town || address.village || address.municipality || (info && info.viaCep && info.viaCep.localidade) || '';
+        const estado = address.state || (info && info.viaCep && info.viaCep.uf) || '';
+        let ponto = caixasPontoInterpolado(caixasCoordsGeoJson(item.geojson), numero);
+
+        if (!ponto) {
+            const geometria = await caixasBuscarGeometriaRuaOpenStreet(rua, cidade, estado);
+            ponto = caixasPontoInterpolado(geometria, numero);
+        }
+
+        if (ponto) {
+            melhorados.push({
+                ...item,
+                lat: ponto.lat,
+                lon: ponto.lng,
+                display_name: `${rua || item.display_name}, ${numero}${cidade ? ', ' + cidade : ''}${estado ? ', ' + estado : ''} (aproximado pelo numero)`
+            });
+        } else {
+            melhorados.push(item);
+        }
+    }
+
+    return melhorados;
+}
+
+async function buscarEndereco(event) {
+    if (event) event.preventDefault();
+    const endereco = document.getElementById('campoBuscaEndereco').value.trim();
+    if (!endereco) { alert('Digite um endereco para buscar'); return; }
+    const box = document.getElementById('resultadoBusca');
+    box.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">Buscando...</p>';
+    const geo = window.mapaGeocodificacao || {};
+    const enderecoInfo = await caixasPrepararEnderecoBusca(endereco);
+    const enderecoBusca = /brasil/i.test(enderecoInfo.texto) ? enderecoInfo.texto : `${enderecoInfo.texto}, Brasil`;
+
+    if (window.google && window.google.maps) {
+        const geocoder = geo.geocoder || new google.maps.Geocoder();
+        geocoder.geocode({
+            address: enderecoBusca,
+            componentRestrictions: {country: 'BR'},
+            region: 'BR'
+        }, (results, status) => {
+            if (status !== 'OK' || !results.length) {
+                buscarEnderecoOpenStreet(enderecoInfo, box);
+                return;
+            }
+            caixasRenderResultados(results.slice(0,10).map(r => ({
+                endereco: r.formatted_address,
+                lat: r.geometry.location.lat(),
+                lng: r.geometry.location.lng()
+            })));
+        });
+        return;
+    }
+
+    buscarEnderecoOpenStreet(enderecoInfo, box);
+}
+
+function buscarEnderecoOpenStreet(enderecoInfo, box) {
+    const info = typeof enderecoInfo === 'string' ? {texto:enderecoInfo, viaCep:null, numero:caixasExtrairNumeroEndereco(enderecoInfo)} : enderecoInfo;
+    fetch(caixasMontarUrlNominatim(info)).then(r => r.json()).then(data => {
+        if ((!data || !data.length) && info.viaCep) {
+            const fallback = {texto: info.texto, viaCep: null, numero: info.numero};
+            return fetch(caixasMontarUrlNominatim(fallback)).then(r => r.json());
+        }
+        return data;
+    }).then(data => caixasAprimorarResultadosOpenStreet(data, info)).then(data => {
+        if (!data || !data.length) { box.innerHTML = '<p style="text-align:center;color:#e74c3c;padding:20px;">Nenhum resultado encontrado</p>'; return; }
+        caixasRenderResultados(data.map(i => ({endereco:i.display_name, lat:parseFloat(i.lat), lng:parseFloat(i.lon)})));
+    }).catch(() => box.innerHTML = '<p style="text-align:center;color:#e74c3c;padding:20px;">Erro ao buscar endereco</p>');
+}
+
+function caixasRenderResultados(resultados) {
+    const box = document.getElementById('resultadoBusca');
+    box.innerHTML = '<p style="color:#666;font-size:12px;margin-bottom:10px;"><strong>Clique para selecionar:</strong></p>';
+    resultados.forEach(resultado => {
+        const div = document.createElement('div');
+        div.style.cssText = 'padding:8px 10px;border:1px solid #e5e7eb;border-radius:6px;margin-bottom:6px;cursor:pointer;transition:all .2s ease;background:#fafbfc;font-size:12px;';
+        div.innerHTML = `<div style="font-weight:600;color:#333;margin-bottom:3px;">${caixasEscapeHtml(resultado.endereco)}</div><div style="color:#999;font-size:11px;">Lat: ${Number(resultado.lat).toFixed(6)} | Lon: ${Number(resultado.lng).toFixed(6)}</div>`;
+        div.onmouseover = () => { div.style.background = '#f0f1f9'; div.style.borderColor = '#667eea'; };
+        div.onmouseout = () => { div.style.background = '#fafbfc'; div.style.borderColor = '#e5e7eb'; };
+        div.onclick = () => { caixasPreencherLocal(resultado.lat, resultado.lng, resultado.endereco); caixasResultadoSelecionado(resultado.lat, resultado.lng, resultado.endereco); };
+        box.appendChild(div);
+    });
+}
+
+</script>
+
+</body>
+</html>
