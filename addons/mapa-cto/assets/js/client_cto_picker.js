@@ -162,7 +162,14 @@
     ].join('');
     document.body.appendChild(overlay);
 
-    function close() { overlay.remove(); }
+    function onKeydown(event) {
+      if (event.key === 'Escape') close();
+    }
+    function close() {
+      document.removeEventListener('keydown', onKeydown);
+      overlay.remove();
+    }
+    document.addEventListener('keydown', onKeydown);
     overlay.querySelector('.cto-picker-close').onclick = close;
     overlay.querySelector('.cto-picker-ignore').onclick = function () {
       close();
@@ -195,9 +202,17 @@
 
     var list = overlay.querySelector('.cto-picker-list');
     var search = overlay.querySelector('.cto-picker-search');
-    overlay.querySelector('.cto-picker-close').onclick = function () { overlay.remove(); };
+    function onKeydown(event) {
+      if (event.key === 'Escape') close();
+    }
+    function close() {
+      document.removeEventListener('keydown', onKeydown);
+      overlay.remove();
+    }
+    document.addEventListener('keydown', onKeydown);
+    overlay.querySelector('.cto-picker-close').onclick = close;
     overlay.addEventListener('click', function (event) {
-      if (event.target === overlay) overlay.remove();
+      if (event.target === overlay) close();
     });
 
     var ctos = [];
@@ -238,7 +253,7 @@
           setField(fields.cto, cto.nome);
           setField(fields.porta, porta);
           setField(fields.olt, cto.olt || fields.olt && fields.olt.value || '');
-          overlay.remove();
+          close();
         };
       });
     }
