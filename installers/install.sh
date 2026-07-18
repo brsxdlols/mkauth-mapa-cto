@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-VERSION="1.1.0"
+VERSION="1.1.1"
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 ROOT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 SOURCE_DIR="$ROOT_DIR/addons/mapa-cto"
@@ -59,7 +59,7 @@ fi
 
 tmp_menu=$(mktemp /tmp/mkauth-addon-js.XXXXXX)
 awk '
-    /addons\/caixas\// {
+    /Mapa Das CTO/ || /add_menu\.[^(]*\(.*addons\/caixas\// || /href="\/admin\/addons\/caixas\// {
         seen++
         if (seen > 1) {
             next
@@ -70,7 +70,7 @@ awk '
 cat "$tmp_menu" > "$ADDON_JS"
 rm -f "$tmp_menu"
 
-if grep -q 'addons/caixas/' "$ADDON_JS"; then
+if grep -q 'Mapa Das CTO' "$ADDON_JS"; then
     printf 'Menu Mapa CTO ja existe em %s; duplicados foram removidos.\n' "$ADDON_JS"
 else
     cat >> "$ADDON_JS" <<'MENU_SNIPPET'
@@ -85,7 +85,7 @@ cat >> "$ADDON_JS" <<'PICKER_SNIPPET'
 // MAPA CTO CLIENTE PICKER INICIO
 if (/\/admin\/cliente_(alt|ins)\.hhvm/.test(window.location.pathname)) {
     const mapaCtoClientePicker = document.createElement('script');
-    mapaCtoClientePicker.src = minha_url + 'addons/caixas/assets/js/client_cto_picker.js?v=1.1.0';
+    mapaCtoClientePicker.src = minha_url + 'addons/caixas/assets/js/client_cto_picker.js?v=1.1.1';
     mapaCtoClientePicker.async = true;
     document.body.appendChild(mapaCtoClientePicker);
 }
@@ -96,7 +96,7 @@ php -l "$ADDON_DIR/index.php" >/dev/null
 php -l "$ADDON_DIR/src/cto/componente/mapadectos/mapadectos.view.php" >/dev/null
 php -l "$ADDON_DIR/src/cto/config/api.php" >/dev/null
 php -l "$ADDON_DIR/src/cto/api/ctos_disponiveis.php" >/dev/null
-grep -q 'addons/caixas/' "$ADDON_JS"
+grep -q 'Mapa Das CTO' "$ADDON_JS"
 grep -q 'client_cto_picker.js' "$ADDON_JS"
 
 printf 'Instalacao concluida.\nVersao: %s\nAddon: %s\nMenu: %s\nBackup: %s\n' "$VERSION" "$ADDON_DIR" "$ADDON_JS" "$BACKUP_DIR"

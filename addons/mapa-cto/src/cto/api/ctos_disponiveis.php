@@ -28,7 +28,7 @@ function norm_porta($porta) {
 }
 
 function out_porta($porta, $capacidade) {
-    return str_pad((string)$porta, ($capacidade >= 10 ? 2 : 1), '0', STR_PAD_LEFT);
+    return str_pad((string)$porta, 2, '0', STR_PAD_LEFT);
 }
 
 $usadas = [];
