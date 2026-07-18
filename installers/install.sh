@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-VERSION="1.1.3"
+VERSION="1.1.4"
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 ROOT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 SOURCE_DIR="$ROOT_DIR/addons/mapa-cto"
@@ -85,7 +85,7 @@ cat >> "$ADDON_JS" <<'PICKER_SNIPPET'
 // MAPA CTO CLIENTE PICKER INICIO
 if (/\/admin\/cliente_(alt|ins)\.hhvm/.test(window.location.pathname)) {
     const mapaCtoClientePicker = document.createElement('script');
-    mapaCtoClientePicker.src = minha_url + 'addons/caixas/assets/js/client_cto_picker.js?v=1.1.3';
+    mapaCtoClientePicker.src = minha_url + 'addons/caixas/assets/js/client_cto_picker.js?v=1.1.4';
     mapaCtoClientePicker.async = true;
     document.body.appendChild(mapaCtoClientePicker);
 }

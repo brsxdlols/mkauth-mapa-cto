@@ -55,6 +55,14 @@
     return null;
   }
 
+  function findAddressTarget() {
+    return findField(['coordenadas', 'coordenada', 'coord', 'coords']) ||
+      findField(['latitude', 'lat', 'cli_latitude', 'cliente_latitude', 'coordenada_latitude']) ||
+      findField(['endereco', 'endereco_res', 'logradouro']) ||
+      findField(['cep']) ||
+      findField(['numero']);
+  }
+
   function distanceMeters(a, b) {
     var r = 6371000;
     var toRad = function (deg) { return deg * Math.PI / 180; };
@@ -113,8 +121,15 @@
       '.cto-picker-open:hover{background:#059669;color:#fff}',
       '.cto-picker-empty{padding:18px;text-align:center;color:#6b7280;background:#f8fafc;border-radius:8px}',
       '.cto-picker-warning{border:1px solid #facc15;background:#fef9c3;color:#854d0e;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:13px;line-height:1.35}',
+      '.cto-picker-alert{background:#fff;width:min(520px,94vw);border-radius:8px;box-shadow:0 18px 60px rgba(0,0,0,.28);overflow:hidden;font-family:Arial,sans-serif}',
+      '.cto-picker-alert-body{padding:18px;color:#334155;font-size:14px;line-height:1.45}',
+      '.cto-picker-alert-body p{margin:0 0 10px 0}',
+      '.cto-picker-alert-actions{display:flex;justify-content:flex-end;gap:10px;padding:0 18px 18px 18px}',
+      '.cto-picker-alert-actions button{border:0;border-radius:6px;font-weight:700;cursor:pointer;height:38px;padding:0 14px}',
+      '.cto-picker-fix{background:#5f6ee8;color:#fff}',
+      '.cto-picker-ignore{background:#e5e7eb;color:#111827}',
       '.cto-picker-distance{font-size:12px;color:#0f766e;font-weight:700;margin-top:4px}',
-      '@media(max-width:700px){.cto-picker-card{grid-template-columns:1fr}.cto-picker-actions{justify-content:space-between}}'
+      '@media(max-width:700px){.cto-picker-card{grid-template-columns:1fr}.cto-picker-actions{justify-content:space-between}.cto-picker-alert-actions{flex-direction:column}.cto-picker-alert-actions button{width:100%}}'
     ].join('');
     document.head.appendChild(style);
   }
@@ -122,13 +137,55 @@
   function openPicker(fields) {
     injectStyles();
     var clientCoords = findClientCoords();
+    if (!clientCoords) {
+      openCoordinateWarning(fields);
+      return;
+    }
+    openPickerList(fields, clientCoords, false);
+  }
+
+  function openCoordinateWarning(fields) {
+    var overlay = document.createElement('div');
+    overlay.className = 'cto-picker-overlay';
+    overlay.innerHTML = [
+      '<div class="cto-picker-alert">',
+      '<div class="cto-picker-head"><h3>Atencao</h3><button type="button" class="cto-picker-close">x</button></div>',
+      '<div class="cto-picker-alert-body">',
+      '<p>Preencha ou ajuste corretamente a coordenada do endereco do cliente antes de calcular a distancia ate a CTO.</p>',
+      '<p>Voce pode corrigir agora ou continuar sem coordenada. Se continuar, as CTOs serao listadas sem mostrar a distancia.</p>',
+      '</div>',
+      '<div class="cto-picker-alert-actions">',
+      '<button type="button" class="cto-picker-ignore">Ignorar Coordenada</button>',
+      '<button type="button" class="cto-picker-fix">Corrigir Coordenada</button>',
+      '</div>',
+      '</div>'
+    ].join('');
+    document.body.appendChild(overlay);
+
+    function close() { overlay.remove(); }
+    overlay.querySelector('.cto-picker-close').onclick = close;
+    overlay.querySelector('.cto-picker-ignore').onclick = function () {
+      close();
+      openPickerList(fields, null, true);
+    };
+    overlay.querySelector('.cto-picker-fix').onclick = function () {
+      var target = findAddressTarget();
+      close();
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(function () { target.focus(); }, 350);
+      }
+    };
+  }
+
+  function openPickerList(fields, clientCoords, ignoredMissingCoords) {
     var overlay = document.createElement('div');
     overlay.className = 'cto-picker-overlay';
     overlay.innerHTML = [
       '<div class="cto-picker-modal">',
       '<div class="cto-picker-head"><h3>LISTAR CTO E PORTA</h3><button type="button" class="cto-picker-close">x</button></div>',
       '<div class="cto-picker-body">',
-      clientCoords ? '' : '<div class="cto-picker-warning">Atenção: preencha ou ajuste corretamente a coordenada do endereço do cliente antes de calcular a distância até a CTO.</div>',
+      ignoredMissingCoords ? '<div class="cto-picker-warning">Atencao: coordenada do cliente nao informada. As CTOs serao listadas sem calculo de distancia.</div>' : '',
       '<input class="cto-picker-search" placeholder="Buscar por CTO, endereco ou OLT..." />',
       '<div class="cto-picker-list"><div class="cto-picker-empty">Carregando CTOs...</div></div>',
       '</div>',
@@ -160,7 +217,7 @@
         var ctoCoords = { lat: parseCoord(cto.latitude), lng: parseCoord(cto.longitude) };
         var distance = '';
         if (clientCoords && ctoCoords.lat !== null && ctoCoords.lng !== null) {
-          distance = '<div class="cto-picker-distance">Distância aproximada: ' + formatDistance(distanceMeters(clientCoords, ctoCoords)) + '</div>';
+          distance = '<div class="cto-picker-distance">Distancia aproximada: ' + formatDistance(distanceMeters(clientCoords, ctoCoords)) + '</div>';
         }
         var portas = (cto.portas_livres || []).map(function (p) {
           return '<option value="' + String(p).replace(/"/g, '&quot;') + '">' + p + '</option>';
@@ -168,7 +225,7 @@
         return [
           '<div class="cto-picker-card" data-idx="' + idx + '">',
           '<div><strong>' + cto.nome + '</strong><span class="cto-picker-badge">' + cto.livres + '/' + cto.capacidade + ' livres</span>',
-          '<div class="cto-picker-meta">Endereço: ' + (cto.endereco || '-') + '<br>OLT: ' + (cto.olt || '-') + ' | Sinal: ' + (cto.sinal || '-') + '</div>' + distance + '</div>',
+          '<div class="cto-picker-meta">Endereco: ' + (cto.endereco || '-') + '<br>OLT: ' + (cto.olt || '-') + ' | Sinal: ' + (cto.sinal || '-') + '</div>' + distance + '</div>',
           '<div class="cto-picker-actions"><select>' + portas + '</select><button type="button">Usar</button></div>',
           '</div>'
         ].join('');
@@ -194,7 +251,7 @@
         render();
       })
       .catch(function () {
-        list.innerHTML = '<div class="cto-picker-empty">Erro ao carregar CTOs disponíveis.</div>';
+        list.innerHTML = '<div class="cto-picker-empty">Erro ao carregar CTOs disponiveis.</div>';
       });
   }
 
@@ -214,7 +271,7 @@
     btn.type = 'button';
     btn.id = 'cto-picker-open';
     btn.className = 'cto-picker-open';
-    btn.textContent = '📦 LISTAR CTO E PORTA';
+    btn.textContent = 'LISTAR CTO E PORTA';
     btn.onclick = function () { openPicker(fields); };
 
     var target = closestField(cto) || closestField(findField(['endereco'])) || cto.parentNode;
