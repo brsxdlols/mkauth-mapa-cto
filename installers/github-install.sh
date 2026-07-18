@@ -22,6 +22,8 @@ sha_url=$(printf '%s\n' "$json" | sed -n 's/.*"browser_download_url"[[:space:]]*
 
 curl -fsSL "$run_url" -o "$TMP/install.run"
 curl -fsSL "$sha_url" -o "$TMP/install.run.sha256"
+tr -d '\r' < "$TMP/install.run.sha256" > "$TMP/install.run.sha256.tmp"
+mv "$TMP/install.run.sha256.tmp" "$TMP/install.run.sha256"
 run_name=$(sed -n 's/^[0-9a-fA-F][0-9a-fA-F]*  //p' "$TMP/install.run.sha256" | tr -d '\r' | head -1)
 [ -n "$run_name" ] || fail "checksum invalido"
 mv "$TMP/install.run" "$TMP/$run_name"
