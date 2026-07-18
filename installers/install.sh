@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-VERSION="1.0.0"
+VERSION="1.0.1"
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 ROOT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 SOURCE_DIR="$ROOT_DIR/addons/mapa-cto"
@@ -56,4 +56,3 @@ php -l "$ADDON_DIR/src/cto/config/api.php" >/dev/null
 grep -q 'GERENCIADOR FTTH - Caixas' "$ADDON_JS"
 
 printf 'Instalacao concluida.\nVersao: %s\nAddon: %s\nMenu: %s\nBackup: %s\n' "$VERSION" "$ADDON_DIR" "$ADDON_JS" "$BACKUP_DIR"
-

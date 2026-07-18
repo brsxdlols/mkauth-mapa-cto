@@ -15,8 +15,8 @@ need sed
 need sha256sum
 
 json=$(curl -fsSL "$API")
-run_url=$(printf '%s' "$json" | grep -o '"browser_download_url":[^"]*"[^"]*\.run"' | head -1 | sed 's/^"browser_download_url":"//;s/"$//')
-sha_url=$(printf '%s' "$json" | grep -o '"browser_download_url":[^"]*"[^"]*\.run\.sha256"' | head -1 | sed 's/^"browser_download_url":"//;s/"$//')
+run_url=$(printf '%s\n' "$json" | sed -n 's/.*"browser_download_url"[[:space:]]*:[[:space:]]*"\([^"]*mkauth-mapa-cto-[^"]*\.run\)".*/\1/p' | head -1)
+sha_url=$(printf '%s\n' "$json" | sed -n 's/.*"browser_download_url"[[:space:]]*:[[:space:]]*"\([^"]*mkauth-mapa-cto-[^"]*\.run\.sha256\)".*/\1/p' | head -1)
 [ -n "$run_url" ] || fail "release sem arquivo .run"
 [ -n "$sha_url" ] || fail "release sem checksum .run.sha256"
 
