@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-VERSION="1.0.6"
+VERSION="1.0.7"
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 ROOT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 SOURCE_DIR="$ROOT_DIR/addons/mapa-cto"
@@ -50,11 +50,16 @@ printf '%s\n' "$VERSION" > "$ADDON_DIR/VERSION"
 if grep -q 'GERENCIADOR FTTH - Caixas' "$ADDON_JS"; then
     sed -i '/GERENCIADOR FTTH - Caixas/,+2d' "$ADDON_JS"
 fi
-cat >> "$ADDON_JS" <<'MENU_SNIPPET'
+
+if grep -q 'addons/caixas/' "$ADDON_JS"; then
+    printf 'Menu Mapa CTO ja existe em %s; nao foi duplicado.\n' "$ADDON_JS"
+else
+    cat >> "$ADDON_JS" <<'MENU_SNIPPET'
 
 // Mapa CTO
 add_menu.provedor('{"plink": "' + minha_url + 'addons/caixas/", "ptext": "📦 Mapa Das CTO"}');
 MENU_SNIPPET
+fi
 
 php -l "$ADDON_DIR/index.php" >/dev/null
 php -l "$ADDON_DIR/src/cto/componente/mapadectos/mapadectos.view.php" >/dev/null
