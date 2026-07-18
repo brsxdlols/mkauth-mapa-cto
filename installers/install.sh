@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-VERSION="1.0.3"
+VERSION="1.0.4"
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 ROOT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 SOURCE_DIR="$ROOT_DIR/addons/mapa-cto"
@@ -18,12 +18,17 @@ add_menu.opcoes('\''{"plink": "'\'' + caixas + '\''?_route=painel", "ptext": "Ge
 fail() { echo "ERRO: $*" >&2; exit 1; }
 
 find_addon_js() {
-    for file in "$ADMIN_DIR/scripts/addon.js" "$ADMIN_DIR/addon.js" "$ADMIN_DIR/assets/js/addon.js"; do
+    for file in "$ADMIN_DIR/addons/addon.js" "$ADMIN_DIR/scripts/addon.js" "$ADMIN_DIR/addon.js" "$ADMIN_DIR/assets/js/addon.js"; do
         if [ -f "$file" ]; then
             printf '%s\n' "$file"
             return 0
         fi
     done
+    found=$(find "$ADMIN_DIR" -type f -name addon.js 2>/dev/null | head -1)
+    if [ -n "$found" ]; then
+        printf '%s\n' "$found"
+        return 0
+    fi
     return 1
 }
 
