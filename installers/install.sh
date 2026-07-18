@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-VERSION="1.0.4"
+VERSION="1.0.5"
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 ROOT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 SOURCE_DIR="$ROOT_DIR/addons/mapa-cto"
@@ -11,9 +11,6 @@ ADDON_DIR="$ADDONS_DIR/caixas"
 STAMP=$(date +%Y%m%d-%H%M%S)
 BACKUP_ROOT="${MKAUTH_BACKUP_ROOT:-/root/backups}"
 BACKUP_DIR="$BACKUP_ROOT/mkauth-mapa-cto-$STAMP-v$VERSION"
-MENU_SNIPPET='/** GERENCIADOR FTTH - Caixas **/\
-const caixas = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ":" + window.location.port: "") + "/admin/addons/caixas/";\
-add_menu.opcoes('\''{"plink": "'\'' + caixas + '\''?_route=painel", "ptext": "Gerenciador FTTH"}'\'');'
 
 fail() { echo "ERRO: $*" >&2; exit 1; }
 
@@ -53,7 +50,12 @@ printf '%s\n' "$VERSION" > "$ADDON_DIR/VERSION"
 if grep -q 'GERENCIADOR FTTH - Caixas' "$ADDON_JS"; then
     sed -i '/GERENCIADOR FTTH - Caixas/,+2d' "$ADDON_JS"
 fi
-printf '\n%s\n' "$MENU_SNIPPET" >> "$ADDON_JS"
+cat >> "$ADDON_JS" <<'MENU_SNIPPET'
+
+/** GERENCIADOR FTTH - Caixas **/
+const caixas = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ":" + window.location.port : "") + "/admin/addons/caixas/";
+add_menu.opcoes(JSON.stringify({plink: caixas + "?_route=painel", ptext: "Gerenciador FTTH"}));
+MENU_SNIPPET
 
 php -l "$ADDON_DIR/index.php" >/dev/null
 php -l "$ADDON_DIR/src/cto/componente/mapadectos/mapadectos.view.php" >/dev/null
