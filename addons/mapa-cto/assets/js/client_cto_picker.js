@@ -63,6 +63,22 @@
       findField(['numero']);
   }
 
+  function readField(names) {
+    var field = findField(names);
+    return field ? String(field.value || '').trim() : '';
+  }
+
+  function getClientAddressText() {
+    return [
+      readField(['endereco', 'endereco_res', 'logradouro']),
+      readField(['numero', 'num']),
+      readField(['bairro']),
+      readField(['cidade']),
+      readField(['estado', 'uf']),
+      readField(['cep'])
+    ].filter(Boolean).join(', ');
+  }
+
   function distanceMeters(a, b) {
     var r = 6371000;
     var toRad = function (deg) { return deg * Math.PI / 180; };
@@ -96,6 +112,12 @@
     return String(txt || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   }
 
+  function escapeHtml(value) {
+    return String(value || '').replace(/[&<>"']/g, function (char) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char];
+    });
+  }
+
   function injectStyles() {
     if (document.getElementById('cto-picker-style')) return;
     var style = document.createElement('style');
@@ -119,6 +141,8 @@
       '.cto-picker-actions button{height:36px;padding:0 14px}',
       '.cto-picker-open{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:34px;margin:6px 0 8px 0;padding:0 14px;font-size:12px;line-height:1;white-space:nowrap;text-transform:uppercase}',
       '.cto-picker-open:hover{background:#059669;color:#fff}',
+      '.cto-map-open{background:#2563eb;margin-left:8px}',
+      '.cto-map-open:hover{background:#1d4ed8;color:#fff}',
       '.cto-picker-empty{padding:18px;text-align:center;color:#6b7280;background:#f8fafc;border-radius:8px}',
       '.cto-picker-warning{border:1px solid #facc15;background:#fef9c3;color:#854d0e;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:13px;line-height:1.35}',
       '.cto-picker-alert{background:#fff;width:min(520px,94vw);border-radius:8px;box-shadow:0 18px 60px rgba(0,0,0,.28);overflow:hidden;font-family:Arial,sans-serif}',
@@ -129,6 +153,14 @@
       '.cto-picker-fix{background:#5f6ee8;color:#fff}',
       '.cto-picker-ignore{background:#e5e7eb;color:#111827}',
       '.cto-picker-distance{font-size:12px;color:#0f766e;font-weight:700;margin-top:4px}',
+      '.cto-map-modal{width:min(1180px,97vw);height:min(760px,92vh)}',
+      '.cto-map-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:12px;min-height:0;flex:1}',
+      '.cto-map-canvas{min-height:520px;border:1px solid #d8dee9;border-radius:8px;overflow:hidden}',
+      '.cto-map-side{border:1px solid #d8dee9;border-radius:8px;overflow:auto;background:#f8fafc;padding:10px}',
+      '.cto-map-legend{display:grid;gap:8px;font-size:12px;color:#334155}',
+      '.cto-map-legend strong{color:#111827}',
+      '.cto-map-hint{font-size:12px;color:#64748b;line-height:1.4;margin-top:10px}',
+      '.cto-map-route{margin-top:10px;padding:9px;border-radius:8px;background:#eef2ff;color:#1e3a8a;font-size:12px;line-height:1.4}',
       '@media(max-width:700px){.cto-picker-card{grid-template-columns:1fr}.cto-picker-actions{justify-content:space-between}.cto-picker-alert-actions{flex-direction:column}.cto-picker-alert-actions button{width:100%}}'
     ].join('');
     document.head.appendChild(style);
@@ -142,6 +174,185 @@
       return;
     }
     openPickerList(fields, clientCoords, false);
+  }
+
+  function ensureLeaflet(callback) {
+    if (window.L) {
+      callback();
+      return;
+    }
+    if (!document.querySelector('link[data-cto-leaflet="1"]')) {
+      var css = document.createElement('link');
+      css.rel = 'stylesheet';
+      css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      css.setAttribute('data-cto-leaflet', '1');
+      document.head.appendChild(css);
+    }
+    var existing = document.querySelector('script[data-cto-leaflet="1"]');
+    if (existing) {
+      existing.addEventListener('load', callback);
+      return;
+    }
+    var script = document.createElement('script');
+    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    script.setAttribute('data-cto-leaflet', '1');
+    script.onload = callback;
+    document.body.appendChild(script);
+  }
+
+  function geocodeClientAddress(callback) {
+    var coords = findClientCoords();
+    if (coords) {
+      callback(coords, 'coordenada do cadastro');
+      return;
+    }
+
+    var address = getClientAddressText();
+    if (!address) {
+      callback(null, '');
+      return;
+    }
+
+    fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(address), { credentials: 'omit' })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data && data.length) {
+          callback({ lat: parseCoord(data[0].lat), lng: parseCoord(data[0].lon) }, address);
+        } else {
+          callback(null, address);
+        }
+      })
+      .catch(function () { callback(null, address); });
+  }
+
+  function markerIcon(color) {
+    return window.L.divIcon({
+      className: '',
+      html: '<div style="width:22px;height:22px;background:' + color + ';border:3px solid white;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 8px rgba(0,0,0,.35)"><span style="display:block;width:8px;height:8px;background:white;border-radius:50%;margin:4px"></span></div>',
+      iconSize: [28, 28],
+      iconAnchor: [14, 24]
+    });
+  }
+
+  function openCtoMap(fields) {
+    injectStyles();
+    ensureLeaflet(function () {
+      geocodeClientAddress(function (clientCoords, addressLabel) {
+        var overlay = document.createElement('div');
+        overlay.className = 'cto-picker-overlay';
+        overlay.innerHTML = [
+          '<div class="cto-picker-modal cto-map-modal">',
+          '<div class="cto-picker-head"><h3>Mapa de CTOs proximas</h3><button type="button" class="cto-picker-close">x</button></div>',
+          '<div class="cto-picker-body" style="display:flex;flex-direction:column;min-height:0;flex:1">',
+          clientCoords ? '' : '<div class="cto-picker-warning">Nao foi possivel localizar o endereco do cliente. Preencha ou ajuste a coordenada/endereco para ver as CTOs proximas.</div>',
+          '<div class="cto-map-layout">',
+          '<div id="cto-client-map" class="cto-map-canvas"></div>',
+          '<div class="cto-map-side"><div class="cto-map-legend">',
+          '<strong>Legenda</strong>',
+          '<div><span style="color:#10b981">●</span> CTO com porta livre</div>',
+          '<div><span style="color:#ef4444">●</span> CTO cheia</div>',
+          '<div><span style="color:#2563eb">●</span> Seu endereco aqui</div>',
+          '<div class="cto-map-hint">Clique em uma CTO para ver portas, distancia e rota aproximada pela rua quando disponivel.</div>',
+          '<div id="cto-map-route" class="cto-map-route" style="display:none"></div>',
+          '</div></div>',
+          '</div>',
+          '</div>',
+          '</div>'
+        ].join('');
+        document.body.appendChild(overlay);
+
+        var routeBox = overlay.querySelector('#cto-map-route');
+        var mapEl = overlay.querySelector('#cto-client-map');
+        var map = window.L.map(mapEl);
+        var routeLayer = null;
+        var directLayer = null;
+        var bounds = window.L.latLngBounds();
+
+        function close() {
+          document.removeEventListener('keydown', onKeydown);
+          map.remove();
+          overlay.remove();
+        }
+        function onKeydown(event) {
+          if (event.key === 'Escape') close();
+        }
+        document.addEventListener('keydown', onKeydown);
+        overlay.querySelector('.cto-picker-close').onclick = close;
+
+        window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 20,
+          attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
+
+        if (clientCoords) {
+          var clientLatLng = [clientCoords.lat, clientCoords.lng];
+          window.L.marker(clientLatLng, { icon: markerIcon('#2563eb') })
+            .bindPopup('<strong>Seu endereco aqui</strong><br>' + escapeHtml(addressLabel || getClientAddressText()))
+            .addTo(map);
+          bounds.extend(clientLatLng);
+        }
+
+        fetch(adminBase() + 'addons/caixas/src/cto/api/ctos_disponiveis.php', { credentials: 'same-origin' })
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            var ctos = data.ctos || [];
+            ctos.forEach(function (cto) {
+              var lat = parseCoord(cto.latitude);
+              var lng = parseCoord(cto.longitude);
+              if (lat === null || lng === null) return;
+
+              var livre = (parseInt(cto.livres, 10) || 0) > 0;
+              var ctoLatLng = [lat, lng];
+              var popup = '<strong>' + escapeHtml(cto.nome) + '</strong><br>' +
+                escapeHtml(cto.endereco || '-') + '<br>' +
+                (livre ? (cto.livres + '/' + cto.capacidade + ' portas livres') : 'CTO cheia') +
+                '<br>OLT: ' + escapeHtml(cto.olt || '-');
+
+              var marker = window.L.marker(ctoLatLng, { icon: markerIcon(livre ? '#10b981' : '#ef4444') })
+                .bindPopup(popup)
+                .addTo(map);
+              bounds.extend(ctoLatLng);
+
+              marker.on('click', function () {
+                if (!clientCoords) return;
+                var meters = distanceMeters(clientCoords, { lat: lat, lng: lng });
+                routeBox.style.display = 'block';
+                routeBox.innerHTML = '<strong>' + escapeHtml(cto.nome) + '</strong><br>Distancia em linha reta: ' + formatDistance(meters) + '<br>Calculando rota pela rua...';
+
+                if (directLayer) map.removeLayer(directLayer);
+                if (routeLayer) map.removeLayer(routeLayer);
+                directLayer = window.L.polyline([[clientCoords.lat, clientCoords.lng], ctoLatLng], { color: '#f59e0b', weight: 3, dashArray: '6,6' }).addTo(map);
+
+                fetch('https://router.project-osrm.org/route/v1/driving/' + clientCoords.lng + ',' + clientCoords.lat + ';' + lng + ',' + lat + '?overview=full&geometries=geojson', { credentials: 'omit' })
+                  .then(function (r) { return r.json(); })
+                  .then(function (route) {
+                    if (route.routes && route.routes.length) {
+                      var coords = route.routes[0].geometry.coordinates.map(function (p) { return [p[1], p[0]]; });
+                      routeLayer = window.L.polyline(coords, { color: '#2563eb', weight: 4 }).addTo(map);
+                      routeBox.innerHTML = '<strong>' + escapeHtml(cto.nome) + '</strong><br>Distancia em linha reta: ' + formatDistance(meters) + '<br>Rota aproximada pela rua: ' + formatDistance(Math.round(route.routes[0].distance));
+                      map.fitBounds(window.L.latLngBounds(coords).extend([clientCoords.lat, clientCoords.lng]).extend(ctoLatLng), { padding: [30, 30] });
+                    } else {
+                      routeBox.innerHTML = '<strong>' + escapeHtml(cto.nome) + '</strong><br>Distancia em linha reta: ' + formatDistance(meters) + '<br>Rota pela rua indisponivel. Linha amarela mostra o puxamento direto.';
+                    }
+                  })
+                  .catch(function () {
+                    routeBox.innerHTML = '<strong>' + escapeHtml(cto.nome) + '</strong><br>Distancia em linha reta: ' + formatDistance(meters) + '<br>Rota pela rua indisponivel. Linha amarela mostra o puxamento direto.';
+                  });
+              });
+            });
+
+            if (bounds.isValid()) map.fitBounds(bounds, { padding: [35, 35] });
+            else map.setView([-10.5, -51.9], 4);
+            setTimeout(function () { map.invalidateSize(); }, 150);
+          })
+          .catch(function () {
+            routeBox.style.display = 'block';
+            routeBox.innerHTML = 'Erro ao carregar CTOs.';
+            if (clientCoords) map.setView([clientCoords.lat, clientCoords.lng], 16);
+            else map.setView([-10.5, -51.9], 4);
+          });
+      });
+    });
   }
 
   function openCoordinateWarning(fields) {
@@ -289,11 +500,20 @@
     btn.textContent = 'LISTAR CTO E PORTA';
     btn.onclick = function () { openPicker(fields); };
 
+    var mapBtn = document.createElement('button');
+    mapBtn.type = 'button';
+    mapBtn.id = 'cto-map-open';
+    mapBtn.className = 'cto-picker-open cto-map-open';
+    mapBtn.textContent = 'VER MAPA';
+    mapBtn.onclick = function () { openCtoMap(fields); };
+
     var target = closestField(cto) || closestField(findField(['endereco'])) || cto.parentNode;
     if (target && target.parentNode) {
       target.parentNode.insertBefore(btn, target.nextSibling);
+      target.parentNode.insertBefore(mapBtn, btn.nextSibling);
     } else {
       cto.parentNode.appendChild(btn);
+      cto.parentNode.appendChild(mapBtn);
     }
   });
 })();

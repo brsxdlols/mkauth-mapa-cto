@@ -38,32 +38,49 @@ if (isset($connection) && $connection) {
 
             $cliente_where = "(caixa_herm = '" . $cto_nome . "' AND caixa_herm IS NOT NULL AND caixa_herm != '')";
             $cliente_where_sc = "(sc.caixa_herm = '" . $cto_nome . "' AND sc.caixa_herm IS NOT NULL AND sc.caixa_herm != '')";
+            $adicional_where_sa = "(sa.caixa_herm = '" . $cto_nome . "' AND sa.caixa_herm IS NOT NULL AND sa.caixa_herm != '')";
 
             if ($has_cto_id) {
                 $cliente_where = "((cto_id = " . $cto_id . " AND cto_id IS NOT NULL AND cto_id > 0) OR " . $cliente_where . ")";
                 $cliente_where_sc = "((sc.cto_id = " . $cto_id . " AND sc.cto_id IS NOT NULL AND sc.cto_id > 0) OR " . $cliente_where_sc . ")";
             }
             
-            // Contar clientes atribuídos
-            $count_sql = "SELECT COUNT(*) as total FROM sis_cliente 
-                         WHERE " . $cliente_where;
+            $count_sql = "SELECT COUNT(DISTINCT id) as total FROM sis_cliente WHERE " . $cliente_where;
             $count_result = mysqli_query($connection, $count_sql);
             $count_row = $count_result ? mysqli_fetch_assoc($count_result) : ['total' => 0];
-            $total_clientes = $count_row['total'] ?? 0;
+            $total_clientes_principal = intval($count_row['total'] ?? 0);
+
+            $count_adicional_sql = "SELECT COUNT(DISTINCT sa.id) as total
+                          FROM sis_adicional sa
+                          LEFT JOIN sis_cliente scp ON scp.login = sa.login
+                          WHERE " . $adicional_where_sa . "
+                          AND (scp.id IS NULL OR scp.cli_ativado = 's')";
+            $count_adicional_result = mysqli_query($connection, $count_adicional_sql);
+            $count_adicional_row = $count_adicional_result ? mysqli_fetch_assoc($count_adicional_result) : ['total' => 0];
+            $total_adicionais = intval($count_adicional_row['total'] ?? 0);
+            $total_clientes = $total_clientes_principal + $total_adicionais;
             
-            // Contar clientes online (com sessão ativa no RADIUS)
-            $online_sql = "SELECT COUNT(*) as total FROM sis_cliente sc 
+            $online_sql = "SELECT COUNT(DISTINCT sc.id) as total FROM sis_cliente sc
                           INNER JOIN radacct ra ON ra.username = sc.login 
                           WHERE ra.acctstoptime IS NULL
                           AND " . $cliente_where_sc;
             $online_result = mysqli_query($connection, $online_sql);
             $online_row = $online_result ? mysqli_fetch_assoc($online_result) : ['total' => 0];
-            $total_online = $online_row['total'] ?? 0;
+            $total_online_principal = intval($online_row['total'] ?? 0);
+
+            $online_adicional_sql = "SELECT COUNT(DISTINCT sa.id) as total
+                          FROM sis_adicional sa
+                          INNER JOIN radacct ra ON ra.username = sa.username AND ra.acctstoptime IS NULL
+                          LEFT JOIN sis_cliente scp ON scp.login = sa.login
+                          WHERE " . $adicional_where_sa . "
+                          AND (scp.id IS NULL OR scp.cli_ativado = 's')";
+            $online_adicional_result = mysqli_query($connection, $online_adicional_sql);
+            $online_adicional_row = $online_adicional_result ? mysqli_fetch_assoc($online_adicional_result) : ['total' => 0];
+            $total_online = $total_online_principal + intval($online_adicional_row['total'] ?? 0);
             
-            $total_offline = $total_clientes - $total_online;
+            $total_offline = max(0, $total_clientes - $total_online);
             
-            // Buscar lista de clientes atribuídos
-            $clientes_sql = "SELECT sc.id, sc.nome, sc.login, 
+            $clientes_sql = "SELECT sc.id, sc.nome, sc.login, 'Cliente' as tipo_cliente,
                             CASE WHEN ra.radacctid IS NOT NULL THEN 'online' ELSE 'offline' END as status
                             FROM sis_cliente sc
                             LEFT JOIN radacct ra ON ra.username = sc.login AND ra.acctstoptime IS NULL
@@ -78,7 +95,33 @@ if (isset($connection) && $connection) {
                         'id' => $cliente['id'],
                         'nome' => $cliente['nome'],
                         'login' => $cliente['login'],
-                        'status' => $cliente['status']
+                        'status' => $cliente['status'],
+                        'tipo' => $cliente['tipo_cliente']
+                    );
+                }
+            }
+
+            $adicionais_sql = "SELECT sa.id,
+                            COALESCE(NULLIF(sa.nome, ''), sa.username, sa.login) as nome,
+                            sa.username as login,
+                            'Adicional' as tipo_cliente,
+                            CASE WHEN ra.radacctid IS NOT NULL THEN 'online' ELSE 'offline' END as status
+                            FROM sis_adicional sa
+                            LEFT JOIN radacct ra ON ra.username = sa.username AND ra.acctstoptime IS NULL
+                            LEFT JOIN sis_cliente scp ON scp.login = sa.login
+                            WHERE " . $adicional_where_sa . "
+                            AND (scp.id IS NULL OR scp.cli_ativado = 's')
+                            ORDER BY nome";
+            $adicionais_result = mysqli_query($connection, $adicionais_sql);
+
+            if ($adicionais_result) {
+                while ($cliente = mysqli_fetch_assoc($adicionais_result)) {
+                    $clientes_list[] = array(
+                        'id' => $cliente['id'],
+                        'nome' => $cliente['nome'],
+                        'login' => $cliente['login'],
+                        'status' => $cliente['status'],
+                        'tipo' => $cliente['tipo_cliente']
                     );
                 }
             }

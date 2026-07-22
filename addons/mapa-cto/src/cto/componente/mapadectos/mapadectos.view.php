@@ -501,6 +501,18 @@
                 grid-template-columns: 1fr;
             }
         }
+        .cto-hover-tooltip{font-family:Arial,sans-serif;min-width:240px;max-width:340px;color:#1f2937}
+        .cto-hover-title{font-weight:700;color:#4f63d8;margin-bottom:4px}
+        .cto-hover-address{font-size:12px;color:#4b5563;margin-bottom:6px}
+        .cto-hover-counts{font-size:12px;font-weight:700;margin-bottom:8px;color:#111827}
+        .cto-hover-clients{display:grid;gap:4px;max-height:220px;overflow:auto}
+        .cto-hover-client{display:grid;grid-template-columns:10px minmax(95px,1fr) minmax(70px,.8fr) auto;gap:5px;align-items:center;font-size:11px;border-top:1px solid #eef2f7;padding-top:4px}
+        .cto-hover-dot{width:7px;height:7px;border-radius:50%;background:#ef4444}
+        .cto-hover-client.online .cto-hover-dot{background:#10b981}
+        .cto-hover-name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .cto-hover-login{color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .cto-hover-type{font-size:10px;color:#475569;background:#eef2ff;border-radius:999px;padding:1px 5px}
+        .cto-hover-empty,.cto-hover-more{font-size:11px;color:#64748b;margin-top:4px}
     </style>
 </head>
 <body>
@@ -567,6 +579,30 @@
         const CAIXAS_MAP_LAYER_KEY = 'caixas_modo_visualizacao_mapa';
         function getCaixasMapMode() { return (localStorage.getItem(CAIXAS_MAP_LAYER_KEY) === 'satelite') ? 'satelite' : 'mapa'; }
         function setCaixasMapMode(mode) { localStorage.setItem(CAIXAS_MAP_LAYER_KEY, mode === 'satelite' ? 'satelite' : 'mapa'); }
+        function escapeHtml(value) {
+            return String(value || '').replace(/[&<>"']/g, function (char) {
+                return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[char];
+            });
+        }
+
+        function montarResumoClientesHover(cto) {
+            const clientes = Array.isArray(cto.clientes) ? cto.clientes : [];
+            if (!clientes.length) {
+                return '<div class="cto-hover-empty">Nenhum cliente atribuido</div>';
+            }
+            const rows = clientes.slice(0, 12).map(cliente => {
+                const statusClass = cliente.status === 'online' ? 'online' : 'offline';
+                const tipo = cliente.tipo ? `<span class="cto-hover-type">${escapeHtml(cliente.tipo)}</span>` : '';
+                return `<div class="cto-hover-client ${statusClass}">
+                    <span class="cto-hover-dot"></span>
+                    <span class="cto-hover-name">${escapeHtml(cliente.nome)}</span>
+                    <span class="cto-hover-login">${escapeHtml(cliente.login)}</span>
+                    ${tipo}
+                </div>`;
+            }).join('');
+            const resto = clientes.length > 12 ? `<div class="cto-hover-more">+${clientes.length - 12} cliente(s)</div>` : '';
+            return `<div class="cto-hover-clients">${rows}${resto}</div>`;
+        }
 
         // Inicializar o mapa
         function initializeMap() {
@@ -740,9 +776,10 @@
                 marker.addListener('mouseover', () => {
                     hoverInfoWindow.setContent(`
                         <div class="cto-hover-tooltip">
-                            <strong>${cto.nome}</strong>
-                            ${cto.endereco || 'Sem endereço'}<br>
-                            ${cto.total_clientes} clientes · ${cto.clientes_online} online · ${cto.clientes_offline} offline
+                            <div class="cto-hover-title">${escapeHtml(cto.nome)}</div>
+                            <div class="cto-hover-address">${escapeHtml(cto.endereco || 'Sem endereco')}</div>
+                            <div class="cto-hover-counts">${cto.total_clientes} clientes | ${cto.clientes_online} online | ${cto.clientes_offline} offline</div>
+                            ${montarResumoClientesHover(cto)}
                         </div>
                     `);
                     hoverInfoWindow.open({

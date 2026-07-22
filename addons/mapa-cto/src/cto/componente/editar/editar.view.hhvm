@@ -505,25 +505,34 @@ $mapProvider = function_exists('getSystemMapProvider') ? getSystemMapProvider() 
                     <div class="client-items-container">
                         <div id="clientesDisponiveis">
                             <?php
-                            if (isset($todosClientes) && $todosClientes && mysqli_num_rows($todosClientes) > 0) {
-                                mysqli_data_seek($todosClientes, 0);
+                            if (isset($todosClientesLista) && count($todosClientesLista) > 0) {
                                 $clientesAtribuidos = isset($clientesCadastrados) ? $clientesCadastrados : [];
                                 $clientesAdicionais = isset($adicionalCadastrados) ? $adicionalCadastrados : [];
-                                $atribuidos = array_merge($clientesAtribuidos, $clientesAdicionais);
+                                $atribuidos = [];
+                                foreach ($clientesAtribuidos as $clienteIdAtribuido) {
+                                    $atribuidos[] = 'cliente:' . $clienteIdAtribuido;
+                                }
+                                foreach ($clientesAdicionais as $adicionalIdAtribuido) {
+                                    $atribuidos[] = 'adicional:' . $adicionalIdAtribuido;
+                                }
                                 
                                 $temDisponivel = false;
                                 $countDisp = 0;
-                                while ($cliente = mysqli_fetch_assoc($todosClientes)) {
-                                    if (!in_array($cliente['id'], $atribuidos)) {
+                                foreach ($todosClientesLista as $cliente) {
+                                    $tipoCliente = $cliente['_tipo_cliente'] ?? 'cliente';
+                                    $acaoAdicionar = $cliente['_acao_adicionar'] ?? 'adc';
+                                    $labelTipo = $cliente['_label_tipo'] ?? 'Cliente';
+                                    $loginCliente = $cliente['login'] ?? $cliente['username'] ?? '';
+                                    if (!in_array($tipoCliente . ':' . ($cliente['id'] ?? ''), $atribuidos)) {
                                         $temDisponivel = true;
                                         $countDisp++;
-                                        echo '<div class="client-item" data-search="' . strtolower($cliente['nome'] ?? '') . '">';
+                                        echo '<div class="client-item" data-search="' . strtolower(($cliente['nome'] ?? '') . ' ' . ($loginCliente ?? '') . ' ' . $labelTipo) . '">';
                                         echo '  <div class="client-info">';
                                         echo '    <div class="client-name">' . htmlspecialchars($cliente['nome'] ?? '') . '</div>';
-                                        echo '    <div class="client-id">ID: ' . htmlspecialchars($cliente['id'] ?? '') . '</div>';
+                                        echo '    <div class="client-id">' . htmlspecialchars($labelTipo, ENT_QUOTES, 'UTF-8') . ' | ID: ' . htmlspecialchars($cliente['id'] ?? '') . ($loginCliente ? ' | Login: ' . htmlspecialchars($loginCliente, ENT_QUOTES, 'UTF-8') : '') . '</div>';
                                         echo '  </div>';
                                         echo '  <div class="action-buttons">';
-                                        echo '    <button type="button" class="btn-small btn-add" onclick="atribuirCliente(' . $cliente['id'] . ', \'' . addslashes($cliente['nome'] ?? '') . '\')">➕ Atribuir</button>';
+                                        echo '    <button type="button" class="btn-small btn-add" onclick="atribuirCliente(' . $cliente['id'] . ', \'' . addslashes($cliente['nome'] ?? '') . '\', \'' . $acaoAdicionar . '\')">Atribuir</button>';
                                         echo '  </div>';
                                         echo '</div>';
                                     }
@@ -531,15 +540,15 @@ $mapProvider = function_exists('getSystemMapProvider') ? getSystemMapProvider() 
                                 
                                 if (!$temDisponivel) {
                                     echo '<div class="empty-state">';
-                                    echo '  <div class="empty-state-icon">✅</div>';
-                                    echo '  <p>Todos os clientes atribuídos</p>';
+                                    echo '  <div class="empty-state-icon">OK</div>';
+                                    echo '  <p>Todos os clientes atribuidos</p>';
                                     echo '</div>';
                                 }
                                 
                                 echo '<script>document.getElementById("countDisponivel").textContent = ' . $countDisp . ';</script>';
                             } else {
                                 echo '<div class="empty-state">';
-                                echo '  <div class="empty-state-icon">📭</div>';
+                                echo '  <div class="empty-state-icon">-</div>';
                                 echo '  <p>Nenhum cliente cadastrado</p>';
                                 echo '</div>';
                             }
@@ -554,26 +563,45 @@ $mapProvider = function_exists('getSystemMapProvider') ? getSystemMapProvider() 
                     <div class="client-items-container">
                         <div id="clientesAtribuidos">
                             <?php
+                            $countAtr = 0;
                             if (isset($dadosClienteEditar) && $dadosClienteEditar && mysqli_num_rows($dadosClienteEditar) > 0) {
                                 mysqli_data_seek($dadosClienteEditar, 0);
-                                $countAtr = 0;
                                 while ($cliente = mysqli_fetch_assoc($dadosClienteEditar)) {
                                     $countAtr++;
-                                    echo '<div class="client-item" data-search="' . strtolower($cliente['nome'] ?? '') . '">';
+                                    echo '<div class="client-item" data-search="' . strtolower(($cliente['nome'] ?? '') . ' ' . ($cliente['login'] ?? '') . ' cliente') . '">';
                                     echo '  <div class="client-info">';
                                     echo '    <div class="client-name">' . htmlspecialchars($cliente['nome'] ?? '') . '</div>';
-                                    echo '    <div class="client-id">ID: ' . htmlspecialchars($cliente['id'] ?? '') . '</div>';
+                                    echo '    <div class="client-id">Cliente | ID: ' . htmlspecialchars($cliente['id'] ?? '') . (!empty($cliente['login']) ? ' | Login: ' . htmlspecialchars($cliente['login'], ENT_QUOTES, 'UTF-8') : '') . '</div>';
                                     echo '  </div>';
                                     echo '  <div class="action-buttons">';
-                                    echo '    <button type="button" class="btn-small btn-remove" onclick="removerCliente(' . $cliente['id'] . ', \'' . addslashes($cliente['nome'] ?? '') . '\')">🗑️ Remover</button>';
+                                    echo '    <button type="button" class="btn-small btn-remove" onclick="removerCliente(' . $cliente['id'] . ', \'' . addslashes($cliente['nome'] ?? '') . '\', \'exc\')">Remover</button>';
                                     echo '  </div>';
                                     echo '</div>';
                                 }
+                            }
+                            if (isset($dadosAdicionalEditar) && $dadosAdicionalEditar && mysqli_num_rows($dadosAdicionalEditar) > 0) {
+                                mysqli_data_seek($dadosAdicionalEditar, 0);
+                                while ($cliente = mysqli_fetch_assoc($dadosAdicionalEditar)) {
+                                    $countAtr++;
+                                    $nomeAdicional = $cliente['nome'] ?? $cliente['username'] ?? $cliente['login'] ?? '';
+                                    $loginAdicional = $cliente['username'] ?? $cliente['login'] ?? '';
+                                    echo '<div class="client-item" data-search="' . strtolower($nomeAdicional . ' ' . $loginAdicional . ' adicional') . '">';
+                                    echo '  <div class="client-info">';
+                                    echo '    <div class="client-name">' . htmlspecialchars($nomeAdicional, ENT_QUOTES, 'UTF-8') . '</div>';
+                                    echo '    <div class="client-id">Adicional | ID: ' . htmlspecialchars($cliente['id'] ?? '') . ($loginAdicional ? ' | Login: ' . htmlspecialchars($loginAdicional, ENT_QUOTES, 'UTF-8') : '') . '</div>';
+                                    echo '  </div>';
+                                    echo '  <div class="action-buttons">';
+                                    echo '    <button type="button" class="btn-small btn-remove" onclick="removerCliente(' . $cliente['id'] . ', \'' . addslashes($nomeAdicional) . '\', \'exca\')">Remover</button>';
+                                    echo '  </div>';
+                                    echo '</div>';
+                                }
+                            }
+                            if ($countAtr > 0) {
                                 echo '<script>document.getElementById("countAtribuido").textContent = ' . $countAtr . ';</script>';
                             } else {
                                 echo '<div class="empty-state">';
-                                echo '  <div class="empty-state-icon">📭</div>';
-                                echo '  <p>Nenhum cliente atribuído</p>';
+                                echo '  <div class="empty-state-icon">-</div>';
+                                echo '  <p>Nenhum cliente atribuido</p>';
                                 echo '</div>';
                             }
                             ?>
@@ -607,33 +635,38 @@ function mapa_get_individual(cplatitude, cplongitude, servidor, latitudePadrao, 
 function filtrarClientes(tipo) {
     const input = tipo === 'disponivel' ? document.getElementById('searchDisponivel') : document.getElementById('searchAtribuido');
     const container = tipo === 'disponivel' ? document.getElementById('clientesDisponiveis') : document.getElementById('clientesAtribuidos');
-    const filtro = input.value.toLowerCase();
+    const counter = tipo === 'disponivel' ? document.getElementById('countDisponivel') : document.getElementById('countAtribuido');
+    const filtro = (input.value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     const items = container.querySelectorAll('.client-item');
-    
+    const oldEmpty = container.querySelector('.search-empty-state');
+    if (oldEmpty) oldEmpty.remove();
+
     let visivel = 0;
     items.forEach(item => {
-        const search = item.getAttribute('data-search');
-        if (search.includes(filtro)) {
-            item.style.display = '';
-            visivel++;
-        } else {
-            item.style.display = 'none';
-        }
+        const search = (item.getAttribute('data-search') || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const match = !filtro || search.includes(filtro);
+        item.style.display = match ? '' : 'none';
+        if (match) visivel++;
     });
-    
+
+    if (counter && items.length > 0) {
+        counter.textContent = filtro ? visivel : items.length;
+    }
+
     if (visivel === 0 && filtro !== '') {
-        let emptyFound = container.querySelector('.empty-state');
-        if (!emptyFound) {
-            container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔍</div><p>Nenhum cliente encontrado</p></div>';
-        }
+        const empty = document.createElement('div');
+        empty.className = 'empty-state search-empty-state';
+        empty.innerHTML = '<div class="empty-state-icon">Busca</div><p>Nenhum cliente encontrado</p>';
+        container.appendChild(empty);
     }
 }
 
-function atribuirCliente(clienteId, clienteNome) {
+function atribuirCliente(clienteId, clienteNome, tipoAcao) {
+    tipoAcao = tipoAcao || 'adc';
     if (confirm('Atribuir cliente "' + clienteNome + '" a esta CTO?')) {
         const formData = new FormData();
-        formData.append('_tipoAcao', 'adc');
-        formData.append('idClienteCaixa', clienteId);
+        formData.append('_tipoAcao', tipoAcao);
+        formData.append(tipoAcao === 'adca' ? 'idAdicionalCaixa' : 'idClienteCaixa', clienteId);
         formData.append('_route', 'editar');
         formData.append('id', '<?php echo isset($ID) ? $ID : ""; ?>');
         
@@ -648,11 +681,12 @@ function atribuirCliente(clienteId, clienteNome) {
     }
 }
 
-function removerCliente(clienteId, clienteNome) {
+function removerCliente(clienteId, clienteNome, tipoAcao) {
+    tipoAcao = tipoAcao || 'exc';
     if (confirm('Remover cliente "' + clienteNome + '" desta CTO?')) {
         const formData = new FormData();
-        formData.append('_tipoAcao', 'exc');
-        formData.append('idClienteCaixa', clienteId);
+        formData.append('_tipoAcao', tipoAcao);
+        formData.append(tipoAcao === 'exca' ? 'idAdicionalCaixa' : 'idClienteCaixa', clienteId);
         formData.append('_route', 'editar');
         formData.append('id', '<?php echo isset($ID) ? $ID : ""; ?>');
         

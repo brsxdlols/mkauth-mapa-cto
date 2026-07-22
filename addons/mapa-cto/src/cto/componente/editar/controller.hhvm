@@ -107,6 +107,7 @@ $numeroPortasLivres = 0;
 $nomeCaixaEditar = '';
 $clientesCadastrados = [];
 $adicionalCadastrados = [];
+$todosClientesLista = [];
 $textoSubTitulo = '';
 
 if (isset($dadosCaixa) && $dadosCaixa && mysqli_num_rows($dadosCaixa) > 0) {
@@ -174,6 +175,32 @@ if (isset($dadosCaixa) && $dadosCaixa && mysqli_num_rows($dadosCaixa) > 0) {
     // Carregar TODOS os clientes para seleção
     if (function_exists('tabelaCliente')) {
         $todosClientes = tabelaCliente($connection, $table_name, null, null, 'nome');
+        if ($todosClientes && mysqli_num_rows($todosClientes) > 0) {
+            mysqli_data_seek($todosClientes, 0);
+            while ($cliente = mysqli_fetch_assoc($todosClientes)) {
+                $cliente['_tipo_cliente'] = 'cliente';
+                $cliente['_acao_adicionar'] = 'adc';
+                $cliente['_acao_remover'] = 'exc';
+                $cliente['_label_tipo'] = 'Cliente';
+                $todosClientesLista[] = $cliente;
+            }
+        }
+    }
+
+    if (function_exists('tabelaAdicional')) {
+        $todosAdicionais = tabelaAdicional($connection, $table_name, null, null, 'nome');
+        if ($todosAdicionais && mysqli_num_rows($todosAdicionais) > 0) {
+            mysqli_data_seek($todosAdicionais, 0);
+            while ($adicional = mysqli_fetch_assoc($todosAdicionais)) {
+                $adicional['_tipo_cliente'] = 'adicional';
+                $adicional['_acao_adicionar'] = 'adca';
+                $adicional['_acao_remover'] = 'exca';
+                $adicional['_label_tipo'] = 'Adicional';
+                $adicional['nome'] = $adicional['nome'] ?? $adicional['username'] ?? $adicional['login'] ?? '';
+                $adicional['login'] = $adicional['username'] ?? $adicional['login'] ?? '';
+                $todosClientesLista[] = $adicional;
+            }
+        }
     }
 }
 
