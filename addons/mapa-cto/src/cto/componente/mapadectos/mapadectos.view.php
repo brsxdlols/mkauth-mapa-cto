@@ -501,12 +501,13 @@
                 grid-template-columns: 1fr;
             }
         }
-        .cto-hover-tooltip{font-family:Arial,sans-serif;min-width:240px;max-width:340px;color:#1f2937}
+        .gm-style .gm-style-iw-c,.gm-style .gm-style-iw-d{max-height:none!important;overflow:visible!important}
+        .cto-hover-tooltip{font-family:Arial,sans-serif;min-width:320px;max-width:min(720px,70vw);color:#1f2937}
         .cto-hover-title{font-weight:700;color:#4f63d8;margin-bottom:4px}
         .cto-hover-address{font-size:12px;color:#4b5563;margin-bottom:6px}
         .cto-hover-counts{font-size:12px;font-weight:700;margin-bottom:8px;color:#111827}
-        .cto-hover-clients{display:grid;gap:4px;max-height:220px;overflow:auto}
-        .cto-hover-client{display:grid;grid-template-columns:10px minmax(95px,1fr) minmax(70px,.8fr) auto;gap:5px;align-items:center;font-size:11px;border-top:1px solid #eef2f7;padding-top:4px}
+        .cto-hover-clients{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:4px 10px;overflow:visible}
+        .cto-hover-client{display:grid;grid-template-columns:10px minmax(100px,1fr) minmax(58px,.7fr) auto;gap:5px;align-items:center;font-size:11px;border-top:1px solid #eef2f7;padding-top:4px;min-width:0}
         .cto-hover-dot{width:7px;height:7px;border-radius:50%;background:#ef4444}
         .cto-hover-client.online .cto-hover-dot{background:#10b981}
         .cto-hover-name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -590,7 +591,7 @@
             if (!clientes.length) {
                 return '<div class="cto-hover-empty">Nenhum cliente atribuido</div>';
             }
-            const rows = clientes.slice(0, 12).map(cliente => {
+            const rows = clientes.map(cliente => {
                 const statusClass = cliente.status === 'online' ? 'online' : 'offline';
                 const tipo = cliente.tipo ? `<span class="cto-hover-type">${escapeHtml(cliente.tipo)}</span>` : '';
                 return `<div class="cto-hover-client ${statusClass}">
@@ -600,8 +601,7 @@
                     ${tipo}
                 </div>`;
             }).join('');
-            const resto = clientes.length > 12 ? `<div class="cto-hover-more">+${clientes.length - 12} cliente(s)</div>` : '';
-            return `<div class="cto-hover-clients">${rows}${resto}</div>`;
+            return `<div class="cto-hover-clients">${rows}</div>`;
         }
 
         // Inicializar o mapa
@@ -641,8 +641,8 @@
             let totalOnlineVisiveis = 0;
             let totalOfflineVisiveis = 0;
             const hoverInfoWindow = new google.maps.InfoWindow({
-                disableAutoPan: true,
-                maxWidth: 240
+                disableAutoPan: false,
+                maxWidth: 760
             });
             ctosData.forEach(cto => {
                 // Verificar filtro
