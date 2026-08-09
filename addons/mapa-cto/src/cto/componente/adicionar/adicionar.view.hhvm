@@ -1,4 +1,15 @@
 <?php // A sessão já foi iniciada no app.hhvm ?>
+<?php
+$apOptions = array();
+if (isset($connection) && $connection) {
+    $apResult = mysqli_query($connection, "SELECT nome FROM mp_caixa WHERE tipo = 'AP' ORDER BY nome");
+    if ($apResult) {
+        while ($apRow = mysqli_fetch_assoc($apResult)) {
+            $apOptions[] = $apRow['nome'];
+        }
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -210,6 +221,11 @@
     <!-- Content -->
     <div class="content">
         <form id="form" name="form" method="post" action="#" autocomplete="off">
+            <datalist id="AP_OPTIONS">
+                <?php foreach ($apOptions as $apNome): ?>
+                    <option value="<?= htmlspecialchars($apNome, ENT_QUOTES, 'UTF-8') ?>"></option>
+                <?php endforeach; ?>
+            </datalist>
             <input type="hidden" name="_tipoAcao" id="_tipoAcao" value="ad" />
             <input type="hidden" name="_route" id="_route" value="adicionar" />
             <input type="hidden" name="LATITUDEPADRAO" id="LATITUDEPADRAO" value="<?= htmlspecialchars($LATITUDEPADRAO ?? '', ENT_QUOTES, 'UTF-8') ?>" />
@@ -249,7 +265,7 @@
                     <label for="TIPO">Tipo *</label>
                     <select id="TIPO" name="TIPO" required>
                         <option value="">Selecione...</option>
-                        <option value="FTHA">FTHA</option>
+                        <option value="FTTA">FTTA</option>
                         <option value="FTTB">FTTB</option>
                         <option value="FTTC">FTTC</option>
                         <option value="FTTD">FTTD</option>
@@ -263,6 +279,9 @@
                         <option value="LAN">LAN</option>
                         <option value="ETH">ETH</option>
                         <option value="CEO">CEO</option>
+                        <option value="AP">AP - Access Point Radio</option>
+                        <option value="STA">STA - Station Radio</option>
+                        <option value="TO">TO - Torre de Radio</option>
                     </select>
                 </div>
 
@@ -278,13 +297,13 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="OLT">OLT</label>
+                    <label for="OLT" id="OLT_LABEL">OLT</label>
                     <input type="text" id="OLT" name="OLT">
                 </div>
 
                 <!-- FSP -->
                 <div class="form-group">
-                    <label for="FSP">FSP</label>
+                    <label for="FSP" id="FSP_LABEL">FSP</label>
                     <input type="text" id="FSP" name="FSP">
                 </div>
             </div>
@@ -305,6 +324,45 @@ window.mapaProvider = <?php echo json_encode($mapProvider); ?>;
 
     window.keyGoogleMaps = <?php echo json_encode($keyGoogleMaps); ?>;
     window.mapaProvider = <?php echo json_encode($mapProvider); ?>;
+    (function () {
+        var tipo = document.getElementById('TIPO');
+        var oltLabel = document.getElementById('OLT_LABEL');
+        var fspLabel = document.getElementById('FSP_LABEL');
+        var olt = document.getElementById('OLT');
+        var fsp = document.getElementById('FSP');
+
+        function atualizarCamposRadio() {
+            var valor = tipo ? tipo.value : '';
+            if (valor === 'AP' || valor === 'STA' || valor === 'TO') {
+                oltLabel.innerHTML = 'Painel/Equipamento';
+                olt.placeholder = 'Ex: Painel setorial, Rocket, LiteBeam';
+                if (valor === 'STA') {
+                    fspLabel.innerHTML = 'AP vinculado';
+                    fsp.placeholder = 'Selecione ou digite o AP';
+                    fsp.setAttribute('list', 'AP_OPTIONS');
+                } else if (valor === 'AP') {
+                    fspLabel.innerHTML = 'Canal/Setor';
+                    fsp.placeholder = 'Ex: Setor 1 / 5.8GHz';
+                    fsp.removeAttribute('list');
+                } else {
+                    fspLabel.innerHTML = 'Estrutura/Setor';
+                    fsp.placeholder = 'Ex: Torre principal / setor norte';
+                    fsp.removeAttribute('list');
+                }
+            } else {
+                oltLabel.innerHTML = 'OLT';
+                olt.placeholder = '';
+                fspLabel.innerHTML = 'FSP';
+                fsp.placeholder = '';
+                fsp.removeAttribute('list');
+            }
+        }
+
+        if (tipo) {
+            tipo.addEventListener('change', atualizarCamposRadio);
+            atualizarCamposRadio();
+        }
+    })();
     // Função para abrir busca de endereço (integração com Google Maps)
     function abrirBuscaEndereco() {
         // Carregar Google Maps se ainda não estiver carregado

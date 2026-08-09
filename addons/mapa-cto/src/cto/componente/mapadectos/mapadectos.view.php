@@ -622,6 +622,40 @@
             return '#ef4444';
         }
 
+        function normalizarNomeCto(valor) {
+            return String(valor || '').trim().toLowerCase();
+        }
+
+        function isRadioTipo(tipo) {
+            return ['AP', 'STA', 'TO'].includes(String(tipo || '').toUpperCase());
+        }
+
+        function subtituloTipoCto(cto) {
+            const tipo = String(cto.tipo || '').toUpperCase();
+            if (tipo === 'AP') return 'AP - Access Point Radio';
+            if (tipo === 'STA') return 'STA - Station Radio';
+            if (tipo === 'TO') return 'TO - Torre de Radio';
+            return 'CTO - Caixa de Terminacao Optica';
+        }
+
+        function equipamentoLabelCto(cto) {
+            return isRadioTipo(cto.tipo) ? 'Painel/Equipamento' : 'OLT';
+        }
+
+        function vinculoLabelCto(cto) {
+            const tipo = String(cto.tipo || '').toUpperCase();
+            if (tipo === 'STA') return 'AP vinculado';
+            if (tipo === 'AP') return 'Canal/Setor';
+            if (tipo === 'TO') return 'Estrutura/Setor';
+            return 'FSP';
+        }
+
+        function ctoVisivelNoFiltro(cto) {
+            if (filtroAtual === 'comclientes' && cto.total_clientes === 0) return false;
+            if (filtroAtual === 'semclientes' && cto.total_clientes > 0) return false;
+            return true;
+        }
+
         function montarConteudoHover(cto) {
             return `
                 <div class="cto-hover-tooltip">
@@ -751,10 +785,7 @@
             });
             ctosData.forEach(cto => {
                 // Verificar filtro
-                if (filtroAtual === 'comclientes' && cto.total_clientes === 0) {
-                    return;
-                }
-                if (filtroAtual === 'semclientes' && cto.total_clientes > 0) {
+                if (!ctoVisivelNoFiltro(cto)) {
                     return;
                 }
 
@@ -794,7 +825,7 @@
                     <div class="cto-popup">
                         <div class="cto-popup-header">
                             <h3>${cto.nome}</h3>
-                            <p>CTO - Caixa de Terminação Óptica</p>
+                            <p>${subtituloTipoCto(cto)}</p>
                         </div>
                         
                         <div class="cto-popup-body">
@@ -813,8 +844,12 @@
                                     <span>${cto.sinal || 'N/A'}</span>
                                 </div>
                                 <div class="cto-tech-item">
-                                    <strong>OLT</strong>
+                                    <strong>${equipamentoLabelCto(cto)}</strong>
                                     <span>${cto.olt || 'N/A'}</span>
+                                </div>
+                                <div class="cto-tech-item">
+                                    <strong>${vinculoLabelCto(cto)}</strong>
+                                    <span>${cto.fsp || 'N/A'}</span>
                                 </div>
                             </div>
                             
@@ -910,7 +945,7 @@
             if (marcadores.length > 0) {
                 const bounds = new google.maps.LatLngBounds();
                 marcadores.forEach(marker => {
-                    bounds.extend(marker.getPosition());
+                    if (marker && typeof marker.getPosition === 'function') bounds.extend(marker.getPosition());
                 });
                 mapa.fitBounds(bounds);
             }
@@ -920,6 +955,7 @@
             document.getElementById('totalClientes').textContent = totalClientesVisiveis;
             document.getElementById('clientesOnline').textContent = totalOnlineVisiveis;
             document.getElementById('clientesOffline').textContent = totalOfflineVisiveis;
+            adicionarVinculosRadioGoogle();
         }
 
         function montarPainelCto(cto) {
@@ -931,7 +967,7 @@
                 <div class="cto-popup">
                     <div class="cto-popup-header">
                         <h3>${escapeHtml(cto.nome)}</h3>
-                        <p>CTO - Caixa de Terminacao Optica</p>
+                        <p>${escapeHtml(subtituloTipoCto(cto))}</p>
                     </div>
                     <div class="cto-popup-body">
                         <div class="cto-section">
@@ -941,7 +977,8 @@
                         <div class="cto-section cto-tech-grid">
                             <div class="cto-tech-item"><strong>Tipo</strong><span>${escapeHtml(cto.tipo || 'N/A')}</span></div>
                             <div class="cto-tech-item"><strong>Sinal</strong><span>${escapeHtml(cto.sinal || 'N/A')}</span></div>
-                            <div class="cto-tech-item"><strong>OLT</strong><span>${escapeHtml(cto.olt || 'N/A')}</span></div>
+                            <div class="cto-tech-item"><strong>${escapeHtml(equipamentoLabelCto(cto))}</strong><span>${escapeHtml(cto.olt || 'N/A')}</span></div>
+                            <div class="cto-tech-item"><strong>${escapeHtml(vinculoLabelCto(cto))}</strong><span>${escapeHtml(cto.fsp || 'N/A')}</span></div>
                         </div>
                         <div class="cto-section">
                             <div class="cto-label">Clientes Atribuidos</div>
@@ -989,8 +1026,7 @@
             const bounds = [];
 
             ctosData.forEach(cto => {
-                if (filtroAtual === 'comclientes' && cto.total_clientes === 0) return;
-                if (filtroAtual === 'semclientes' && cto.total_clientes > 0) return;
+                if (!ctoVisivelNoFiltro(cto)) return;
 
                 const lat = parseFloat(cto.latitude);
                 const lng = parseFloat(cto.longitude);
@@ -1020,6 +1056,69 @@
             document.getElementById('totalClientes').textContent = totalClientesVisiveis;
             document.getElementById('clientesOnline').textContent = totalOnlineVisiveis;
             document.getElementById('clientesOffline').textContent = totalOfflineVisiveis;
+            adicionarVinculosRadioOpenStreet();
+        }
+
+        function ctosValidasVisiveis() {
+            return ctosData.filter(cto => {
+                const lat = parseFloat(cto.latitude);
+                const lng = parseFloat(cto.longitude);
+                return ctoVisivelNoFiltro(cto) && !isNaN(lat) && !isNaN(lng);
+            });
+        }
+
+        function paresStaAp() {
+            const visiveis = ctosValidasVisiveis();
+            const aps = {};
+            visiveis.forEach(cto => {
+                if (String(cto.tipo || '').toUpperCase() === 'AP') {
+                    aps[normalizarNomeCto(cto.nome)] = cto;
+                }
+            });
+            return visiveis
+                .filter(cto => String(cto.tipo || '').toUpperCase() === 'STA' && normalizarNomeCto(cto.fsp))
+                .map(sta => ({sta: sta, ap: aps[normalizarNomeCto(sta.fsp)]}))
+                .filter(par => !!par.ap);
+        }
+
+        function adicionarVinculosRadioGoogle() {
+            if (!window.google || !google.maps || !mapa) return;
+            paresStaAp().forEach(par => {
+                const linha = new google.maps.Polyline({
+                    path: [
+                        {lat: parseFloat(par.sta.latitude), lng: parseFloat(par.sta.longitude)},
+                        {lat: parseFloat(par.ap.latitude), lng: parseFloat(par.ap.longitude)}
+                    ],
+                    geodesic: true,
+                    strokeColor: '#f59e0b',
+                    strokeOpacity: 0.9,
+                    strokeWeight: 3,
+                    icons: [{
+                        icon: {path: 'M 0,-1 0,1', strokeOpacity: 1, scale: 3},
+                        offset: '0',
+                        repeat: '14px'
+                    }],
+                    map: mapa
+                });
+                marcadores.push(linha);
+            });
+        }
+
+        function adicionarVinculosRadioOpenStreet() {
+            if (!window.L || !mapa) return;
+            paresStaAp().forEach(par => {
+                const linha = L.polyline([
+                    [parseFloat(par.sta.latitude), parseFloat(par.sta.longitude)],
+                    [parseFloat(par.ap.latitude), parseFloat(par.ap.longitude)]
+                ], {
+                    color: '#f59e0b',
+                    weight: 3,
+                    opacity: 0.9,
+                    dashArray: '8 8'
+                }).addTo(mapa);
+                linha.bindTooltip(escapeHtml(par.sta.nome + ' -> ' + par.ap.nome), {direction: 'center'});
+                marcadores.push(linha);
+            });
         }
 
         function abrirPainelCto(conteudo) {

@@ -21,10 +21,24 @@ function tabelaCaixa($connection, $table_name, $ID = null, $nome = null) {
 
     return $result;
 }
+
+function caixasTabelaExiste($connection, $table_name) {
+    $table = mysqli_real_escape_string($connection, $table_name);
+    $result = mysqli_query($connection, "SHOW TABLES LIKE '" . $table . "'");
+    return $result && mysqli_num_rows($result) > 0;
+}
+
+function caixasColunaExiste($connection, $table_name, $column_name) {
+    $table = mysqli_real_escape_string($connection, $table_name);
+    $column = mysqli_real_escape_string($connection, $column_name);
+    $result = mysqli_query($connection, "SHOW COLUMNS FROM `" . $table . "` LIKE '" . $column . "'");
+    return $result && mysqli_num_rows($result) > 0;
+}
     
   
 function countClientesCto($connection, $cto_name) {
     $count = 0;
+    $cto_name = mysqli_real_escape_string($connection, $cto_name);
 
     // Conta clientes
     if ($result = mysqli_query($connection, "SELECT COUNT(*) AS count FROM sis_cliente WHERE caixa_herm = '" . $cto_name . "' AND cli_ativado = 'S'")) {
@@ -35,13 +49,13 @@ function countClientesCto($connection, $cto_name) {
     }
 
     // Conta clientes adicionais
-    if ($result = mysqli_query($connection, "SELECT COUNT(*) AS count FROM sis_adicional "
-            . "INNER JOIN sis_cliente ON sis_adicional.login = sis_cliente.login "
-            . "WHERE sis_adicional.caixa_herm = '" . $cto_name . "' AND sis_cliente.cli_ativado = 'S'")) {
-        $row = mysqli_fetch_array($result);
-        $count += $row['count'];
-    } else {
-        $count += 0;
+    if (caixasTabelaExiste($connection, 'sis_adicional') && caixasColunaExiste($connection, 'sis_adicional', 'caixa_herm')) {
+        if ($result = mysqli_query($connection, "SELECT COUNT(*) AS count FROM sis_adicional "
+                . "INNER JOIN sis_cliente ON sis_adicional.login = sis_cliente.login "
+                . "WHERE sis_adicional.caixa_herm = '" . $cto_name . "' AND sis_cliente.cli_ativado = 'S'")) {
+            $row = mysqli_fetch_array($result);
+            $count += $row['count'];
+        }
     }
 
     return $count;
@@ -50,6 +64,7 @@ function countClientesCto($connection, $cto_name) {
 // Conta clientes que estão online em uma CTO
 function countClientesOnlineCto($connection, $cto_name) {
     $count = 0;
+    $cto_name = mysqli_real_escape_string($connection, $cto_name);
 
     // Conta clientes online
     if ($result = mysqli_query($connection, "SELECT login FROM sis_cliente WHERE caixa_herm = '" . $cto_name . "' AND cli_ativado = 'S'")) {
@@ -64,14 +79,16 @@ function countClientesOnlineCto($connection, $cto_name) {
     }
 
     // Conta clientes adicionais online
-    if ($result = mysqli_query($connection, "SELECT username FROM sis_adicional "
-            . "INNER JOIN sis_cliente ON sis_adicional.login = sis_cliente.login "
-            . "WHERE sis_adicional.caixa_herm = '" . $cto_name . "' AND sis_cliente.cli_ativado = 'S'")) {
-        $rowcount = mysqli_num_rows($result);
-        if ($rowcount > 0) {
-            while ($row = mysqli_fetch_array($result)) {
-                if (clienteConectado($connection, $row['username'])) {
-                    $count++;
+    if (caixasTabelaExiste($connection, 'sis_adicional') && caixasColunaExiste($connection, 'sis_adicional', 'caixa_herm')) {
+        if ($result = mysqli_query($connection, "SELECT username FROM sis_adicional "
+                . "INNER JOIN sis_cliente ON sis_adicional.login = sis_cliente.login "
+                . "WHERE sis_adicional.caixa_herm = '" . $cto_name . "' AND sis_cliente.cli_ativado = 'S'")) {
+            $rowcount = mysqli_num_rows($result);
+            if ($rowcount > 0) {
+                while ($row = mysqli_fetch_array($result)) {
+                    if (clienteConectado($connection, $row['username'])) {
+                        $count++;
+                    }
                 }
             }
         }
@@ -202,13 +219,27 @@ function obterNomesArmario($connection) {
   
 function vincularCaixaAdicional($connection, $idCliente, $nomeCaixa, $porta_splitter, $tipoAcao) {
     $tabela_cliente = 'sis_adicional';
+    if (!caixasTabelaExiste($connection, $tabela_cliente)) {
+        return "Tabela sis_adicional nao encontrada neste MK-AUTH.";
+    }
+    if (!caixasColunaExiste($connection, $tabela_cliente, 'caixa_herm')) {
+        return "Campo caixa_herm nao encontrado em sis_adicional.";
+    }
 
+    $idCliente = intval($idCliente);
+    $nomeCaixa = mysqli_real_escape_string($connection, $nomeCaixa);
+    $porta_splitter = mysqli_real_escape_string($connection, $porta_splitter);
     if ($tipoAcao == 'adca') {
         $sql = "UPDATE $tabela_cliente SET caixa_herm = '" . $nomeCaixa . "' WHERE ID = $idCliente";
     } else if ($tipoAcao == 'exca') {
         $sql = "UPDATE $tabela_cliente SET caixa_herm = null WHERE ID = $idCliente";
     } else if ($tipoAcao == 'edca') {
+        if (!caixasColunaExiste($connection, $tabela_cliente, 'porta_splitter')) {
+            return "Campo porta_splitter nao encontrado em sis_adicional.";
+        }
         $sql = "UPDATE $tabela_cliente SET porta_splitter = '" . $porta_splitter . "' WHERE ID = $idCliente";
+    } else {
+        return "Acao invalida.";
     }
 
     if (mysqli_query($connection, $sql)) {
@@ -258,17 +289,26 @@ function editarCliente($connection, $id, $coordenadas) {
 
 function tabelaAdicional($connection, $table_name, $nomeCaixa, $id, $orden = 'nome') {
     $tabela_adicional = 'sis_adicional';
-    //
+    if (!caixasTabelaExiste($connection, $tabela_adicional)) {
+        return false;
+    }
+
+    $temCaixaHerm = caixasColunaExiste($connection, $tabela_adicional, 'caixa_herm');
+    $temPortaSplitter = caixasColunaExiste($connection, $tabela_adicional, 'porta_splitter');
+    if (!$temCaixaHerm && $nomeCaixa != '') {
+        return false;
+    }
+
+    $orderBy = $temPortaSplitter ? 'porta_splitter' : (caixasColunaExiste($connection, $tabela_adicional, 'nome') ? 'nome' : 'id');
     if ($nomeCaixa != '') {
-        $result = mysqli_query($connection, "SELECT * FROM $tabela_adicional WHERE caixa_herm = '" . $nomeCaixa . "' ORDER BY porta_splitter");
+        $nomeCaixa = mysqli_real_escape_string($connection, $nomeCaixa);
+        $result = mysqli_query($connection, "SELECT * FROM $tabela_adicional WHERE caixa_herm = '" . $nomeCaixa . "' ORDER BY $orderBy");
     } elseif ($id != '') {
+        $id = intval($id);
         $result = mysqli_query($connection, "SELECT * FROM $tabela_adicional WHERE id = '" . $id . "' ");
     } else {
-        if ($orden == 'id') {
-            $result = mysqli_query($connection, "SELECT * FROM $tabela_adicional ") or die("A tabela $tabela_adicional nao existe!");
-        } else {
-            $result = mysqli_query($connection, "SELECT * FROM $tabela_adicional  ") or die("A tabela $tabela_adicional nao existe!");
-        }
+        $ordenSeguro = ($orden == 'id' || caixasColunaExiste($connection, $tabela_adicional, $orden)) ? $orden : $orderBy;
+        $result = mysqli_query($connection, "SELECT * FROM $tabela_adicional ORDER BY $ordenSeguro");
     }
 
     return $result;
@@ -305,9 +345,36 @@ function adicionarCaixa($connection, $table_name, $NOME, $LATITUDE, $LONGITUDE, 
   }
 
 function editarCaixa($connection, $table_name, $ID, $NOME, $LATITUDE, $LONGITUDE, $ENDERECO, $TIPO, $CAPACIDADE, $SINAL, $OLT, $FSP) {
+    $ID = intval($ID);
+    $novoNomeRaw = $NOME;
+    $nomeAntigo = '';
+    $resultAntigo = mysqli_query($connection, "SELECT nome FROM $table_name WHERE ID = $ID LIMIT 1");
+    if ($resultAntigo && $rowAntigo = mysqli_fetch_assoc($resultAntigo)) {
+        $nomeAntigo = $rowAntigo['nome'] ?? '';
+    }
+
+    $NOME = mysqli_real_escape_string($connection, $NOME);
+    $LATITUDE = mysqli_real_escape_string($connection, $LATITUDE);
+    $LONGITUDE = mysqli_real_escape_string($connection, $LONGITUDE);
+    $ENDERECO = mysqli_real_escape_string($connection, $ENDERECO);
+    $TIPO = mysqli_real_escape_string($connection, $TIPO);
+    $CAPACIDADE = mysqli_real_escape_string($connection, $CAPACIDADE);
+    $SINAL = mysqli_real_escape_string($connection, $SINAL);
+    $OLT = mysqli_real_escape_string($connection, $OLT);
+    $FSP = mysqli_real_escape_string($connection, $FSP);
+
     $sql = "UPDATE $table_name SET NOME = '" . $NOME . "', LATITUDE = '" . $LATITUDE . "', LONGITUDE = '" . $LONGITUDE . "', ENDERECO = '" . $ENDERECO . "', TIPO = '" . $TIPO . "', CAPACIDADE = '" . $CAPACIDADE . "', SINAL = '" . $SINAL . "', OLT = '" . $OLT . "', FSP = '" . $FSP . "' WHERE ID = $ID";
 
     if (mysqli_query($connection, $sql)) {
+        if ($nomeAntigo !== '' && $nomeAntigo !== $novoNomeRaw) {
+            $nomeAntigoSafe = mysqli_real_escape_string($connection, $nomeAntigo);
+            if (caixasColunaExiste($connection, 'sis_cliente', 'caixa_herm')) {
+                mysqli_query($connection, "UPDATE sis_cliente SET caixa_herm = '" . $NOME . "' WHERE caixa_herm = '" . $nomeAntigoSafe . "'");
+            }
+            if (caixasTabelaExiste($connection, 'sis_adicional') && caixasColunaExiste($connection, 'sis_adicional', 'caixa_herm')) {
+                mysqli_query($connection, "UPDATE sis_adicional SET caixa_herm = '" . $NOME . "' WHERE caixa_herm = '" . $nomeAntigoSafe . "'");
+            }
+        }
         $reposta = "";
     } else {
         $reposta = "Error: " . $sql . "<br>" . mysqli_error($connection);
@@ -337,16 +404,16 @@ function criarTabelaMp_Caixas($connection, $table_name) {
     // Cria uma tabela de dados usando sql
     $sql = "CREATE TABLE $table_name (
             id INT(11) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-            nome VARCHAR(20) NOT NULL,
+            nome VARCHAR(128) NOT NULL,
             latitude VARCHAR(20) NOT NULL,
             longitude VARCHAR(20) NOT NULL,
             numcaixa VARCHAR(10) NOT NULL,
-            endereco VARCHAR(80) NOT NULL,
-            tipo VARCHAR(10) NOT NULL,
-            capacidade VARCHAR(2) NOT NULL,
-            sinal VARCHAR(6) NOT NULL,
-            olt VARCHAR(15) NOT NULL,
-            fsp VARCHAR(6) NOT NULL
+            endereco VARCHAR(255) NOT NULL,
+            tipo VARCHAR(20) NOT NULL,
+            capacidade VARCHAR(5) NOT NULL,
+            sinal VARCHAR(20) NOT NULL,
+            olt VARCHAR(128) NOT NULL,
+            fsp VARCHAR(128) NOT NULL
             ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1";
 
     if (mysqli_query($connection, $sql)) {
@@ -410,15 +477,20 @@ function alterTabelaMp_Caixas($connection, $table_name) {
     $sql = "
         ALTER TABLE $table_name
         ADD COLUMN IF NOT EXISTS numcaixa VARCHAR(10) NOT NULL AFTER longitude,
-        ADD COLUMN IF NOT EXISTS endereco VARCHAR(50) NOT NULL AFTER tipo,
-        ADD COLUMN IF NOT EXISTS capacidade VARCHAR(2) NOT NULL AFTER endereco,
-        ADD COLUMN IF NOT EXISTS sinal VARCHAR(6) NOT NULL AFTER capacidade,
-        ADD COLUMN IF NOT EXISTS olt VARCHAR(15) NOT NULL AFTER sinal,
-        ADD COLUMN IF NOT EXISTS fsp VARCHAR(8) NOT NULL AFTER olt,
-        CHANGE nome nome VARCHAR(20) NOT NULL,
-        CHANGE latitude latitude VARCHAR(10) NOT NULL,
-        CHANGE longitude longitude VARCHAR(10) NOT NULL,
-        CHANGE tipo tipo VARCHAR(10) NOT NULL
+        ADD COLUMN IF NOT EXISTS endereco VARCHAR(255) NOT NULL AFTER tipo,
+        ADD COLUMN IF NOT EXISTS capacidade VARCHAR(5) NOT NULL AFTER endereco,
+        ADD COLUMN IF NOT EXISTS sinal VARCHAR(20) NOT NULL AFTER capacidade,
+        ADD COLUMN IF NOT EXISTS olt VARCHAR(128) NOT NULL AFTER sinal,
+        ADD COLUMN IF NOT EXISTS fsp VARCHAR(128) NOT NULL AFTER olt,
+        CHANGE nome nome VARCHAR(128) NOT NULL,
+        CHANGE latitude latitude VARCHAR(20) NOT NULL,
+        CHANGE longitude longitude VARCHAR(20) NOT NULL,
+        CHANGE endereco endereco VARCHAR(255) NOT NULL,
+        CHANGE tipo tipo VARCHAR(20) NOT NULL,
+        CHANGE capacidade capacidade VARCHAR(5) NOT NULL,
+        CHANGE sinal sinal VARCHAR(20) NOT NULL,
+        CHANGE olt olt VARCHAR(128) NOT NULL,
+        CHANGE fsp fsp VARCHAR(128) NOT NULL
     ";
 
     $response = mysqli_query($connection, $sql);

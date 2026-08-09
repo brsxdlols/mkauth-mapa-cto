@@ -13,6 +13,14 @@ if (isset($connection) && $connection) {
     if ($column_check && mysqli_num_rows($column_check) > 0) {
         $has_cto_id = true;
     }
+    $has_sis_adicional = false;
+    $has_sis_adicional_caixa = false;
+    $table_check = mysqli_query($connection, "SHOW TABLES LIKE 'sis_adicional'");
+    if ($table_check && mysqli_num_rows($table_check) > 0) {
+        $has_sis_adicional = true;
+        $adicional_caixa_check = mysqli_query($connection, "SHOW COLUMNS FROM sis_adicional LIKE 'caixa_herm'");
+        $has_sis_adicional_caixa = $adicional_caixa_check && mysqli_num_rows($adicional_caixa_check) > 0;
+    }
 
     // Buscar todas as CTOs com dados de clientes
     $sql = "SELECT 
@@ -50,14 +58,17 @@ if (isset($connection) && $connection) {
             $count_row = $count_result ? mysqli_fetch_assoc($count_result) : ['total' => 0];
             $total_clientes_principal = intval($count_row['total'] ?? 0);
 
-            $count_adicional_sql = "SELECT COUNT(DISTINCT sa.id) as total
-                          FROM sis_adicional sa
-                          LEFT JOIN sis_cliente scp ON scp.login = sa.login
-                          WHERE " . $adicional_where_sa . "
-                          AND (scp.id IS NULL OR scp.cli_ativado = 's')";
-            $count_adicional_result = mysqli_query($connection, $count_adicional_sql);
-            $count_adicional_row = $count_adicional_result ? mysqli_fetch_assoc($count_adicional_result) : ['total' => 0];
-            $total_adicionais = intval($count_adicional_row['total'] ?? 0);
+            $total_adicionais = 0;
+            if ($has_sis_adicional && $has_sis_adicional_caixa) {
+                $count_adicional_sql = "SELECT COUNT(DISTINCT sa.id) as total
+                              FROM sis_adicional sa
+                              LEFT JOIN sis_cliente scp ON scp.login = sa.login
+                              WHERE " . $adicional_where_sa . "
+                              AND (scp.id IS NULL OR scp.cli_ativado = 's')";
+                $count_adicional_result = mysqli_query($connection, $count_adicional_sql);
+                $count_adicional_row = $count_adicional_result ? mysqli_fetch_assoc($count_adicional_result) : ['total' => 0];
+                $total_adicionais = intval($count_adicional_row['total'] ?? 0);
+            }
             $total_clientes = $total_clientes_principal + $total_adicionais;
             
             $online_sql = "SELECT COUNT(DISTINCT sc.id) as total FROM sis_cliente sc
@@ -68,15 +79,19 @@ if (isset($connection) && $connection) {
             $online_row = $online_result ? mysqli_fetch_assoc($online_result) : ['total' => 0];
             $total_online_principal = intval($online_row['total'] ?? 0);
 
-            $online_adicional_sql = "SELECT COUNT(DISTINCT sa.id) as total
-                          FROM sis_adicional sa
-                          INNER JOIN radacct ra ON ra.username = sa.username AND ra.acctstoptime IS NULL
-                          LEFT JOIN sis_cliente scp ON scp.login = sa.login
-                          WHERE " . $adicional_where_sa . "
-                          AND (scp.id IS NULL OR scp.cli_ativado = 's')";
-            $online_adicional_result = mysqli_query($connection, $online_adicional_sql);
-            $online_adicional_row = $online_adicional_result ? mysqli_fetch_assoc($online_adicional_result) : ['total' => 0];
-            $total_online = $total_online_principal + intval($online_adicional_row['total'] ?? 0);
+            $total_online_adicional = 0;
+            if ($has_sis_adicional && $has_sis_adicional_caixa) {
+                $online_adicional_sql = "SELECT COUNT(DISTINCT sa.id) as total
+                              FROM sis_adicional sa
+                              INNER JOIN radacct ra ON ra.username = sa.username AND ra.acctstoptime IS NULL
+                              LEFT JOIN sis_cliente scp ON scp.login = sa.login
+                              WHERE " . $adicional_where_sa . "
+                              AND (scp.id IS NULL OR scp.cli_ativado = 's')";
+                $online_adicional_result = mysqli_query($connection, $online_adicional_sql);
+                $online_adicional_row = $online_adicional_result ? mysqli_fetch_assoc($online_adicional_result) : ['total' => 0];
+                $total_online_adicional = intval($online_adicional_row['total'] ?? 0);
+            }
+            $total_online = $total_online_principal + $total_online_adicional;
             
             $total_offline = max(0, $total_clientes - $total_online);
             
@@ -101,28 +116,30 @@ if (isset($connection) && $connection) {
                 }
             }
 
-            $adicionais_sql = "SELECT sa.id,
-                            COALESCE(NULLIF(sa.nome, ''), sa.username, sa.login) as nome,
-                            sa.username as login,
-                            'Adicional' as tipo_cliente,
-                            CASE WHEN ra.radacctid IS NOT NULL THEN 'online' ELSE 'offline' END as status
-                            FROM sis_adicional sa
-                            LEFT JOIN radacct ra ON ra.username = sa.username AND ra.acctstoptime IS NULL
-                            LEFT JOIN sis_cliente scp ON scp.login = sa.login
-                            WHERE " . $adicional_where_sa . "
-                            AND (scp.id IS NULL OR scp.cli_ativado = 's')
-                            ORDER BY nome";
-            $adicionais_result = mysqli_query($connection, $adicionais_sql);
+            if ($has_sis_adicional && $has_sis_adicional_caixa) {
+                $adicionais_sql = "SELECT sa.id,
+                                COALESCE(NULLIF(sa.nome, ''), sa.username, sa.login) as nome,
+                                sa.username as login,
+                                'Adicional' as tipo_cliente,
+                                CASE WHEN ra.radacctid IS NOT NULL THEN 'online' ELSE 'offline' END as status
+                                FROM sis_adicional sa
+                                LEFT JOIN radacct ra ON ra.username = sa.username AND ra.acctstoptime IS NULL
+                                LEFT JOIN sis_cliente scp ON scp.login = sa.login
+                                WHERE " . $adicional_where_sa . "
+                                AND (scp.id IS NULL OR scp.cli_ativado = 's')
+                                ORDER BY nome";
+                $adicionais_result = mysqli_query($connection, $adicionais_sql);
 
-            if ($adicionais_result) {
-                while ($cliente = mysqli_fetch_assoc($adicionais_result)) {
-                    $clientes_list[] = array(
-                        'id' => $cliente['id'],
-                        'nome' => $cliente['nome'],
-                        'login' => $cliente['login'],
-                        'status' => $cliente['status'],
-                        'tipo' => $cliente['tipo_cliente']
-                    );
+                if ($adicionais_result) {
+                    while ($cliente = mysqli_fetch_assoc($adicionais_result)) {
+                        $clientes_list[] = array(
+                            'id' => $cliente['id'],
+                            'nome' => $cliente['nome'],
+                            'login' => $cliente['login'],
+                            'status' => $cliente['status'],
+                            'tipo' => $cliente['tipo_cliente']
+                        );
+                    }
                 }
             }
             
