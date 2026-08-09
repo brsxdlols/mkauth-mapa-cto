@@ -503,6 +503,8 @@
         }
         .gm-style .gm-style-iw-c,.gm-style .gm-style-iw-d{max-height:none!important;overflow:visible!important}
         .cto-hover-tooltip{font-family:Arial,sans-serif;min-width:320px;max-width:min(720px,70vw);color:#1f2937}
+        .leaflet-popup-content-wrapper,.leaflet-popup-content{max-height:none!important;overflow:visible!important}
+        .cto-leaflet-marker svg{display:block}
         .cto-hover-title{font-weight:700;color:#4f63d8;margin-bottom:4px}
         .cto-hover-address{font-size:12px;color:#4b5563;margin-bottom:6px}
         .cto-hover-counts{font-size:12px;font-weight:700;margin-bottom:8px;color:#111827}
@@ -563,16 +565,26 @@
         </div>
     </div>
 
-    <!-- Google Maps API -->
+    <!-- Map provider API -->
     <?php
     require_once dirname(__FILE__) . '/../../config/api.php';
     $api_key = getGoogleMapsApiKey();
+    $map_provider = function_exists('getSystemMapProvider') ? getSystemMapProvider() : (!empty($api_key) ? 'google' : 'openstreet');
+    if ($map_provider === 'google' && empty($api_key)) {
+        $map_provider = 'openstreet';
+    }
     ?>
+    <?php if ($map_provider === 'google' && !empty($api_key)): ?>
     <script src="https://maps.googleapis.com/maps/api/js?key=<?php echo htmlspecialchars($api_key); ?>"></script>
+    <?php else: ?>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <?php endif; ?>
 
     <script>
         // Dados das CTOs
         const ctosData = <?php echo $ctos_json; ?>;
+        const MAP_PROVIDER = <?php echo json_encode($map_provider); ?>;
         let mapa = null;
         let marcadores = [];
         let filtroAtual = 'todos';
@@ -604,8 +616,60 @@
             return `<div class="cto-hover-clients">${rows}</div>`;
         }
 
+        function corMarcadorCto(cto) {
+            if (cto.total_clientes === 0) return '#9ca3af';
+            if (cto.clientes_online > 0) return '#10b981';
+            return '#ef4444';
+        }
+
+        function montarConteudoHover(cto) {
+            return `
+                <div class="cto-hover-tooltip">
+                    <div class="cto-hover-title">${escapeHtml(cto.nome)}</div>
+                    <div class="cto-hover-address">${escapeHtml(cto.endereco || 'Sem endereco')}</div>
+                    <div class="cto-hover-counts">${cto.total_clientes} clientes | ${cto.clientes_online} online | ${cto.clientes_offline} offline</div>
+                    ${montarResumoClientesHover(cto)}
+                </div>
+            `;
+        }
+
+        function markerSvg(cor) {
+            return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 60" width="40" height="60">
+                <path d="M20 0C8.95 0 0 8.95 0 20c0 11.05 20 40 20 40s20-28.95 20-40C40 8.95 31.05 0 20 0z" fill="${cor}"/>
+                <circle cx="20" cy="20" r="8" fill="white"/>
+            </svg>`;
+        }
+
+        function limparMarcadores() {
+            marcadores.forEach(marker => {
+                if (marker && typeof marker.setMap === 'function') marker.setMap(null);
+                else if (marker && typeof marker.remove === 'function') marker.remove();
+            });
+            marcadores = [];
+        }
+
+        function adicionarMarcadores() {
+            if (MAP_PROVIDER === 'openstreet') {
+                adicionarMarcadoresOpenStreet();
+                return;
+            }
+            adicionarMarcadoresGoogle();
+        }
+
         // Inicializar o mapa
         function initializeMap() {
+            if (MAP_PROVIDER === 'openstreet') {
+                initializeOpenStreetMap();
+                return;
+            }
+            if (!window.google || !window.google.maps) {
+                document.getElementById('map').innerHTML = '<div style="padding:20px;color:#b91c1c;font-weight:700">Nao foi possivel carregar o Google Maps. Verifique a chave ou altere o recurso do sistema para OpenStreetMap.</div>';
+                return;
+            }
+            initializeGoogleMap();
+        }
+
+        function initializeGoogleMap() {
             // Centro padrão (Brasil)
             const centro = { lat: -10.5, lng: -51.9 };
 
@@ -632,10 +696,51 @@
         }
 
         // Adicionar marcadores no mapa
-        function adicionarMarcadores() {
+        function criarLeafletIcon(cor) {
+            return L.divIcon({
+                className: 'cto-leaflet-marker',
+                html: markerSvg(cor),
+                iconSize: [40, 60],
+                iconAnchor: [20, 60],
+                popupAnchor: [0, -56]
+            });
+        }
+
+        function initializeOpenStreetMap() {
+            if (!window.L) {
+                document.getElementById('map').innerHTML = '<div style="padding:20px;color:#b91c1c;font-weight:700">Nao foi possivel carregar o OpenStreetMap.</div>';
+                return;
+            }
+
+            const centro = [-10.5, -51.9];
+            const camadas = {
+                mapa: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; OpenStreetMap'
+                }),
+                satelite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    maxZoom: 19,
+                    attribution: 'Tiles &copy; Esri'
+                })
+            };
+
+            mapa = L.map('map', {
+                center: centro,
+                zoom: 4,
+                layers: [getCaixasMapMode() === 'satelite' ? camadas.satelite : camadas.mapa],
+                zoomControl: true
+            });
+
+            L.control.layers({'Mapa': camadas.mapa, 'Satelite': camadas.satelite}, null, {collapsed: false}).addTo(mapa);
+            mapa.on('baselayerchange', event => setCaixasMapMode(event.name === 'Satelite' ? 'satelite' : 'mapa'));
+
+            adicionarMarcadores();
+            atualizarEstatisticas();
+        }
+
+        function adicionarMarcadoresGoogle() {
             // Limpar marcadores antigos
-            marcadores.forEach(marker => marker.setMap(null));
-            marcadores = [];
+            limparMarcadores();
 
             let totalClientesVisiveis = 0;
             let totalOnlineVisiveis = 0;
@@ -817,6 +922,106 @@
             document.getElementById('clientesOffline').textContent = totalOfflineVisiveis;
         }
 
+        function montarPainelCto(cto) {
+            const capacidade = parseInt(cto.capacidade) || 0;
+            const portasUtilizadas = parseInt(cto.portas_utilizadas) || 0;
+            const percentualUso = capacidade > 0 ? Math.min((portasUtilizadas / capacidade) * 100, 100) : 0;
+
+            return `
+                <div class="cto-popup">
+                    <div class="cto-popup-header">
+                        <h3>${escapeHtml(cto.nome)}</h3>
+                        <p>CTO - Caixa de Terminacao Optica</p>
+                    </div>
+                    <div class="cto-popup-body">
+                        <div class="cto-section">
+                            <div class="cto-label">Endereco</div>
+                            <div class="cto-text">${escapeHtml(cto.endereco || 'N/A')}</div>
+                        </div>
+                        <div class="cto-section cto-tech-grid">
+                            <div class="cto-tech-item"><strong>Tipo</strong><span>${escapeHtml(cto.tipo || 'N/A')}</span></div>
+                            <div class="cto-tech-item"><strong>Sinal</strong><span>${escapeHtml(cto.sinal || 'N/A')}</span></div>
+                            <div class="cto-tech-item"><strong>OLT</strong><span>${escapeHtml(cto.olt || 'N/A')}</span></div>
+                        </div>
+                        <div class="cto-section">
+                            <div class="cto-label">Clientes Atribuidos</div>
+                            <div class="cto-client-grid">
+                                <div class="cto-count-card cto-count-total"><strong>${cto.total_clientes}</strong><span>Total</span></div>
+                                <div class="cto-count-card cto-count-online"><strong>${cto.clientes_online}</strong><span>Online</span></div>
+                                <div class="cto-count-card cto-count-offline"><strong>${cto.clientes_offline}</strong><span>Offline</span></div>
+                            </div>
+                        </div>
+                        ${cto.clientes && cto.clientes.length > 0 ? `
+                        <div class="cto-section cto-client-list">
+                            <div class="cto-label">Lista de Clientes</div>
+                            <div class="cto-client-list-inner">
+                                ${cto.clientes.map(cliente => `
+                                    <div class="cto-client-row">
+                                        <span class="cto-client-name"><strong>${escapeHtml(cliente.nome)}</strong></span>
+                                        <span class="cto-client-login">${escapeHtml(cliente.login)}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : `<div class="cto-section cto-empty">Nenhum cliente atribuido</div>`}
+                        <div class="cto-section cto-section-full">
+                            <div class="cto-label">Capacidade de Portas</div>
+                            <div class="cto-progress-head">
+                                <span>${portasUtilizadas}/${capacidade} portas</span>
+                                <span>${cto.portas_livres} livres</span>
+                            </div>
+                            <div class="progress-bar"><div class="progress-fill" style="width: ${percentualUso}%;"></div></div>
+                        </div>
+                        <div class="cto-section cto-section-full" style="margin-bottom:0;">
+                            <a href="?_route=editar&id=${cto.id}" class="cto-edit">Editar CTO</a>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function adicionarMarcadoresOpenStreet() {
+            limparMarcadores();
+
+            let totalClientesVisiveis = 0;
+            let totalOnlineVisiveis = 0;
+            let totalOfflineVisiveis = 0;
+            const bounds = [];
+
+            ctosData.forEach(cto => {
+                if (filtroAtual === 'comclientes' && cto.total_clientes === 0) return;
+                if (filtroAtual === 'semclientes' && cto.total_clientes > 0) return;
+
+                const lat = parseFloat(cto.latitude);
+                const lng = parseFloat(cto.longitude);
+                if (isNaN(lat) || isNaN(lng)) return;
+
+                const marker = L.marker([lat, lng], {icon: criarLeafletIcon(corMarcadorCto(cto)), title: cto.nome}).addTo(mapa);
+                marker.bindTooltip(escapeHtml(cto.nome || ''), {direction: 'top', offset: [0, -48]});
+                marker.bindPopup(montarConteudoHover(cto), {
+                    maxWidth: 760,
+                    autoPan: true,
+                    closeButton: true,
+                    className: 'cto-hover-popup'
+                });
+                marker.on('mouseover', () => marker.openPopup());
+                marker.on('click', () => abrirPainelCto(montarPainelCto(cto)));
+
+                marcadores.push(marker);
+                bounds.push([lat, lng]);
+                totalClientesVisiveis += parseInt(cto.total_clientes);
+                totalOnlineVisiveis += parseInt(cto.clientes_online);
+                totalOfflineVisiveis += parseInt(cto.clientes_offline);
+            });
+
+            if (bounds.length > 0) mapa.fitBounds(bounds, {padding: [30, 30]});
+
+            document.getElementById('totalCtos').textContent = marcadores.length;
+            document.getElementById('totalClientes').textContent = totalClientesVisiveis;
+            document.getElementById('clientesOnline').textContent = totalOnlineVisiveis;
+            document.getElementById('clientesOffline').textContent = totalOfflineVisiveis;
+        }
+
         function abrirPainelCto(conteudo) {
             const mapElement = document.getElementById('map');
             if (!mapElement) return;
@@ -909,8 +1114,7 @@
                         ctosData.push(...novosDados);
                         
                         // Limpar marcadores antigos
-                        marcadores.forEach(marker => marker.setMap(null));
-                        marcadores = [];
+                        limparMarcadores();
                         
                         // Re-renderizar mapa
                         adicionarMarcadores();
