@@ -108,9 +108,9 @@ function getGoogleMapsApiKey() {
             if ($result && $result->num_rows > 0) {
                 $row = $result->fetch_assoc();
                 $valor = $row['valor'] ?? '';
-                $stmt->close();
                 
                 if (!empty($valor)) {
+                    $stmt->close();
                     return $valor;
                 }
             }
