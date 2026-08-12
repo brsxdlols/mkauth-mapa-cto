@@ -1,4 +1,4 @@
-<?php // A sessão já foi iniciada no app.hhvm ?>
+﻿<?php // A sesso j foi iniciada no app.hhvm ?>
 <?php
 $apOptions = array();
 if (isset($connection) && $connection) {
@@ -213,9 +213,9 @@ if (isset($connection) && $connection) {
 <div class="container">
     <!-- Header -->
     <div class="header">
-        <a href="?_route=inicio" class="btn-back">← Voltar à Listagem</a>
-        <h1>➕ Adicionar CTO</h1>
-        <p>Preencha os dados para adicionar uma nova Caixa de Terminação Óptica</p>
+        <a href="?_route=inicio" class="btn-back">&lt;- Voltar a Listagem</a>
+        <h1> Adicionar CTO</h1>
+        <p>Preencha os dados para adicionar uma nova Caixa de Terminacao Optica</p>
     </div>
 
     <!-- Content -->
@@ -238,9 +238,9 @@ if (isset($connection) && $connection) {
                     <input type="text" id="NOME" name="NOME" required>
                 </div>
 
-                <!-- Localização -->
+                <!-- Localizao -->
                 <div class="form-group full">
-                    <label>Localização</label>
+                    <label>Localizao</label>
                     <div class="coord-group">
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; flex: 1;">
                             <div>
@@ -250,13 +250,13 @@ if (isset($connection) && $connection) {
                                 <input type="text" id="LONGITUDE" name="LONGITUDE" placeholder="Longitude" required>
                             </div>
                         </div>
-                        <div class="map-icon" onclick="abrirBuscaEndereco()" title="Buscar no mapa">🗺️</div>
+                        <div class="map-icon" onclick="abrirBuscaEndereco()" title="Buscar no mapa"></div>
                     </div>
                 </div>
 
-                <!-- Endereço -->
+                <!-- Endereco -->
                 <div class="form-group full">
-                    <label for="ENDERECO">Endereço</label>
+                    <label for="ENDERECO">Endereco</label>
                     <textarea id="ENDERECO" name="ENDERECO"></textarea>
                 </div>
 
@@ -309,10 +309,10 @@ if (isset($connection) && $connection) {
             </div>
 
             <div class="buttons">
-                <button type="submit" class="btn btn-primary" onclick="document.getElementById('_tipoAcao').value='ad'">✓ Gravar CTO</button>
-                <button type="submit" class="btn btn-success" onclick="document.getElementById('_tipoAcao').value='adc'">✓ Gravar e Adicionar Outra</button>
-                <button type="reset" class="btn btn-secondary">🔄 Limpar</button>
-                <a href="?_route=inicio" class="btn btn-secondary">✕ Cancelar</a>
+                <button type="submit" class="btn btn-primary" onclick="document.getElementById('_tipoAcao').value='ad'"> Gravar CTO</button>
+                <button type="submit" class="btn btn-success" onclick="document.getElementById('_tipoAcao').value='adc'"> Gravar e Adicionar Outra</button>
+                <button type="reset" class="btn btn-secondary"> Limpar</button>
+                <a href="?_route=inicio" class="btn btn-secondary"> Cancelar</a>
             </div>
         </form>
     </div>
@@ -363,22 +363,22 @@ window.mapaProvider = <?php echo json_encode($mapProvider); ?>;
             atualizarCamposRadio();
         }
     })();
-    // Função para abrir busca de endereço (integração com Google Maps)
+    // Funo para abrir busca de endereo (integrao com Google Maps)
     function abrirBuscaEndereco() {
-        // Carregar Google Maps se ainda não estiver carregado
+        // Carregar Google Maps se ainda no estiver carregado
         if (!window.google || !window.google.maps) {
             const script = document.createElement('script');
             const apiKey = window.keyGoogleMaps || '';
             
             if (!apiKey) {
-                alert('⚠️ Chave da API do Google Maps não configurada. Por favor, configure em Configurações > Google Maps API');
+                alert(' Chave da API do Google Maps no configurada. Por favor, configure em Configuraes > Google Maps API');
                 return;
             }
             
             script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&language=pt-BR`;
             script.onload = () => criarModalMapa();
             script.onerror = () => {
-                alert('❌ Erro ao carregar Google Maps. Verifique a chave da API.');
+                alert(' Erro ao carregar Google Maps. Verifique a chave da API.');
             };
             document.head.appendChild(script);
         } else {
@@ -415,10 +415,10 @@ window.mapaProvider = <?php echo json_encode($mapProvider); ?>;
                 flex-direction: column;
                 box-sizing: border-box;
             ">
-                <h3 style="margin: 0 0 15px 0; color: #333; font-size: 18px;">🗺️ Buscar Endereço no Mapa</h3>
+                <h3 style="margin: 0 0 15px 0; color: #333; font-size: 18px;">Buscar Endereco no Mapa</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; flex: 0 0 auto;">
                     <div>
-                        <p style="color: #666; font-size: 13px; margin: 0 0 8px 0;">Digite o endereço:</p>
+                        <p style="color: #666; font-size: 13px; margin: 0 0 8px 0;">Digite o endereo:</p>
                         <input 
                             type="text" 
                             id="campoBuscaEndereco" 
@@ -448,7 +448,7 @@ window.mapaProvider = <?php echo json_encode($mapProvider); ?>;
                             transition: all 0.2s ease;
                             font-size: 13px;
                         " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 15px rgba(102, 126, 234, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow=''">
-                            🔍 Buscar
+                             Buscar
                         </button>
                     </div>
                 </div>
@@ -472,7 +472,7 @@ window.mapaProvider = <?php echo json_encode($mapProvider); ?>;
                         overflow: hidden;
                     ">
                         <div style="padding: 12px; border-bottom: 1px solid #e5e7eb; font-weight: 600; color: #333; font-size: 13px;">
-                            📍 Resultados
+                             Resultados
                         </div>
                         <div id="resultadoBusca" style="
                             flex: 1;
@@ -518,7 +518,7 @@ window.mapaProvider = <?php echo json_encode($mapProvider); ?>;
                         transition: all 0.2s ease;
                         display: none;
                     " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 15px rgba(16, 185, 129, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow=''">
-                        ✓ Confirmar
+                         Confirmar
                     </button>
                 </div>
             </div>
@@ -566,7 +566,7 @@ window.mapaProvider = <?php echo json_encode($mapProvider); ?>;
             let infoWindowAberta = null;
             window.mapaGeocodificacao = { geocoder: new google.maps.Geocoder(), mapa: mapa };
             
-            // Buscar endereço ao digitar
+            // Buscar endereo ao digitar
             const campoBusca = document.getElementById('campoBuscaEndereco');
             campoBusca.addEventListener('keyup', (e) => {
                 if (e.key !== 'Enter') return;
@@ -587,7 +587,7 @@ window.mapaProvider = <?php echo json_encode($mapProvider); ?>;
                         const address = results[0].formatted_address;
                         document.getElementById('ENDERECO').value = address;
                         
-                        // Mostrar botão Confirmar (Mapa - Reverse Geocoding)
+                        // Mostrar boto Confirmar (Mapa - Reverse Geocoding)
                         const btnConfirmar = document.getElementById('btnConfirmarEndereco');
                         if (btnConfirmar) {
                             btnConfirmar.style.display = 'block';
@@ -595,16 +595,16 @@ window.mapaProvider = <?php echo json_encode($mapProvider); ?>;
                         
                         document.getElementById('resultadoBusca').innerHTML = `
                             <div style="padding: 8px; background: #e8f5e9; border-radius: 6px; border-left: 4px solid #4caf50;">
-                                <div style="font-weight: 600; color: #2e7d32; font-size: 13px;">✅ Localização Selecionada</div>
+                                <div style="font-weight: 600; color: #2e7d32; font-size: 13px;"> Localizao Selecionada</div>
                                 <div style="color: #555; font-size: 12px; margin-top: 6px;">
-                                    <strong>Endereço:</strong><br>${address}<br><br>
+                                    <strong>Endereco:</strong><br>${address}<br><br>
                                     <strong>Coordenadas:</strong><br>
                                     Lat: ${lat} | Lon: ${lng}
                                 </div>
                             </div>
                         `;
                     } else {
-                        document.getElementById('resultadoBusca').innerHTML = '<div style="color: #d32f2f; font-size: 12px;">❌ Não foi possível obter o endereço</div>';
+                        document.getElementById('resultadoBusca').innerHTML = '<div style="color: #d32f2f; font-size: 12px;"> No foi possvel obter o endereo</div>';
                     }
                 });
                 
@@ -612,15 +612,15 @@ window.mapaProvider = <?php echo json_encode($mapProvider); ?>;
                 marcador = new google.maps.Marker({
                     position: e.latLng,
                     map: mapa,
-                    title: 'Localização Selecionada'
+                    title: 'Localizao Selecionada'
                 });
             });
             
-            // Armazenar função de busca globalmente
+            // Armazenar funo de busca globalmente
             window.buscarEndereco = function() {
                 const endereco = document.getElementById('campoBuscaEndereco').value.trim();
                 if (!endereco) {
-                    alert('Digite um endereço para buscar');
+                    alert('Digite um endereo para buscar');
                     return;
                 }
                 
@@ -635,7 +635,7 @@ window.mapaProvider = <?php echo json_encode($mapProvider); ?>;
                         document.getElementById('LONGITUDE').value = lng.toFixed(4);
                         document.getElementById('ENDERECO').value = result.formatted_address;
                         
-                        // Mostrar botão Confirmar (Google Maps)
+                        // Mostrar boto Confirmar (Google Maps)
                         const btnConfirmar = document.getElementById('btnConfirmarEndereco');
                         if (btnConfirmar) {
                             btnConfirmar.style.display = 'block';
@@ -665,12 +665,12 @@ window.mapaProvider = <?php echo json_encode($mapProvider); ?>;
                                 this.style.background = '#c8e6c9';
                                 this.style.borderColor = '#4caf50';
                             ">
-                                <div style="font-weight: 600; color: #1565c0; font-size: 13px;">📍 ${result.formatted_address}</div>
+                                <div style="font-weight: 600; color: #1565c0; font-size: 13px;"> ${result.formatted_address}</div>
                                 <div style="color: #666; font-size: 11px; margin-top: 4px;">Lat: ${lat.toFixed(4)} | Lon: ${lng.toFixed(4)}</div>
                             </div>
                         `;
                     } else {
-                        document.getElementById('resultadoBusca').innerHTML = '<div style="color: #d32f2f; font-size: 12px;">❌ Endereço não encontrado</div>';
+                        document.getElementById('resultadoBusca').innerHTML = '<div style="color: #d32f2f; font-size: 12px;">Endereco nao encontrado</div>';
                     }
                 });
             };

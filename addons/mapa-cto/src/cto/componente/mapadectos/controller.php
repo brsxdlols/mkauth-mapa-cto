@@ -15,11 +15,29 @@ if (isset($connection) && $connection) {
     }
     $has_sis_adicional = false;
     $has_sis_adicional_caixa = false;
+    $has_sis_adicional_porta = false;
+    $has_sis_adicional_latitude = false;
+    $has_sis_adicional_longitude = false;
+    $has_cliente_porta = false;
+    $has_cliente_latitude = false;
+    $has_cliente_longitude = false;
+    $cliente_porta_check = mysqli_query($connection, "SHOW COLUMNS FROM sis_cliente LIKE 'porta_splitter'");
+    $has_cliente_porta = $cliente_porta_check && mysqli_num_rows($cliente_porta_check) > 0;
+    $cliente_latitude_check = mysqli_query($connection, "SHOW COLUMNS FROM sis_cliente LIKE 'latitude'");
+    $has_cliente_latitude = $cliente_latitude_check && mysqli_num_rows($cliente_latitude_check) > 0;
+    $cliente_longitude_check = mysqli_query($connection, "SHOW COLUMNS FROM sis_cliente LIKE 'longitude'");
+    $has_cliente_longitude = $cliente_longitude_check && mysqli_num_rows($cliente_longitude_check) > 0;
     $table_check = mysqli_query($connection, "SHOW TABLES LIKE 'sis_adicional'");
     if ($table_check && mysqli_num_rows($table_check) > 0) {
         $has_sis_adicional = true;
         $adicional_caixa_check = mysqli_query($connection, "SHOW COLUMNS FROM sis_adicional LIKE 'caixa_herm'");
         $has_sis_adicional_caixa = $adicional_caixa_check && mysqli_num_rows($adicional_caixa_check) > 0;
+        $adicional_porta_check = mysqli_query($connection, "SHOW COLUMNS FROM sis_adicional LIKE 'porta_splitter'");
+        $has_sis_adicional_porta = $adicional_porta_check && mysqli_num_rows($adicional_porta_check) > 0;
+        $adicional_latitude_check = mysqli_query($connection, "SHOW COLUMNS FROM sis_adicional LIKE 'latitude'");
+        $has_sis_adicional_latitude = $adicional_latitude_check && mysqli_num_rows($adicional_latitude_check) > 0;
+        $adicional_longitude_check = mysqli_query($connection, "SHOW COLUMNS FROM sis_adicional LIKE 'longitude'");
+        $has_sis_adicional_longitude = $adicional_longitude_check && mysqli_num_rows($adicional_longitude_check) > 0;
     }
 
     // Buscar todas as CTOs com dados de clientes
@@ -95,7 +113,14 @@ if (isset($connection) && $connection) {
             
             $total_offline = max(0, $total_clientes - $total_online);
             
-            $clientes_sql = "SELECT sc.id, sc.nome, sc.login, 'Cliente' as tipo_cliente,
+            $cliente_porta_select = $has_cliente_porta ? "sc.porta_splitter" : "''";
+            $cliente_latitude_select = $has_cliente_latitude ? "sc.latitude" : "''";
+            $cliente_longitude_select = $has_cliente_longitude ? "sc.longitude" : "''";
+            $clientes_sql = "SELECT sc.id, sc.nome, sc.login,
+                            " . $cliente_porta_select . " as porta_splitter,
+                            " . $cliente_latitude_select . " as latitude,
+                            " . $cliente_longitude_select . " as longitude,
+                            'Cliente' as tipo_cliente,
                             CASE WHEN ra.radacctid IS NOT NULL THEN 'online' ELSE 'offline' END as status
                             FROM sis_cliente sc
                             LEFT JOIN radacct ra ON ra.username = sc.login AND ra.acctstoptime IS NULL
@@ -110,6 +135,9 @@ if (isset($connection) && $connection) {
                         'id' => $cliente['id'],
                         'nome' => $cliente['nome'],
                         'login' => $cliente['login'],
+                        'porta' => $cliente['porta_splitter'] ?? '',
+                        'latitude' => $cliente['latitude'] ?? '',
+                        'longitude' => $cliente['longitude'] ?? '',
                         'status' => $cliente['status'],
                         'tipo' => $cliente['tipo_cliente']
                     );
@@ -117,9 +145,15 @@ if (isset($connection) && $connection) {
             }
 
             if ($has_sis_adicional && $has_sis_adicional_caixa) {
+                $adicional_porta_select = $has_sis_adicional_porta ? "sa.porta_splitter" : "''";
+                $adicional_latitude_select = $has_sis_adicional_latitude ? "sa.latitude" : "''";
+                $adicional_longitude_select = $has_sis_adicional_longitude ? "sa.longitude" : "''";
                 $adicionais_sql = "SELECT sa.id,
                                 COALESCE(NULLIF(sa.nome, ''), sa.username, sa.login) as nome,
                                 sa.username as login,
+                                " . $adicional_porta_select . " as porta_splitter,
+                                " . $adicional_latitude_select . " as latitude,
+                                " . $adicional_longitude_select . " as longitude,
                                 'Adicional' as tipo_cliente,
                                 CASE WHEN ra.radacctid IS NOT NULL THEN 'online' ELSE 'offline' END as status
                                 FROM sis_adicional sa
@@ -136,6 +170,9 @@ if (isset($connection) && $connection) {
                             'id' => $cliente['id'],
                             'nome' => $cliente['nome'],
                             'login' => $cliente['login'],
+                            'porta' => $cliente['porta_splitter'] ?? '',
+                            'latitude' => $cliente['latitude'] ?? '',
+                            'longitude' => $cliente['longitude'] ?? '',
                             'status' => $cliente['status'],
                             'tipo' => $cliente['tipo_cliente']
                         );

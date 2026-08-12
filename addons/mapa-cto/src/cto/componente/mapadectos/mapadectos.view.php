@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -197,12 +197,14 @@
 
         .cto-map-panel {
             position: absolute;
-            inset: 0;
+            top: 12px;
+            right: 12px;
+            bottom: 12px;
+            width: min(520px, calc(100% - 24px));
             z-index: 9999;
             display: none;
-            background: rgba(248, 250, 252, 0.98);
-            padding: 10px;
-            overflow: hidden;
+            overflow: visible;
+            pointer-events: none;
         }
 
         .cto-map-panel.is-open {
@@ -224,6 +226,7 @@
             line-height: 1;
             cursor: pointer;
             box-shadow: 0 4px 14px rgba(15, 23, 42, 0.18);
+            pointer-events: auto;
         }
 
         .cto-hover-tooltip {
@@ -231,7 +234,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             font-size: 12px;
             line-height: 1.3;
-            max-width: 220px;
+            max-width: min(720px, 70vw);
             padding: 4px 2px;
         }
 
@@ -244,15 +247,15 @@
 
         .cto-popup {
             width: 100%;
-            min-height: 100%;
-            height: 100%;
+            max-height: 100%;
             background: white;
             border-radius: 12px;
-            overflow: hidden;
+            overflow: visible;
             box-shadow: 0 10px 26px rgba(30, 41, 59, 0.2);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
+            pointer-events: auto;
         }
 
         .cto-popup-header {
@@ -277,11 +280,11 @@
 
         .cto-popup-body {
             padding: 10px;
-            overflow: hidden;
+            overflow: visible;
             min-height: 0;
             flex: 1 1 auto;
             display: grid;
-            grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+            grid-template-columns: 1fr;
             gap: 8px;
             align-content: start;
         }
@@ -382,7 +385,7 @@
             max-height: none;
             overflow: visible;
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: 1fr;
             column-gap: 14px;
         }
 
@@ -504,6 +507,8 @@
         .gm-style .gm-style-iw-c,.gm-style .gm-style-iw-d{max-height:none!important;overflow:visible!important}
         .cto-hover-tooltip{font-family:Arial,sans-serif;min-width:320px;max-width:min(720px,70vw);color:#1f2937}
         .leaflet-popup-content-wrapper,.leaflet-popup-content{max-height:none!important;overflow:visible!important}
+        .leaflet-popup-content{margin:10px 12px!important}
+        .cto-hover-popup .leaflet-popup-content-wrapper{overflow:visible!important}
         .cto-leaflet-marker svg{display:block}
         .cto-hover-title{font-weight:700;color:#4f63d8;margin-bottom:4px}
         .cto-hover-address{font-size:12px;color:#4b5563;margin-bottom:6px}
@@ -516,22 +521,25 @@
         .cto-hover-login{color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
         .cto-hover-type{font-size:10px;color:#475569;background:#eef2ff;border-radius:999px;padding:1px 5px}
         .cto-hover-empty,.cto-hover-more{font-size:11px;color:#64748b;margin-top:4px}
+        .cto-port-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(54px,1fr));gap:6px}
+        .cto-port-pill{border:1px solid #dbeafe;border-radius:6px;padding:5px 6px;font-size:11px;background:#eff6ff;color:#1e40af;text-align:center}
+        .cto-port-pill.used{background:#fef2f2;border-color:#fecaca;color:#991b1b}
     </style>
 </head>
 <body>
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <h1>🌐 Gerenciador FTTH</h1>
+            <h1> Gerenciador FTTH</h1>
             <div style="display: flex; gap: 10px; margin-top: 15px;">
-                <a href="?_route=inicio" class="btn-voltar">← Voltar à Listagem</a>
-                <a href="?_route=painel" class="btn-voltar" style="background: rgba(255, 107, 107, 0.2); border-color: #ff6b6b;">🏠 Painel Principal</a>
+                <a href="?_route=inicio" class="btn-voltar">&lt;- Voltar a Listagem</a>
+                <a href="?_route=painel" class="btn-voltar" style="background: rgba(255, 107, 107, 0.2); border-color: #ff6b6b;"> Painel Principal</a>
             </div>
         </div>
 
         <!-- Content -->
         <div class="content">
-            <!-- Estatísticas -->
+            <!-- Estatsticas -->
             <div class="stats">
                 <div class="stat-card">
                     <h3 id="totalCtos">0</h3>
@@ -539,7 +547,7 @@
                 </div>
                 <div class="stat-card">
                     <h3 id="totalClientes">0</h3>
-                    <p>Clientes Atribuídos</p>
+                    <p>Clientes Atribuidos</p>
                 </div>
                 <div class="stat-card">
                     <h3 id="clientesOnline">0</h3>
@@ -587,8 +595,10 @@
         const MAP_PROVIDER = <?php echo json_encode($map_provider); ?>;
         let mapa = null;
         let marcadores = [];
+        let marcadoresClientesHover = [];
         let filtroAtual = 'todos';
         let painelCtoConteudoAtual = '';
+        let ctoHoverTimer = null;
         const CAIXAS_MAP_LAYER_KEY = 'caixas_modo_visualizacao_mapa';
         function getCaixasMapMode() { return (localStorage.getItem(CAIXAS_MAP_LAYER_KEY) === 'satelite') ? 'satelite' : 'mapa'; }
         function setCaixasMapMode(mode) { localStorage.setItem(CAIXAS_MAP_LAYER_KEY, mode === 'satelite' ? 'satelite' : 'mapa'); }
@@ -614,6 +624,83 @@
                 </div>`;
             }).join('');
             return `<div class="cto-hover-clients">${rows}</div>`;
+        }
+
+        function montarPortasCto(cto) {
+            const capacidade = parseInt(cto.capacidade, 10) || 0;
+            const clientes = Array.isArray(cto.clientes) ? cto.clientes : [];
+            if (!capacidade) return '<div class="cto-empty">Capacidade nao informada</div>';
+
+            const portasUsadas = {};
+            clientes.forEach((cliente, index) => {
+                const porta = String(cliente.porta || cliente.porta_splitter || '').trim() || String(index + 1).padStart(2, '0');
+                portasUsadas[parseInt(porta, 10)] = cliente;
+            });
+
+            let html = '<div class="cto-port-grid">';
+            for (let i = 1; i <= capacidade; i++) {
+                const cliente = portasUsadas[i];
+                const porta = String(i).padStart(2, '0');
+                html += `<div class="cto-port-pill ${cliente ? 'used' : ''}" title="${cliente ? escapeHtml(cliente.nome || '') : 'Porta livre'}">${porta}${cliente ? '<br>Uso' : '<br>Livre'}</div>`;
+            }
+            html += '</div>';
+            return html;
+        }
+
+        function clienteTemCoordenada(cliente) {
+            const lat = parseFloat(cliente.latitude);
+            const lng = parseFloat(cliente.longitude);
+            return !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
+        }
+
+        function corClienteMapa(cliente) {
+            return cliente.status === 'online' ? '#2563eb' : '#ef4444';
+        }
+
+        function limparMarcadoresClientesHover() {
+            marcadoresClientesHover.forEach(marker => {
+                if (marker && typeof marker.setMap === 'function') marker.setMap(null);
+                else if (marker && typeof marker.remove === 'function') marker.remove();
+            });
+            marcadoresClientesHover = [];
+        }
+
+        function mostrarClientesCtoNoMapa(cto) {
+            limparMarcadoresClientesHover();
+            const clientes = (Array.isArray(cto.clientes) ? cto.clientes : []).filter(clienteTemCoordenada);
+            if (!clientes.length || !mapa) return;
+
+            clientes.forEach(cliente => {
+                const lat = parseFloat(cliente.latitude);
+                const lng = parseFloat(cliente.longitude);
+                const titulo = `${cliente.nome || ''} - ${cliente.login || ''}`;
+                if (MAP_PROVIDER === 'openstreet' && window.L) {
+                    const marker = L.circleMarker([lat, lng], {
+                        radius: 6,
+                        color: '#ffffff',
+                        weight: 2,
+                        fillColor: corClienteMapa(cliente),
+                        fillOpacity: 1
+                    }).addTo(mapa);
+                    marker.bindTooltip(escapeHtml(titulo), {direction: 'top'});
+                    marcadoresClientesHover.push(marker);
+                } else if (window.google && google.maps) {
+                    const marker = new google.maps.Marker({
+                        position: {lat: lat, lng: lng},
+                        map: mapa,
+                        title: titulo,
+                        icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            scale: 6,
+                            fillColor: corClienteMapa(cliente),
+                            fillOpacity: 1,
+                            strokeColor: '#ffffff',
+                            strokeWeight: 2
+                        }
+                    });
+                    marcadoresClientesHover.push(marker);
+                }
+            });
         }
 
         function corMarcadorCto(cto) {
@@ -675,6 +762,7 @@
         }
 
         function limparMarcadores() {
+            limparMarcadoresClientesHover();
             marcadores.forEach(marker => {
                 if (marker && typeof marker.setMap === 'function') marker.setMap(null);
                 else if (marker && typeof marker.remove === 'function') marker.remove();
@@ -704,7 +792,7 @@
         }
 
         function initializeGoogleMap() {
-            // Centro padrão (Brasil)
+            // Centro padrao (Brasil)
             const centro = { lat: -10.5, lng: -51.9 };
 
             mapa = new google.maps.Map(document.getElementById('map'), {
@@ -725,7 +813,7 @@
             // Adicionar marcadores para cada CTO
             adicionarMarcadores();
 
-            // Atualizar estatísticas
+            // Atualizar estatisticas
             atualizarEstatisticas();
         }
 
@@ -790,7 +878,7 @@
                 }
 
                 // Definir cor do marcador baseado em clientes online
-                let cor = '#667eea'; // Padrão
+                let cor = '#667eea'; // Padro
                 if (cto.total_clientes === 0) {
                     cor = '#9ca3af'; // Cinza se sem clientes
                 } else if (cto.clientes_online > 0) {
@@ -816,104 +904,15 @@
                     }
                 });
 
-                const capacidade = parseInt(cto.capacidade) || 0;
-                const portasUtilizadas = parseInt(cto.portas_utilizadas) || 0;
-                const percentualUso = capacidade > 0 ? Math.min((portasUtilizadas / capacidade) * 100, 100) : 0;
-
-                // Criar conteúdo do popup com design responsivo
-                const infoContent = `
-                    <div class="cto-popup">
-                        <div class="cto-popup-header">
-                            <h3>${cto.nome}</h3>
-                            <p>${subtituloTipoCto(cto)}</p>
-                        </div>
-                        
-                        <div class="cto-popup-body">
-                            <div class="cto-section">
-                                <div class="cto-label">Endereço</div>
-                                <div class="cto-text">${cto.endereco || 'N/A'}</div>
-                            </div>
-                            
-                            <div class="cto-section cto-tech-grid">
-                                <div class="cto-tech-item">
-                                    <strong>Tipo</strong>
-                                    <span>${cto.tipo || 'N/A'}</span>
-                                </div>
-                                <div class="cto-tech-item">
-                                    <strong>Sinal</strong>
-                                    <span>${cto.sinal || 'N/A'}</span>
-                                </div>
-                                <div class="cto-tech-item">
-                                    <strong>${equipamentoLabelCto(cto)}</strong>
-                                    <span>${cto.olt || 'N/A'}</span>
-                                </div>
-                                <div class="cto-tech-item">
-                                    <strong>${vinculoLabelCto(cto)}</strong>
-                                    <span>${cto.fsp || 'N/A'}</span>
-                                </div>
-                            </div>
-                            
-                            <div class="cto-section">
-                                <div class="cto-label">Clientes Atribuídos</div>
-                                <div class="cto-client-grid">
-                                    <div class="cto-count-card cto-count-total">
-                                        <strong>${cto.total_clientes}</strong>
-                                        <span>Total</span>
-                                    </div>
-                                    <div class="cto-count-card cto-count-online">
-                                        <strong>${cto.clientes_online}</strong>
-                                        <span>Online</span>
-                                    </div>
-                                    <div class="cto-count-card cto-count-offline">
-                                        <strong>${cto.clientes_offline}</strong>
-                                        <span>Offline</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            ${cto.clientes && cto.clientes.length > 0 ? `
-                            <div class="cto-section cto-client-list">
-                                <div class="cto-label">Lista de Clientes</div>
-                                <div class="cto-client-list-inner">
-                                    ${cto.clientes.map(cliente => `
-                                        <div class="cto-client-row">
-                                            <span class="cto-client-name">
-                                                ${cliente.status === 'online' ? '●' : '●'} 
-                                                <strong>${cliente.nome}</strong>
-                                            </span>
-                                            <span class="cto-client-login">${cliente.login}</span>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </div>
-                            ` : `
-                            <div class="cto-section cto-empty">Nenhum cliente atribuído</div>
-                            `}
-                            
-                            <div class="cto-section cto-section-full">
-                                <div class="cto-label">Capacidade de Portas</div>
-                                <div class="cto-progress-head">
-                                    <span>${portasUtilizadas}/${capacidade} portas</span>
-                                    <span>${cto.portas_livres} livres</span>
-                                </div>
-                                <div class="progress-bar">
-                                    <div class="progress-fill" style="width: ${percentualUso}%;"></div>
-                                </div>
-                            </div>
-                            
-                            <div class="cto-section cto-section-full" style="margin-bottom: 0;">
-                                <a href="?_route=editar&id=${cto.id}" class="cto-edit">Editar CTO</a>
-                            </div>
-                        </div>
-                    </div>
-                `;
-
                 marker.addListener('click', () => {
                     hoverInfoWindow.close();
-                    abrirPainelCto(infoContent);
+                    mostrarClientesCtoNoMapa(cto);
+                    abrirPainelCto(montarPainelCto(cto));
                 });
 
                 marker.addListener('mouseover', () => {
+                    if (ctoHoverTimer) clearTimeout(ctoHoverTimer);
+                    mostrarClientesCtoNoMapa(cto);
                     hoverInfoWindow.setContent(`
                         <div class="cto-hover-tooltip">
                             <div class="cto-hover-title">${escapeHtml(cto.nome)}</div>
@@ -930,12 +929,15 @@
                 });
 
                 marker.addListener('mouseout', () => {
-                    hoverInfoWindow.close();
+                    ctoHoverTimer = setTimeout(() => {
+                        hoverInfoWindow.close();
+                        if (!painelCtoConteudoAtual) limparMarcadoresClientesHover();
+                    }, 450);
                 });
 
                 marcadores.push(marker);
 
-                // Contar para estatísticas
+                // Contar para estatsticas
                 totalClientesVisiveis += parseInt(cto.total_clientes);
                 totalOnlineVisiveis += parseInt(cto.clientes_online);
                 totalOfflineVisiveis += parseInt(cto.clientes_offline);
@@ -950,7 +952,7 @@
                 mapa.fitBounds(bounds);
             }
 
-            // Atualizar contadores visíveis
+            // Atualizar contadores visveis
             document.getElementById('totalCtos').textContent = marcadores.length;
             document.getElementById('totalClientes').textContent = totalClientesVisiveis;
             document.getElementById('clientesOnline').textContent = totalOnlineVisiveis;
@@ -995,12 +997,16 @@
                                 ${cto.clientes.map(cliente => `
                                     <div class="cto-client-row">
                                         <span class="cto-client-name"><strong>${escapeHtml(cliente.nome)}</strong></span>
-                                        <span class="cto-client-login">${escapeHtml(cliente.login)}</span>
+                                        <span class="cto-client-login">Porta ${escapeHtml(cliente.porta || '-')} | ${escapeHtml(cliente.login)}</span>
                                     </div>
                                 `).join('')}
                             </div>
                         </div>
                         ` : `<div class="cto-section cto-empty">Nenhum cliente atribuido</div>`}
+                        <div class="cto-section cto-section-full">
+                            <div class="cto-label">Portas da CTO</div>
+                            ${montarPortasCto(cto)}
+                        </div>
                         <div class="cto-section cto-section-full">
                             <div class="cto-label">Capacidade de Portas</div>
                             <div class="cto-progress-head">
@@ -1040,8 +1046,28 @@
                     closeButton: true,
                     className: 'cto-hover-popup'
                 });
+                marker.on('popupopen', event => {
+                    const popup = event.popup && event.popup.getElement ? event.popup.getElement() : null;
+                    if (!popup) return;
+                    popup.addEventListener('mouseenter', () => {
+                        if (ctoHoverTimer) clearTimeout(ctoHoverTimer);
+                    });
+                    popup.addEventListener('mouseleave', () => {
+                        ctoHoverTimer = setTimeout(() => marker.closePopup(), 350);
+                    });
+                });
                 marker.on('mouseover', () => marker.openPopup());
-                marker.on('click', () => abrirPainelCto(montarPainelCto(cto)));
+                marker.on('mouseover', () => mostrarClientesCtoNoMapa(cto));
+                marker.on('mouseout', () => {
+                    ctoHoverTimer = setTimeout(() => {
+                        marker.closePopup();
+                        if (!painelCtoConteudoAtual) limparMarcadoresClientesHover();
+                    }, 450);
+                });
+                marker.on('click', () => {
+                    mostrarClientesCtoNoMapa(cto);
+                    abrirPainelCto(montarPainelCto(cto));
+                });
 
                 marcadores.push(marker);
                 bounds.push([lat, lng]);
@@ -1140,7 +1166,7 @@
             painelCtoConteudoAtual = conteudo;
 
             painel.innerHTML = `
-                <button type="button" class="cto-panel-close" onclick="fecharPainelCto()" aria-label="Fechar">×</button>
+                <button type="button" class="cto-panel-close" onclick="fecharPainelCto()" aria-label="Fechar">x</button>
                 ${conteudo}
             `;
             painel.classList.add('is-open');
@@ -1153,6 +1179,7 @@
             painel.classList.remove('is-open');
             painel.innerHTML = '';
             painelCtoConteudoAtual = '';
+            limparMarcadoresClientesHover();
         }
 
         document.addEventListener('fullscreenchange', () => {
@@ -1161,7 +1188,7 @@
             }
         });
 
-        // Atualizar estatísticas gerais
+        // Atualizar estatsticas gerais
         function atualizarEstatisticas() {
             let totalClientes = 0;
             let totalOnline = 0;
@@ -1191,7 +1218,7 @@
         });
 
         // Inicializar ao carregar
-        // Função para recarregar dados em tempo real
+        // Funo para recarregar dados em tempo real
         function atualizarDadosEmTempoReal() {
             fetch(window.location.href, {
                 method: 'GET',
@@ -1206,7 +1233,7 @@
                 if (match && match[1]) {
                     const novosDados = JSON.parse(match[1]);
                     
-                    // Verificar se há mudanças
+                    // Verificar se h mudanas
                     if (JSON.stringify(ctosData) !== JSON.stringify(novosDados)) {
                         // Atualizar dados
                         while (ctosData.length > 0) ctosData.pop();
@@ -1219,7 +1246,7 @@
                         adicionarMarcadores();
                         atualizarEstatisticas();
                         
-                        console.log('✅ Mapa atualizado em tempo real');
+                        console.log(' Mapa atualizado em tempo real');
                     }
                 }
             })

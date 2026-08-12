@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 @require_once __DIR__ . '/../../config/api.php';
 $keyGoogleMaps = function_exists('getGoogleMapsApiKey') ? getGoogleMapsApiKey() : (isset($keyGoogleMaps) ? $keyGoogleMaps : '');
 $mapProvider = function_exists('getSystemMapProvider') ? getSystemMapProvider() : (!empty($keyGoogleMaps) ? 'google' : 'openstreet');
@@ -467,11 +467,11 @@ $mapProvider = function_exists('getSystemMapProvider') ? getSystemMapProvider() 
     <div class="header">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
-                <h2>📍 Editar Caixa de Terminação Óptica</h2>
+                <h2>Editar Caixa de Terminacao Optica</h2>
                 <p><?php echo isset($textoSubTitulo) ? htmlspecialchars($textoSubTitulo) : 'Edite os dados da CTO'; ?></p>
             </div>
             <button type="button" onclick="window.location.href='?_route=inicio'" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(102, 126, 234, 0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow=''">
-                ← 📋 Voltar
+                  Voltar
             </button>
         </div>
     </div>
@@ -480,28 +480,28 @@ $mapProvider = function_exists('getSystemMapProvider') ? getSystemMapProvider() 
     <div class="content-wrapper">
         <!-- Form Section -->
         <div class="form-section">
-            <h3>📋 Dados da CTO</h3>
+            <h3> Dados da CTO</h3>
             <?php include "editar.caixa.view.hhvm"; ?>
         </div>
 
         <!-- Clients Management Section -->
         <div class="clients-section">
-            <h3>👥 Gerenciar Clientes</h3>
+            <h3> Gerenciar Clientes</h3>
             
             <!-- Search Box -->
             <div class="search-box">
                 <div class="search-input">
-                    <input type="text" id="searchDisponivel" placeholder="🔍 Buscar cliente disponível..." onkeyup="filtrarClientes('disponivel')">
+                    <input type="text" id="searchDisponivel" placeholder="Buscar cliente disponivel..." onkeyup="filtrarClientes('disponivel')">
                 </div>
                 <div class="search-input">
-                    <input type="text" id="searchAtribuido" placeholder="�� Buscar cliente atribuído..." onkeyup="filtrarClientes('atribuido')">
+                    <input type="text" id="searchAtribuido" placeholder="Buscar cliente atribuido..." onkeyup="filtrarClientes('atribuido')">
                 </div>
             </div>
 
             <div class="clients-grid">
-                <!-- Clientes Disponíveis -->
+                <!-- Clientes Disponiveis -->
                 <div class="client-list">
-                    <h4>🆓 Disponíveis <span class="counter-badge" id="countDisponivel">0</span></h4>
+                    <h4>Disponiveis <span class="counter-badge" id="countDisponivel">0</span></h4>
                     <div class="client-items-container">
                         <div id="clientesDisponiveis">
                             <?php
@@ -557,9 +557,9 @@ $mapProvider = function_exists('getSystemMapProvider') ? getSystemMapProvider() 
                     </div>
                 </div>
 
-                <!-- Clientes Atribuídos -->
+                <!-- Clientes Atribuidos -->
                 <div class="client-list">
-                    <h4>✅ Atribuídos <span class="counter-badge" id="countAtribuido">0</span></h4>
+                    <h4>Atribuidos <span class="counter-badge" id="countAtribuido">0</span></h4>
                     <div class="client-items-container">
                         <div id="clientesAtribuidos">
                             <?php
@@ -701,22 +701,22 @@ function removerCliente(clienteId, clienteNome, tipoAcao) {
     }
 }
 
-// Modal para buscar endereço via geocodificação com Google Maps
+// Modal para buscar endereo via geocodificao com Google Maps
 function abrirBuscaEndereco() {
-    // Carregar Google Maps se ainda não estiver carregado
+    // Carregar Google Maps se ainda no estiver carregado
     if (!window.google || !window.google.maps) {
         const script = document.createElement('script');
         const apiKey = window.keyGoogleMaps || '';
         
         if (!apiKey) {
-            alert('⚠️ Chave da API do Google Maps não configurada. Por favor, configure em Configurações > Google Maps API');
+            alert(' Chave da API do Google Maps no configurada. Por favor, configure em Configuraes > Google Maps API');
             return;
         }
         
         script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&language=pt-BR`;
         script.onload = () => criarModalMapa();
         script.onerror = () => {
-            alert('❌ Erro ao carregar Google Maps. Verifique a chave da API.');
+            alert(' Erro ao carregar Google Maps. Verifique a chave da API.');
         };
         document.head.appendChild(script);
     } else {
@@ -753,11 +753,11 @@ function criarModalMapa() {
             flex-direction: column;
             box-sizing: border-box;
         ">
-            <h3 style="margin: 0 0 15px 0; color: #333; font-size: 18px;">🗺️ Buscar Endereço no Mapa</h3>
+            <h3 style="margin: 0 0 15px 0; color: #333; font-size: 18px;">Buscar Endereco no Mapa</h3>
             
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; flex: 0 0 auto;">
                 <div>
-                    <p style="color: #666; font-size: 13px; margin: 0 0 8px 0;">Digite o endereço:</p>
+                    <p style="color: #666; font-size: 13px; margin: 0 0 8px 0;">Digite o endereo:</p>
                     <input 
                         type="text" 
                         id="campoBuscaEndereco" 
@@ -787,7 +787,7 @@ function criarModalMapa() {
                         transition: all 0.2s ease;
                         font-size: 13px;
                     " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 15px rgba(102, 126, 234, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow=''">
-                        🔍 Buscar
+                         Buscar
                     </button>
                 </div>
             </div>
@@ -811,7 +811,7 @@ function criarModalMapa() {
                     overflow: hidden;
                 ">
                     <div style="padding: 12px; border-bottom: 1px solid #e5e7eb; font-weight: 600; color: #333; font-size: 13px;">
-                        📍 Resultados
+                         Resultados
                     </div>
                     <div id="resultadoBusca" style="
                         flex: 1;
@@ -857,7 +857,7 @@ function criarModalMapa() {
                     transition: all 0.2s ease;
                     display: none;
                 " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 15px rgba(16, 185, 129, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow=''">
-                    ✓ Confirmar
+                     Confirmar
                 </button>
             </div>
         </div>
@@ -865,13 +865,13 @@ function criarModalMapa() {
     
     document.body.appendChild(modal);
     
-    // Bloquear scroll da página quando modal abre, mas permitir scroll no mapa
+    // Bloquear scroll da pgina quando modal abre, mas permitir scroll no mapa
     document.body.style.overflow = 'hidden';
     
     // Permitir wheel/scroll apenas sobre o mapa
     const mapContainer = document.getElementById('mapaBuscaEndereco');
     
-    // Função para bloquear scroll fora do mapa
+    // Funo para bloquear scroll fora do mapa
     const preventDefault = (e) => {
         // Permitir scroll apenas se estiver sobre o mapa
         if (mapContainer && !mapContainer.contains(e.target)) {
@@ -879,20 +879,20 @@ function criarModalMapa() {
         }
     };
     
-    // Bloquear scroll da página
+    // Bloquear scroll da pgina
     document.addEventListener('wheel', preventDefault, { passive: false });
     
     // Permitir fechar o modal clicando fora dele
     modal.addEventListener('click', (e) => {
         if (e.target === modal) {
             modal.remove();
-            // Restaurar scroll da página
+            // Restaurar scroll da pgina
             document.body.style.overflow = 'auto';
             document.removeEventListener('wheel', preventDefault);
         }
     });
     
-    // Restaurar scroll ao fechar o modal clicando no botão Cancelar
+    // Restaurar scroll ao fechar o modal clicando no boto Cancelar
     const btnCancelar = modal.querySelector('button:first-of-type');
     btnCancelar.addEventListener('click', () => {
         document.body.style.overflow = 'auto';
@@ -913,7 +913,7 @@ function criarModalMapa() {
         
         let marcador = null;
         
-        // Armazenar mapa e marcador globalmente para usar em outras funções
+        // Armazenar mapa e marcador globalmente para usar em outras funes
         window.mapaGeocodificacao = {
             mapa: mapa,
             marcador: marcador,
@@ -939,14 +939,14 @@ function criarModalMapa() {
             document.getElementById('LATITUDE').value = lat;
             document.getElementById('LONGITUDE').value = lng;
             
-            // Fazer reverse geocoding para obter o endereço
+            // Fazer reverse geocoding para obter o endereo
             const geocoder = window.mapaGeocodificacao.geocoder;
             geocoder.geocode({ location: e.latLng }, (results, status) => {
                 if (status === 'OK' && results.length > 0) {
                     const address = results[0].formatted_address;
                     document.getElementById('ENDERECO').value = address;
                     
-                    // Mostrar botão Confirmar (Mapa - Reverse Geocoding)
+                    // Mostrar boto Confirmar (Mapa - Reverse Geocoding)
                     const btnConfirmar = document.getElementById('btnConfirmarEndereco');
                     if (btnConfirmar) {
                         btnConfirmar.style.display = 'block';
@@ -954,9 +954,9 @@ function criarModalMapa() {
                     
                     document.getElementById('resultadoBusca').innerHTML = `
                         <div style="padding: 8px; background: #e8f5e9; border-radius: 6px; border-left: 4px solid #4caf50;">
-                            <div style="font-weight: 600; color: #2e7d32; font-size: 13px;">✅ Localização Selecionada</div>
+                            <div style="font-weight: 600; color: #2e7d32; font-size: 13px;"> Localizao Selecionada</div>
                             <div style="color: #555; font-size: 12px; margin-top: 6px;">
-                                <strong>Endereço:</strong><br>${address}<br><br>
+                                <strong>Endereco:</strong><br>${address}<br><br>
                                 <strong>Coordenadas:</strong><br>
                                 Lat: ${lat} | Lon: ${lng}
                             </div>
@@ -965,7 +965,7 @@ function criarModalMapa() {
                 } else {
                     document.getElementById('resultadoBusca').innerHTML = `
                         <div style="padding: 8px; background: #e8f5e9; border-radius: 6px; border-left: 4px solid #4caf50;">
-                            <div style="font-weight: 600; color: #2e7d32; font-size: 13px;">✅ Coordenadas Selecionadas</div>
+                            <div style="font-weight: 600; color: #2e7d32; font-size: 13px;"> Coordenadas Selecionadas</div>
                             <div style="color: #555; font-size: 12px; margin-top: 6px;">
                                 Latitude: <strong>${lat}</strong><br>
                                 Longitude: <strong>${lng}</strong>
@@ -980,7 +980,7 @@ function criarModalMapa() {
     const inputBusca = document.getElementById('campoBuscaEndereco');
     inputBusca.focus();
     
-    // Busca automática enquanto digita (com debounce)
+    // Busca automtica enquanto digita (com debounce)
     let timeoutBusca = null;
     inputBusca.addEventListener('input', () => {
         clearTimeout(timeoutBusca);
@@ -989,7 +989,7 @@ function criarModalMapa() {
         if (texto.length > 3) { // Apenas busca com mais de 3 caracteres
             timeoutBusca = setTimeout(() => {
                 buscarEndereco();
-            }, 700); // Aguarda 700ms após parar de digitar
+            }, 700); // Aguarda 700ms aps parar de digitar
         }
     });
 }
@@ -998,14 +998,14 @@ function buscarEndereco() {
     const endereco = document.getElementById('campoBuscaEndereco').value.trim();
     
     if (!endereco) {
-        alert('Por favor, digite um endereço');
+        alert('Por favor, digite um endereo');
         return;
     }
     
     const resultadoBusca = document.getElementById('resultadoBusca');
-    resultadoBusca.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">🔍 Buscando...</p>';
+    resultadoBusca.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;"> Buscando...</p>';
     
-    // Usar Google Geocoder se disponível, caso contrário usar Nominatim
+    // Usar Google Geocoder se disponivel, caso contrario usar Nominatim
     if (window.mapaGeocodificacao && window.mapaGeocodificacao.geocoder) {
         // Google Geocoder
         const geocoder = window.mapaGeocodificacao.geocoder;
@@ -1052,10 +1052,10 @@ function buscarEndereco() {
                         document.getElementById('LATITUDE').value = lat;
                         document.getElementById('LONGITUDE').value = lng;
                         
-                        // Atualizar campo de endereço
+                        // Atualizar campo de endereo
                         document.getElementById('ENDERECO').value = result.formatted_address;
                         
-                        // Mover mapa para a localização e adicionar marcador
+                        // Mover mapa para a localizao e adicionar marcador
                         if (window.mapaGeocodificacao && window.mapaGeocodificacao.mapa) {
                             const mapa = window.mapaGeocodificacao.mapa;
                             mapa.setCenter(result.geometry.location);
@@ -1078,7 +1078,7 @@ function buscarEndereco() {
                         div.style.fontWeight = '600';
                         div.style.color = '#2e7d32';
                         
-                        // Mostrar botão Confirmar (Google Maps)
+                        // Mostrar boto Confirmar (Google Maps)
                         const btnConfirmar = document.getElementById('btnConfirmarEndereco');
                         if (btnConfirmar) {
                             btnConfirmar.style.display = 'block';
@@ -1088,7 +1088,7 @@ function buscarEndereco() {
                     resultadoBusca.appendChild(div);
                 });
             } else {
-                resultadoBusca.innerHTML = '<p style="text-align: center; color: #e74c3c; padding: 20px;">❌ Nenhum resultado encontrado</p>';
+                resultadoBusca.innerHTML = '<p style="text-align: center; color: #e74c3c; padding: 20px;"> Nenhum resultado encontrado</p>';
             }
         });
     } else {
@@ -1097,7 +1097,7 @@ function buscarEndereco() {
             .then(response => response.json())
             .then(data => {
                 if (data.length === 0) {
-                    resultadoBusca.innerHTML = '<p style="text-align: center; color: #e74c3c; padding: 20px;">❌ Nenhum resultado encontrado</p>';
+                    resultadoBusca.innerHTML = '<p style="text-align: center; color: #e74c3c; padding: 20px;"> Nenhum resultado encontrado</p>';
                     return;
                 }
                 
@@ -1155,7 +1155,7 @@ function buscarEndereco() {
                 });
             })
             .catch(error => {
-                resultadoBusca.innerHTML = '<p style="text-align: center; color: #e74c3c; padding: 20px;">❌ Erro ao buscar endereço</p>';
+                resultadoBusca.innerHTML = '<p style="text-align: center; color: #e74c3c; padding: 20px;"> Erro ao buscar endereo</p>';
                 console.error('Erro:', error);
             });
     }
