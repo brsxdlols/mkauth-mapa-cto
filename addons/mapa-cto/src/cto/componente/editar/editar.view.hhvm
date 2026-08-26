@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 @require_once __DIR__ . '/../../config/api.php';
 $keyGoogleMaps = function_exists('getGoogleMapsApiKey') ? getGoogleMapsApiKey() : (isset($keyGoogleMaps) ? $keyGoogleMaps : '');
 $mapProvider = function_exists('getSystemMapProvider') ? getSystemMapProvider() : (!empty($keyGoogleMaps) ? 'google' : 'openstreet');
@@ -24,26 +24,27 @@ $mapProvider = function_exists('getSystemMapProvider') ? getSystemMapProvider() 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 6px;
         }
 
         .container {
-            max-width: 1600px;
+            width: 100%;
+            max-width: 1880px;
             margin: 0 auto;
         }
 
         .header {
             background: white;
-            padding: 25px;
-            border-radius: 12px;
+            padding: 10px 16px;
+            border-radius: 10px;
             box-shadow: 0 8px 32px rgba(102, 126, 234, 0.15);
-            margin-bottom: 25px;
+            margin-bottom: 8px;
         }
 
         .header h2 {
             color: #333;
-            font-size: 28px;
-            margin-bottom: 8px;
+            font-size: 24px;
+            margin-bottom: 4px;
             font-weight: 700;
         }
 
@@ -54,18 +55,18 @@ $mapProvider = function_exists('getSystemMapProvider') ? getSystemMapProvider() 
 
         .content-wrapper {
             display: grid;
-            grid-template-columns: 1fr 1.2fr;
-            gap: 25px;
+            grid-template-columns: minmax(620px, 0.9fr) minmax(760px, 1.1fr);
+            gap: 12px;
+            align-items: start;
         }
 
         .form-section {
             background: white;
-            padding: 30px;
-            border-radius: 12px;
+            padding: 12px 16px;
+            border-radius: 10px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             height: fit-content;
-            max-height: 800px;
-            overflow-y: auto;
+            overflow: visible;
         }
 
         .form-section::-webkit-scrollbar {
@@ -88,35 +89,35 @@ $mapProvider = function_exists('getSystemMapProvider') ? getSystemMapProvider() 
 
         .form-section h3 {
             color: #333;
-            font-size: 18px;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
+            font-size: 17px;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
             border-bottom: 3px solid #667eea;
             font-weight: 600;
         }
 
         .form-group {
-            margin-bottom: 18px;
+            margin-bottom: 10px;
         }
 
         .form-group label {
             display: block;
             font-weight: 600;
             color: #333;
-            font-size: 13px;
-            margin-bottom: 8px;
+            font-size: 12px;
+            margin-bottom: 5px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0;
         }
 
         .form-group input,
         .form-group select,
         .form-group textarea {
             width: 100%;
-            padding: 12px 14px;
+            padding: 9px 12px;
             border: 2px solid #e5e7eb;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 13px;
             font-family: inherit;
             transition: all 0.3s ease;
             background: #fafbfc;
@@ -133,7 +134,7 @@ $mapProvider = function_exists('getSystemMapProvider') ? getSystemMapProvider() 
 
         .form-group textarea {
             resize: vertical;
-            min-height: 100px;
+            min-height: 58px;
         }
 
         .form-group input:disabled {
@@ -394,6 +395,220 @@ $mapProvider = function_exists('getSystemMapProvider') ? getSystemMapProvider() 
             font-weight: 600;
             margin-left: 8px;
         }
+        .cto-mini-map {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            min-height: 0;
+            height: auto;
+            border: 1px solid #dbe3ef;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f8fafc;
+        }
+
+        .cto-mini-map iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            display: block;
+        }
+
+        .cto-mini-map-empty {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            padding: 10px;
+        }
+
+
+        .cto-map-info-grid {
+            display: grid;
+            grid-template-columns: minmax(190px, 34%) minmax(0, 1fr);
+            gap: 10px;
+            align-items: start;
+            margin-bottom: 8px;
+        }
+
+        .cto-map-col .form-group,
+        .cto-info-col .form-group {
+            margin-bottom: 8px;
+        }
+
+        .cto-info-col textarea {
+            min-height: 54px;
+        }
+
+        .usage-card-right {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 10px 12px;
+            border-radius: 10px;
+            margin: 10px 0 12px;
+            color: white;
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.16);
+        }
+
+        .usage-card-right .usage-title {
+            text-transform: uppercase;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .usage-card-right .usage-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .usage-card-right .usage-number {
+            display: block;
+            font-size: 22px;
+            line-height: 1;
+            font-weight: 800;
+        }
+
+        .usage-card-right .usage-label {
+            display: block;
+            font-size: 11px;
+            opacity: 0.92;
+            margin-top: 3px;
+        }
+
+        .usage-card-right .usage-bar {
+            height: 8px;
+            background: rgba(255,255,255,0.28);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .usage-card-right .usage-bar span {
+            display: block;
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #f59e0b);
+            border-radius: inherit;
+        }
+
+        @media (max-width: 1200px) {
+            .cto-map-info-grid { grid-template-columns: 1fr; }
+        }
+
+        .port-modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 2500;
+            background: rgba(15, 23, 42, 0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+        }
+
+        .port-modal {
+            width: min(760px, 96vw);
+            max-height: 92vh;
+            overflow: auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.30);
+        }
+
+        .port-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 16px 18px;
+            color: #fff;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .port-modal-header h3 {
+            margin: 0;
+            color: #fff;
+            font-size: 18px;
+            border: 0;
+            padding: 0;
+        }
+
+        .port-modal-close {
+            border: 0;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.18);
+            color: #fff;
+            font-size: 20px;
+            width: 34px;
+            height: 34px;
+            cursor: pointer;
+        }
+
+        .port-modal-body {
+            padding: 18px;
+        }
+
+        .port-client-summary {
+            background: #f8fafc;
+            border: 1px solid #dbe4f0;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 14px;
+            color: #1f2937;
+            line-height: 1.6;
+        }
+
+        .port-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .port-btn {
+            border: 1px solid #bfdbfe;
+            background: #eff6ff;
+            color: #2563eb;
+            border-radius: 8px;
+            min-height: 54px;
+            padding: 8px 6px;
+            font-weight: 700;
+            cursor: pointer;
+            line-height: 1.2;
+        }
+
+        .port-btn small {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 3px;
+        }
+
+        .port-btn.is-busy {
+            border-color: #fecaca;
+            background: #fee2e2;
+            color: #dc2626;
+            cursor: not-allowed;
+        }
+
+        .port-modal-footer {
+            padding: 0 18px 18px;
+        }
+
+        .port-cancel {
+            width: 100%;
+            border: 0;
+            border-radius: 8px;
+            background: #e5e7eb;
+            color: #111827;
+            padding: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
 
         @media (max-width: 1200px) {
             .content-wrapper {
@@ -458,6 +673,400 @@ $mapProvider = function_exists('getSystemMapProvider') ? getSystemMapProvider() 
                 flex-wrap: wrap;
             }
         }
+
+        /* codex-compact-edit-v7-start */
+        html, body {
+            height: 100vh !important;
+            min-height: 100vh !important;
+            overflow: hidden !important;
+        }
+
+        body {
+            padding: 6px 8px !important;
+        }
+
+        .container {
+            width: calc(100vw - 16px) !important;
+            max-width: none !important;
+            height: calc(100vh - 12px) !important;
+            display: flex !important;
+            flex-direction: column !important;
+            margin: 0 auto !important;
+        }
+
+        .header {
+            flex: 0 0 auto !important;
+            padding: 8px 14px !important;
+            margin-bottom: 8px !important;
+            border-radius: 8px !important;
+        }
+
+        .header h2 {
+            font-size: 22px !important;
+            margin-bottom: 1px !important;
+        }
+
+        .header p {
+            font-size: 12px !important;
+        }
+
+        .content-wrapper {
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
+            height: auto !important;
+            display: grid !important;
+            grid-template-columns: minmax(610px, 0.82fr) minmax(800px, 1.18fr) !important;
+            gap: 10px !important;
+            align-items: stretch !important;
+        }
+
+        .form-section,
+        .clients-section {
+            min-height: 0 !important;
+            height: 100% !important;
+            overflow: hidden !important;
+            padding: 12px 18px !important;
+            border-radius: 9px !important;
+        }
+
+        .form-section {
+            display: flex !important;
+            flex-direction: column !important;
+        }
+
+        .form-section > form {
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 7px 10px !important;
+            align-content: start !important;
+        }
+
+        .form-section h3,
+        .clients-section h3 {
+            flex: 0 0 auto !important;
+            font-size: 16px !important;
+            margin-bottom: 8px !important;
+            padding-bottom: 7px !important;
+        }
+
+        .form-group {
+            margin-bottom: 0 !important;
+        }
+
+        .form-group label {
+            font-size: 11px !important;
+            margin-bottom: 3px !important;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea,
+        .search-input input {
+            min-height: 31px !important;
+            padding: 6px 9px !important;
+            font-size: 13px !important;
+            border-radius: 7px !important;
+        }
+
+        .form-group textarea {
+            min-height: 45px !important;
+            resize: none !important;
+        }
+
+        .map-button {
+            margin-top: 0 !important;
+            padding: 6px 10px !important;
+            min-height: 31px !important;
+        }
+
+        .cto-map-info-grid {
+            grid-column: 1 / -1 !important;
+            display: grid !important;
+            grid-template-columns: 240px minmax(0, 1fr) !important;
+            gap: 10px !important;
+            align-items: start !important;
+            margin: 0 !important;
+        }
+
+        .cto-mini-map {
+            width: 240px !important;
+            height: 240px !important;
+            min-height: 240px !important;
+            aspect-ratio: 1 / 1 !important;
+            border-radius: 8px !important;
+        }
+
+        .cto-info-col {
+            min-width: 0 !important;
+            display: grid !important;
+            gap: 7px !important;
+        }
+
+        .cto-info-col textarea {
+            min-height: 78px !important;
+        }
+
+        .button-group {
+            grid-column: 1 / -1 !important;
+            margin-top: 2px !important;
+            gap: 10px !important;
+        }
+
+        .btn {
+            padding: 9px 14px !important;
+            min-height: 36px !important;
+        }
+
+        .clients-section {
+            display: flex !important;
+            flex-direction: column !important;
+        }
+
+        .usage-card-left {
+            display: none !important;
+        }
+
+        .usage-card-right {
+            flex: 0 0 auto !important;
+            margin: 0 0 10px !important;
+            padding: 9px 12px !important;
+            border-radius: 8px !important;
+        }
+
+        .usage-card-right .usage-title {
+            margin-bottom: 5px !important;
+            font-size: 11px !important;
+        }
+
+        .usage-card-right .usage-number {
+            font-size: 21px !important;
+        }
+
+        .usage-card-right .usage-label {
+            font-size: 10px !important;
+        }
+
+        .usage-card-right .usage-bar {
+            height: 7px !important;
+        }
+
+        .search-box {
+            flex: 0 0 auto !important;
+            gap: 10px !important;
+            margin-bottom: 10px !important;
+        }
+
+        .clients-grid {
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
+            gap: 12px !important;
+        }
+
+        .client-list {
+            min-height: 0 !important;
+            max-height: none !important;
+            height: 100% !important;
+            padding: 12px !important;
+            border-radius: 9px !important;
+        }
+
+        .client-list h4 {
+            flex: 0 0 auto !important;
+            font-size: 14px !important;
+            margin-bottom: 9px !important;
+            padding-bottom: 7px !important;
+        }
+
+        .client-items-container {
+            min-height: 0 !important;
+            overflow-y: auto !important;
+        }
+
+        .client-item {
+            padding: 8px 10px !important;
+            margin-bottom: 7px !important;
+        }
+
+        .client-name {
+            font-size: 12px !important;
+        }
+
+        .client-id {
+            font-size: 10px !important;
+        }
+
+        .btn-small {
+            padding: 6px 9px !important;
+        }
+
+        .address-suggestions {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 100%;
+            z-index: 4000;
+            margin-top: 4px;
+            background: #fff;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            box-shadow: 0 14px 35px rgba(15, 23, 42, 0.22);
+            overflow-y: auto;
+            max-height: 210px;
+            display: none;
+        }
+
+        .address-suggestion-item {
+            padding: 8px 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eef2f7;
+            font-size: 12px;
+            line-height: 1.35;
+            color: #1f2937;
+        }
+
+        .address-suggestion-item:hover {
+            background: #eef4ff;
+        }
+
+        .address-suggestion-title {
+            font-weight: 700;
+            color: #3155d4;
+            margin-bottom: 2px;
+        }
+
+        .address-status {
+            font-size: 11px;
+            color: #2563eb;
+            margin-top: 3px;
+            line-height: 1.25;
+        }
+
+        @media (max-width: 1450px) {
+            html, body {
+                overflow: auto !important;
+                height: auto !important;
+            }
+
+            .container {
+                height: auto !important;
+            }
+
+            .content-wrapper {
+                grid-template-columns: 1fr !important;
+            }
+
+            .form-section,
+            .clients-section {
+                height: auto !important;
+                overflow: visible !important;
+            }
+
+            .client-list {
+                height: 420px !important;
+            }
+        }
+
+        @media (max-width: 780px) {
+            .form-section > form,
+            .cto-map-info-grid,
+            .clients-grid,
+            .search-box {
+                grid-template-columns: 1fr !important;
+            }
+
+            .cto-mini-map {
+                width: 100% !important;
+                height: 240px !important;
+            }
+        }
+        /* codex-compact-edit-v7-end */
+
+
+        /* codex-port-select-save-start */
+        .port-btn.is-selected {
+            border-color: #f59e0b !important;
+            background: linear-gradient(135deg, #fde68a 0%, #fbbf24 100%) !important;
+            color: #78350f !important;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.24), 0 10px 18px rgba(245, 158, 11, 0.24) !important;
+            transform: translateY(-1px);
+        }
+
+        .port-btn.is-selected small {
+            color: #78350f !important;
+        }
+
+        .port-selected-hint {
+            margin-top: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: #fffbeb;
+            color: #92400e;
+            font-weight: 700;
+            font-size: 13px;
+            display: none;
+        }
+
+        .port-save {
+            width: 100%;
+            border: 0;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #fff;
+            padding: 12px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .port-save:disabled {
+            background: #cbd5e1;
+            color: #64748b;
+            cursor: not-allowed;
+        }
+
+        .port-modal-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        /* codex-port-select-save-end */
+
+
+        /* codex-assigned-port-badge-start */
+        .client-port-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 5px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border: 0;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 800;
+            line-height: 1;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.22);
+        }
+
+        .client-port-badge:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 16px rgba(16, 185, 129, 0.28);
+        }
+
+        .port-btn.is-current {
+            border-color: #10b981 !important;
+            background: #ecfdf5 !important;
+            color: #047857 !important;
+        }
+
+        .port-btn.is-current small {
+            color: #047857 !important;
+        }
+        /* codex-assigned-port-badge-end */
+
     </style>
 </head>
 <body>
@@ -487,6 +1096,21 @@ $mapProvider = function_exists('getSystemMapProvider') ? getSystemMapProvider() 
         <!-- Clients Management Section -->
         <div class="clients-section">
             <h3> Gerenciar Clientes</h3>
+            <?php
+            $capacidadePainel = intval($caixaAtualEdicao['capacidade'] ?? 0);
+            $clientesCountPainel = (isset($clientesCadastrados) ? count($clientesCadastrados) : 0) + (isset($adicionalCadastrados) ? count($adicionalCadastrados) : 0);
+            $livresPainel = max(0, $capacidadePainel - $clientesCountPainel);
+            $percentPainel = $capacidadePainel > 0 ? min(100, round(($clientesCountPainel / $capacidadePainel) * 100)) : 0;
+            ?>
+            <div class="usage-card-right">
+                <div class="usage-title">Utilizacao de Portas</div>
+                <div class="usage-metrics">
+                    <div><span class="usage-number"><?= $clientesCountPainel ?></span><span class="usage-label">Utilizadas</span></div>
+                    <div><span class="usage-number"><?= $livresPainel ?></span><span class="usage-label">Disponiveis</span></div>
+                    <div><span class="usage-number"><?= $percentPainel ?>%</span><span class="usage-label">Uso</span></div>
+                </div>
+                <div class="usage-bar"><span style="width: <?= $percentPainel ?>%"></span></div>
+            </div>
             
             <!-- Search Box -->
             <div class="search-box">
@@ -568,10 +1192,16 @@ $mapProvider = function_exists('getSystemMapProvider') ? getSystemMapProvider() 
                                 mysqli_data_seek($dadosClienteEditar, 0);
                                 while ($cliente = mysqli_fetch_assoc($dadosClienteEditar)) {
                                     $countAtr++;
-                                    echo '<div class="client-item" data-search="' . strtolower(($cliente['nome'] ?? '') . ' ' . ($cliente['login'] ?? '') . ' cliente') . '">';
+                                    $portaCliente = isset($cliente['porta_splitter']) ? trim((string)$cliente['porta_splitter']) : '';
+                                    echo '<div class="client-item" data-search="' . strtolower(($cliente['nome'] ?? '') . ' ' . ($cliente['login'] ?? '') . ' cliente porta ' . $portaCliente) . '">';
                                     echo '  <div class="client-info">';
                                     echo '    <div class="client-name">' . htmlspecialchars($cliente['nome'] ?? '') . '</div>';
                                     echo '    <div class="client-id">Cliente | ID: ' . htmlspecialchars($cliente['id'] ?? '') . (!empty($cliente['login']) ? ' | Login: ' . htmlspecialchars($cliente['login'], ENT_QUOTES, 'UTF-8') : '') . '</div>';
+                                    if ($portaCliente !== '') {
+                                        $nomeClientePortaJs = json_encode($cliente['nome'] ?? '', JSON_HEX_APOS | JSON_HEX_QUOT);
+                                        $portaClienteJs = json_encode($portaCliente, JSON_HEX_APOS | JSON_HEX_QUOT);
+                                        echo '    <button type="button" class="client-port-badge" title="Ver ou trocar porta" onclick=\'abrirModalSelecaoPorta(' . intval($cliente['id'] ?? 0) . ', ' . $nomeClientePortaJs . ', "edc", ' . $portaClienteJs . ')\'>Porta ' . htmlspecialchars(str_pad($portaCliente, 2, '0', STR_PAD_LEFT), ENT_QUOTES, 'UTF-8') . '</button>';
+                                    }
                                     echo '  </div>';
                                     echo '  <div class="action-buttons">';
                                     echo '    <button type="button" class="btn-small btn-remove" onclick="removerCliente(' . $cliente['id'] . ', \'' . addslashes($cliente['nome'] ?? '') . '\', \'exc\')">Remover</button>';
@@ -585,10 +1215,16 @@ $mapProvider = function_exists('getSystemMapProvider') ? getSystemMapProvider() 
                                     $countAtr++;
                                     $nomeAdicional = $cliente['nome'] ?? $cliente['username'] ?? $cliente['login'] ?? '';
                                     $loginAdicional = $cliente['username'] ?? $cliente['login'] ?? '';
-                                    echo '<div class="client-item" data-search="' . strtolower($nomeAdicional . ' ' . $loginAdicional . ' adicional') . '">';
+                                    $portaAdicional = isset($cliente['porta_splitter']) ? trim((string)$cliente['porta_splitter']) : '';
+                                    echo '<div class="client-item" data-search="' . strtolower($nomeAdicional . ' ' . $loginAdicional . ' adicional porta ' . $portaAdicional) . '">';
                                     echo '  <div class="client-info">';
                                     echo '    <div class="client-name">' . htmlspecialchars($nomeAdicional, ENT_QUOTES, 'UTF-8') . '</div>';
                                     echo '    <div class="client-id">Adicional | ID: ' . htmlspecialchars($cliente['id'] ?? '') . ($loginAdicional ? ' | Login: ' . htmlspecialchars($loginAdicional, ENT_QUOTES, 'UTF-8') : '') . '</div>';
+                                    if ($portaAdicional !== '') {
+                                        $nomeAdicionalPortaJs = json_encode($nomeAdicional, JSON_HEX_APOS | JSON_HEX_QUOT);
+                                        $portaAdicionalJs = json_encode($portaAdicional, JSON_HEX_APOS | JSON_HEX_QUOT);
+                                        echo '    <button type="button" class="client-port-badge" title="Ver ou trocar porta" onclick=\'abrirModalSelecaoPorta(' . intval($cliente['id'] ?? 0) . ', ' . $nomeAdicionalPortaJs . ', "edca", ' . $portaAdicionalJs . ')\'>Porta ' . htmlspecialchars(str_pad($portaAdicional, 2, '0', STR_PAD_LEFT), ENT_QUOTES, 'UTF-8') . '</button>';
+                                    }
                                     echo '  </div>';
                                     echo '  <div class="action-buttons">';
                                     echo '    <button type="button" class="btn-small btn-remove" onclick="removerCliente(' . $cliente['id'] . ', \'' . addslashes($nomeAdicional) . '\', \'exca\')">Remover</button>';
@@ -614,6 +1250,18 @@ $mapProvider = function_exists('getSystemMapProvider') ? getSystemMapProvider() 
 </div>
 
 <script>
+const ctoEditContext = <?php
+    $caixaAtual = isset($caixaAtualEdicao) ? $caixaAtualEdicao : array();
+    echo json_encode(array(
+        'id' => $ID,
+        'nome' => $caixaAtual['nome'] ?? $nomeCaixaEditar ?? '',
+        'latitude' => $caixaAtual['latitude'] ?? '',
+        'longitude' => $caixaAtual['longitude'] ?? '',
+        'capacidade' => intval($caixaAtual['capacidade'] ?? $numeroPortas ?? 0),
+        'portasOcupadas' => isset($portas_ocupadas) ? $portas_ocupadas : array()
+    ));
+?>;
+
 function mapa_get_individual(cplatitude, cplongitude, servidor, latitudePadrao, longitudePadrao) {
     var width = (screen.availWidth - 100);
     var height = (screen.availHeight - 100);
@@ -662,24 +1310,135 @@ function filtrarClientes(tipo) {
 }
 
 function atribuirCliente(clienteId, clienteNome, tipoAcao) {
-    tipoAcao = tipoAcao || 'adc';
-    if (confirm('Atribuir cliente "' + clienteNome + '" a esta CTO?')) {
-        const formData = new FormData();
-        formData.append('_tipoAcao', tipoAcao);
-        formData.append(tipoAcao === 'adca' ? 'idAdicionalCaixa' : 'idClienteCaixa', clienteId);
-        formData.append('_route', 'editar');
-        formData.append('id', '<?php echo isset($ID) ? $ID : ""; ?>');
-        
-        fetch(window.location.href, {
-            method: 'POST',
-            body: formData
-        }).then(response => {
-            location.reload();
-        }).catch(error => {
-            alert('Erro ao atribuir cliente');
+    abrirModalSelecaoPorta(clienteId, clienteNome, tipoAcao || 'adc');
+}
+
+function fecharModalSelecaoPorta() {
+    const modal = document.getElementById('modalSelecaoPortaCto');
+    if (modal) modal.remove();
+}
+
+function nomeCurtoPorta(nome) {
+    nome = (nome || '').trim();
+    if (!nome) return 'Ocupada';
+    const partes = nome.split(/\s+/).filter(Boolean);
+    if (partes.length <= 2) return nome;
+    return partes[0] + ' ' + partes[partes.length - 1];
+}
+
+function escapeJsAttr(value) {
+    return String(value == null ? '' : value)
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/\r?\n/g, ' ');
+}
+
+function escapeHtml(value) {
+    return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function abrirModalSelecaoPorta(clienteId, clienteNome, tipoAcao, portaAtual) {
+    fecharModalSelecaoPorta();
+    const capacidadeCampo = document.getElementById('CAPACIDADE');
+    const capacidade = Math.max(0, parseInt((capacidadeCampo && capacidadeCampo.value) || ctoEditContext.capacidade || 0, 10));
+    const ocupadas = ctoEditContext.portasOcupadas || {};
+    const portaAtualNumero = parseInt(String(portaAtual || '').trim(), 10) || null;
+    const trocandoPorta = (tipoAcao === 'edc' || tipoAcao === 'edca');
+    const overlay = document.createElement('div');
+    overlay.id = 'modalSelecaoPortaCto';
+    overlay.className = 'port-modal-overlay';
+
+    let portasHtml = '';
+    if (capacidade <= 0) {
+        portasHtml = '<div class="empty-state"><p>Esta CTO esta sem capacidade cadastrada. Ajuste a capacidade antes de atribuir clientes.</p></div>';
+    } else {
+        for (let porta = 1; porta <= capacidade; porta++) {
+            const info = ocupadas[String(porta)] || ocupadas[porta];
+            const isCurrent = portaAtualNumero === porta;
+            if (info && !isCurrent) {
+                portasHtml += '<button type="button" class="port-btn is-busy" title="' + escapeHtml(info.nome || '') + '" disabled>' + String(porta).padStart(2, '0') + '<small>Ocupada</small><small>' + escapeHtml(nomeCurtoPorta(info.nome)) + '</small></button>';
+            } else {
+                const currentClass = isCurrent ? ' is-current' : '';
+                const currentText = isCurrent ? 'Atual' : 'Livre';
+                portasHtml += '<button type="button" class="port-btn js-porta-livre' + currentClass + '" data-porta="' + porta + '">' + String(porta).padStart(2, '0') + '<small>' + currentText + '</small></button>';
+            }
+        }
+    }
+
+    overlay.innerHTML = '<div class="port-modal" role="dialog" aria-modal="true">'
+        + '<div class="port-modal-header"><h3>Escolher porta da CTO</h3><button type="button" class="port-modal-close" onclick="fecharModalSelecaoPorta()">x</button></div>'
+        + '<div class="port-modal-body">'
+        + '<div class="port-client-summary"><strong>Cliente:</strong> ' + escapeHtml(clienteNome) + '<br><strong>CTO:</strong> ' + escapeHtml(ctoEditContext.nome || '') + (portaAtualNumero ? '<br><strong>Porta atual:</strong> ' + String(portaAtualNumero).padStart(2, '0') : '') + '<br><strong>Portas:</strong> selecione uma porta livre e depois clique em Gravar.</div>'
+        + '<div class="port-grid">' + portasHtml + '</div>'
+        + '<div class="port-selected-hint" id="portSelectedHint">Porta selecionada: <span id="portSelectedNumber"></span></div>'
+        + '</div><div class="port-modal-footer"><div class="port-modal-actions"><button type="button" class="port-cancel" onclick="fecharModalSelecaoPorta()">Cancelar</button><button type="button" class="port-save" id="btnSalvarPortaCto" disabled>Gravar</button></div></div>'
+        + '</div>';
+    overlay.addEventListener('click', function (ev) {
+        if (ev.target === overlay) fecharModalSelecaoPorta();
+    });
+    document.body.appendChild(overlay);
+    let portaSelecionada = null;
+    const saveButton = overlay.querySelector('#btnSalvarPortaCto');
+    const selectedHint = overlay.querySelector('#portSelectedHint');
+    const selectedNumber = overlay.querySelector('#portSelectedNumber');
+
+    overlay.querySelectorAll('.js-porta-livre').forEach(function (button) {
+        button.addEventListener('click', function (ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            overlay.querySelectorAll('.js-porta-livre').forEach(function (item) {
+                item.classList.remove('is-selected');
+                const p = parseInt(item.getAttribute('data-porta'), 10);
+                const texto = (portaAtualNumero === p) ? 'Atual' : 'Livre';
+                item.innerHTML = String(p).padStart(2, '0') + '<small>' + texto + '</small>';
+            });
+            portaSelecionada = parseInt(button.getAttribute('data-porta'), 10);
+            button.classList.add('is-selected');
+            button.innerHTML = String(portaSelecionada).padStart(2, '0') + '<small>Selecionada</small>';
+            if (selectedNumber) selectedNumber.textContent = String(portaSelecionada).padStart(2, '0');
+            if (selectedHint) selectedHint.style.display = 'block';
+            if (saveButton) saveButton.disabled = false;
+        });
+    });
+
+    if (saveButton) {
+        saveButton.addEventListener('click', function (ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            if (!portaSelecionada) {
+                alert('Selecione uma porta livre antes de gravar.');
+                return;
+            }
+            confirmarAtribuicaoPorta(Number(clienteId), tipoAcao || 'adc', portaSelecionada);
         });
     }
 }
+
+function confirmarAtribuicaoPorta(clienteId, tipoAcao, porta) {
+    const formData = new FormData();
+    formData.append('_tipoAcao', tipoAcao);
+    formData.append(tipoAcao === 'adca' ? 'idAdicionalCaixa' : 'idClienteCaixa', clienteId);
+    formData.append('porta_splitter', porta);
+    formData.append('_route', 'editar');
+    formData.append('id', '<?php echo isset($ID) ? $ID : ""; ?>');
+    formData.append('ID', '<?php echo isset($ID) ? $ID : ""; ?>');
+
+    fetch(window.location.href, { method: 'POST', body: formData, credentials: 'same-origin' })
+        .then(function (response) {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            location.reload();
+        })
+        .catch(function () { alert('Erro ao atribuir cliente'); });
+}
+
+document.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape') fecharModalSelecaoPorta();
+});
 
 function removerCliente(clienteId, clienteNome, tipoAcao) {
     tipoAcao = tipoAcao || 'exc';
@@ -1353,6 +2112,7 @@ function caixasInicializarGoogle(center) {
     mapa.addListener('maptypeid_changed', () => caixasSalvarModoMapa(mapa.getMapTypeId() === google.maps.MapTypeId.SATELLITE ? 'satelite' : 'mapa'));
     const marcador = new google.maps.Marker({position:center, map:mapa, draggable:true});
     window.mapaGeocodificacao = {provider:'google', mapa, marcador, geocoder:new google.maps.Geocoder()};
+    caixasMostrarCtosReferencia();
     caixasVincularArrasteMarcador();
     mapa.addListener('click', e => {
         const lat = e.latLng.lat(), lng = e.latLng.lng();
@@ -1374,6 +2134,7 @@ function caixasInicializarOpenStreet(center) {
     mapa.on('baselayerchange', e => caixasSalvarModoMapa(e.name === 'Satelite' ? 'satelite' : 'mapa'));
     const marcador = L.marker([center.lat, center.lng], {draggable:true}).addTo(mapa);
     window.mapaGeocodificacao = {provider:'openstreet', mapa, marcador};
+    caixasMostrarCtosReferencia();
     caixasVincularArrasteMarcador();
     mapa.on('click', e => {
         const lat = e.latlng.lat, lng = e.latlng.lng;
@@ -1385,6 +2146,52 @@ function caixasInicializarOpenStreet(center) {
         }).catch(() => caixasResultadoSelecionado(lat, lng, ''));
     });
     setTimeout(() => mapa.invalidateSize(), 150);
+}
+
+function caixasMostrarCtosReferencia() {
+    fetch('src/cto/componente/viabilidade/carregarCtos.php', {headers:{'X-Requested-With':'XMLHttpRequest'}})
+        .then(r => r.json())
+        .then(ctos => {
+            if (!Array.isArray(ctos)) return;
+            const geo = window.mapaGeocodificacao || {};
+            ctos.forEach(cto => {
+                const lat = parseFloat(cto.latitude);
+                const lng = parseFloat(cto.longitude);
+                if (isNaN(lat) || isNaN(lng)) return;
+                const titulo = `${cto.nomecaixa || 'CTO'}${cto.endereco ? ' - ' + cto.endereco : ''}`;
+                if (geo.provider === 'google' && window.google && google.maps) {
+                    new google.maps.Marker({
+                        position: {lat, lng},
+                        map: geo.mapa,
+                        title: titulo,
+                        clickable: false,
+                        icon: {
+                            url: 'data:image/svg+xml;base64,' + btoa(caixasMarkerCtoReferenciaSvg(cto.nomecaixa || 'CTO')),
+                            scaledSize: new google.maps.Size(30, 25),
+                            anchor: new google.maps.Point(15, 23)
+                        }
+                    });
+                } else if (geo.provider === 'openstreet' && window.L) {
+                    L.marker([lat, lng], {
+                        icon: L.divIcon({
+                            className: 'cto-ref-marker',
+                            html: caixasMarkerCtoReferenciaSvg(cto.nomecaixa || 'CTO'),
+                            iconSize: [30, 25],
+                            iconAnchor: [15, 23]
+                        }),
+                        title: titulo,
+                        interactive: false
+                    }).addTo(geo.mapa);
+                }
+            });
+        })
+        .catch(() => {});
+}
+
+function caixasMarkerCtoReferenciaSvg(nome) {
+    const numero = (String(nome || '').match(/\d+/) || [''])[0];
+    const texto = numero ? `<text x="15" y="16" text-anchor="middle" font-family="Arial" font-size="9" font-weight="700" fill="white">${numero}</text>` : '<circle cx="15" cy="12" r="3.5" fill="white"/>';
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 25" width="30" height="25"><rect x="3" y="3" width="24" height="17" rx="4" fill="#64748b" stroke="white" stroke-width="2"/><rect x="10" y="20" width="10" height="3" rx="1" fill="#64748b" stroke="white" stroke-width="1"/>${texto}</svg>`;
 }
 
 async function caixasPrepararEnderecoBusca(endereco) {

@@ -169,11 +169,14 @@ function encontrarOLT($connection, $olt_id) {
 function vincularCaixaCliente($connection, $idCliente, $nomeCaixa, $porta_splitter, $tipoAcao) {
 
     $tabela_cliente = 'sis_cliente';
+    $idCliente = intval($idCliente);
+    $nomeCaixa = mysqli_real_escape_string($connection, $nomeCaixa);
+    $porta_splitter = mysqli_real_escape_string($connection, $porta_splitter);
 
     if ($tipoAcao == 'adc') {
-        $sql = "UPDATE $tabela_cliente SET caixa_herm = '" . $nomeCaixa . "' WHERE ID = $idCliente";
+        $sql = "UPDATE $tabela_cliente SET caixa_herm = '" . $nomeCaixa . "', porta_splitter = '" . $porta_splitter . "' WHERE ID = $idCliente";
     } else if ($tipoAcao == 'exc') {
-        $sql = "UPDATE $tabela_cliente SET caixa_herm = null WHERE ID = $idCliente";
+        $sql = "UPDATE $tabela_cliente SET caixa_herm = null, porta_splitter = null WHERE ID = $idCliente";
     } else if ($tipoAcao == 'edc') {
         $sql = "UPDATE $tabela_cliente SET porta_splitter = '" . $porta_splitter . "' WHERE ID = $idCliente";
     }
@@ -229,12 +232,15 @@ function vincularCaixaAdicional($connection, $idCliente, $nomeCaixa, $porta_spli
     $idCliente = intval($idCliente);
     $nomeCaixa = mysqli_real_escape_string($connection, $nomeCaixa);
     $porta_splitter = mysqli_real_escape_string($connection, $porta_splitter);
+    $temPortaSplitter = caixasColunaExiste($connection, $tabela_cliente, 'porta_splitter');
     if ($tipoAcao == 'adca') {
-        $sql = "UPDATE $tabela_cliente SET caixa_herm = '" . $nomeCaixa . "' WHERE ID = $idCliente";
+        $setPorta = $temPortaSplitter ? ", porta_splitter = '" . $porta_splitter . "'" : "";
+        $sql = "UPDATE $tabela_cliente SET caixa_herm = '" . $nomeCaixa . "'" . $setPorta . " WHERE ID = $idCliente";
     } else if ($tipoAcao == 'exca') {
-        $sql = "UPDATE $tabela_cliente SET caixa_herm = null WHERE ID = $idCliente";
+        $setPorta = $temPortaSplitter ? ", porta_splitter = null" : "";
+        $sql = "UPDATE $tabela_cliente SET caixa_herm = null" . $setPorta . " WHERE ID = $idCliente";
     } else if ($tipoAcao == 'edca') {
-        if (!caixasColunaExiste($connection, $tabela_cliente, 'porta_splitter')) {
+        if (!$temPortaSplitter) {
             return "Campo porta_splitter nao encontrado em sis_adicional.";
         }
         $sql = "UPDATE $tabela_cliente SET porta_splitter = '" . $porta_splitter . "' WHERE ID = $idCliente";
