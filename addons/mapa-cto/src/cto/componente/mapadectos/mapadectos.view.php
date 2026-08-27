@@ -2069,6 +2069,20 @@
             mostrarAvisoMapa('Exibindo somente ' + (cto.nome || 'CTO') + ' e seus clientes.');
         }
 
+        function abrirCtoSelecionadaNoMapa(cto) {
+            if (!cto) return;
+            if (modoAtrelarCliente) {
+                selecionarCtoDestinoAtrelamento(cto);
+                return;
+            }
+            fixarClientesCto(cto.id);
+            try {
+                destacarRadioCto(cto);
+            } catch (erro) {
+                if (window.console && console.warn) console.warn('Falha ao destacar vinculo de radio da CTO', erro);
+            }
+        }
+
         function filtrarClientesPainelCto(filtro) {
             if (!ctoSelecionadaAtual) return;
             filtroClientesCtoAtual = filtro || 'total';
@@ -2470,13 +2484,8 @@
                 });
 
                 marker.addListener('click', () => {
-                    if (modoAtrelarCliente) {
-                        selecionarCtoDestinoAtrelamento(cto);
-                        return;
-                    }
                     hoverInfoWindow.close();
-                    destacarRadioCto(cto);
-                    fixarClientesCto(cto.id);
+                    abrirCtoSelecionadaNoMapa(cto);
                 });
 
                 marker.addListener('mouseover', () => {
@@ -2655,12 +2664,8 @@
                     }, 1200);
                 });
                 marker.on('click', () => {
-                    if (modoAtrelarCliente) {
-                        selecionarCtoDestinoAtrelamento(cto);
-                        return;
-                    }
-                    destacarRadioCto(cto);
-                    fixarClientesCto(cto.id);
+                    marker.closePopup();
+                    abrirCtoSelecionadaNoMapa(cto);
                 });
 
                 marcadores.push(marker);
