@@ -1074,6 +1074,14 @@
             bloquearWheelMapa(box);
         }
 
+        function abrirClienteNoMapa(cliente) {
+            const cto = encontrarCtoDoCliente(cliente);
+            if (cto && (clientesFixosAtivos || todosClientesFixosAtivos)) {
+                fixarClientesCto(cto.id);
+            }
+            abrirDetalheCliente(cliente);
+        }
+
         function fecharDetalheCliente() {
             const detalhe = document.getElementById('ctoClientDetail');
             if (detalhe) detalhe.remove();
@@ -1977,7 +1985,7 @@
                     }).addTo(mapa);
                     const marker = L.marker([lat, lng], {icon: criarLeafletIconCliente(cliente)}).addTo(mapa);
                     marker.bindTooltip(escapeHtml(titulo), {direction: 'top'});
-                    marker.on('click', () => abrirDetalheCliente(cliente));
+                    marker.on('click', () => abrirClienteNoMapa(cliente));
                     marcadoresClientesHover.push(linha);
                     marcadoresClientesHover.push(marker);
                 } else if (window.google && google.maps) {
@@ -1998,7 +2006,7 @@
                         title: titulo,
                         icon: googleIconCliente(cliente)
                     });
-                    marker.addListener('click', () => abrirDetalheCliente(cliente));
+                    marker.addListener('click', () => abrirClienteNoMapa(cliente));
                     marcadoresClientesHover.push(linha);
                     marcadoresClientesHover.push(marker);
                 }
@@ -2036,7 +2044,7 @@
                 if (MAP_PROVIDER === 'openstreet' && window.L) {
                     const marker = L.marker([lat, lng], {icon: criarLeafletIconCliente(cliente)}).addTo(mapa);
                     marker.bindTooltip(escapeHtml(titulo), {direction: 'top'});
-                    marker.on('click', () => abrirDetalheCliente(cliente));
+                    marker.on('click', () => abrirClienteNoMapa(cliente));
                     marcadoresClientesHover.push(marker);
                 } else if (window.google && google.maps) {
                     const marker = new google.maps.Marker({
@@ -2045,7 +2053,7 @@
                         title: titulo,
                         icon: googleIconCliente(cliente)
                     });
-                    marker.addListener('click', () => abrirDetalheCliente(cliente));
+                    marker.addListener('click', () => abrirClienteNoMapa(cliente));
                     marcadoresClientesHover.push(marker);
                 }
             });
@@ -2081,6 +2089,28 @@
             } catch (erro) {
                 if (window.console && console.warn) console.warn('Falha ao destacar vinculo de radio da CTO', erro);
             }
+        }
+
+        function encontrarCtoProximaDoClique(latlng, raioPx) {
+            if (!mapa || !latlng || typeof mapa.latLngToContainerPoint !== 'function') return null;
+            const pontoClique = mapa.latLngToContainerPoint(latlng);
+            let melhor = null;
+            let melhorDistancia = Number.POSITIVE_INFINITY;
+            (Array.isArray(ctosData) ? ctosData : []).forEach(cto => {
+                if (!ctoVisivelNoFiltro(cto)) return;
+                const lat = parseFloat(cto.latitude);
+                const lng = parseFloat(cto.longitude);
+                if (isNaN(lat) || isNaN(lng)) return;
+                const pontoCto = mapa.latLngToContainerPoint([lat, lng]);
+                const dx = pontoClique.x - pontoCto.x;
+                const dy = pontoClique.y - pontoCto.y;
+                const distancia = Math.sqrt(dx * dx + dy * dy);
+                if (distancia < melhorDistancia) {
+                    melhorDistancia = distancia;
+                    melhor = cto;
+                }
+            });
+            return melhorDistancia <= (raioPx || 44) ? melhor : null;
         }
 
         function filtrarClientesPainelCto(filtro) {
@@ -2435,7 +2465,14 @@
                     mostrarAvisoMapa('Agora arraste a casa se precisar e clique em salvar.');
                     return;
                 }
-                if (modoAdicionarCto) abrirFormularioNovaCto(event.latlng.lat, event.latlng.lng);
+                if (modoAdicionarCto) {
+                    abrirFormularioNovaCto(event.latlng.lat, event.latlng.lng);
+                    return;
+                }
+                if (!modoAdicionarCto && !modoAjustarCliente && !modoAtrelarCliente && !modoAjustarCto && (clientesFixosAtivos || todosClientesFixosAtivos)) {
+                    const cto = encontrarCtoProximaDoClique(event.latlng, 52);
+                    if (cto) abrirCtoSelecionadaNoMapa(cto);
+                }
             });
 
             adicionarMarcadores();
