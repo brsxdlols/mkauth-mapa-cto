@@ -9,6 +9,28 @@ $ctos_data = array();
 $todos_clientes_data = array();
 $todos_clientes_index = array();
 
+function mapa_cto_json_response($data) {
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($data);
+    exit;
+}
+
+function mapa_cto_coluna_existe($connection, $tabela, $coluna) {
+    $tabela = mysqli_real_escape_string($connection, $tabela);
+    $coluna = mysqli_real_escape_string($connection, $coluna);
+    $result = mysqli_query($connection, "SHOW COLUMNS FROM `" . $tabela . "` LIKE '" . $coluna . "'");
+    return $result && mysqli_num_rows($result) > 0;
+}
+
+function mapa_cto_tabela_existe($connection, $tabela) {
+    $tabela = mysqli_real_escape_string($connection, $tabela);
+    $result = mysqli_query($connection, "SHOW TABLES LIKE '" . $tabela . "'");
+    return $result && mysqli_num_rows($result) > 0;
+}
+
 function mapa_cto_cliente_tem_coord($cliente) {
     $lat = isset($cliente['latitude']) ? floatval($cliente['latitude']) : 0;
     $lng = isset($cliente['longitude']) ? floatval($cliente['longitude']) : 0;
@@ -44,6 +66,60 @@ function mapa_cto_adicionar_todos_clientes(&$todos_clientes_data, &$todos_client
     $pos = $todos_clientes_index[$key];
     if (!mapa_cto_cliente_tem_coord($todos_clientes_data[$pos]) && mapa_cto_cliente_tem_coord($cliente)) {
         $todos_clientes_data[$pos] = $cliente;
+    }
+}
+
+if (isset($connection) && $connection && isset($_POST['acao_mapa_cto'])) {
+    $acao_mapa_cto = isset($_POST['acao_mapa_cto']) ? (string)$_POST['acao_mapa_cto'] : '';
+
+    if ($acao_mapa_cto === 'atribuir_cliente_cto') {
+        $cliente_id = isset($_POST['cliente_id']) ? intval($_POST['cliente_id']) : 0;
+        $cliente_tipo = isset($_POST['cliente_tipo']) ? trim((string)$_POST['cliente_tipo']) : 'Cliente';
+        $cto_id = isset($_POST['cto_id']) ? intval($_POST['cto_id']) : 0;
+        $porta = isset($_POST['porta']) ? trim((string)$_POST['porta']) : '';
+
+        if ($cliente_id <= 0 || $cto_id <= 0 || $porta === '') {
+            mapa_cto_json_response(array('ok' => false, 'message' => 'Cliente, CTO ou porta invalida.'));
+        }
+
+        $cto_result = mysqli_query($connection, "SELECT id, nome FROM mp_caixa WHERE id = " . $cto_id . " LIMIT 1");
+        $cto = $cto_result ? mysqli_fetch_assoc($cto_result) : null;
+        if (!$cto) {
+            mapa_cto_json_response(array('ok' => false, 'message' => 'CTO nao encontrada.'));
+        }
+
+        $cto_nome = mysqli_real_escape_string($connection, $cto['nome']);
+        $porta_db = mysqli_real_escape_string($connection, $porta);
+        $is_adicional = strtolower($cliente_tipo) === 'adicional';
+
+        if ($is_adicional) {
+            if (!mapa_cto_tabela_existe($connection, 'sis_adicional') || !mapa_cto_coluna_existe($connection, 'sis_adicional', 'caixa_herm')) {
+                mapa_cto_json_response(array('ok' => false, 'message' => 'Tabela/campo de adicional nao encontrado.'));
+            }
+            $set = "caixa_herm = '" . $cto_nome . "'";
+            if (mapa_cto_coluna_existe($connection, 'sis_adicional', 'porta_splitter')) {
+                $set .= ", porta_splitter = '" . $porta_db . "'";
+            }
+            $ok = mysqli_query($connection, "UPDATE sis_adicional SET " . $set . " WHERE id = " . $cliente_id . " LIMIT 1");
+        } else {
+            if (!mapa_cto_coluna_existe($connection, 'sis_cliente', 'caixa_herm')) {
+                mapa_cto_json_response(array('ok' => false, 'message' => 'Campo caixa_herm nao encontrado em sis_cliente.'));
+            }
+            $set = "caixa_herm = '" . $cto_nome . "'";
+            if (mapa_cto_coluna_existe($connection, 'sis_cliente', 'porta_splitter')) {
+                $set .= ", porta_splitter = '" . $porta_db . "'";
+            }
+            if (mapa_cto_coluna_existe($connection, 'sis_cliente', 'cto_id')) {
+                $set .= ", cto_id = " . $cto_id;
+            }
+            $ok = mysqli_query($connection, "UPDATE sis_cliente SET " . $set . " WHERE id = " . $cliente_id . " LIMIT 1");
+        }
+
+        if (!$ok) {
+            mapa_cto_json_response(array('ok' => false, 'message' => 'Erro ao gravar: ' . mysqli_error($connection)));
+        }
+
+        mapa_cto_json_response(array('ok' => true, 'message' => 'Cliente atrelado com sucesso.'));
     }
 }
 
