@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -560,8 +560,11 @@
         .cto-hover-type{font-size:10px;color:#475569;background:#eef2ff;border-radius:999px;padding:1px 5px}
         .cto-hover-empty,.cto-hover-more{font-size:11px;color:#64748b;margin-top:4px}
         .cto-port-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(54px,1fr));gap:6px}
-        .cto-port-pill{border:1px solid #dbeafe;border-radius:6px;padding:5px 6px;font-size:11px;background:#eff6ff;color:#1e40af;text-align:center}
+        .cto-port-pill{border:1px solid #dbeafe;border-radius:6px;padding:5px 6px;font-size:11px;background:#eff6ff;color:#1e40af;text-align:center;font-family:inherit}
+        button.cto-port-pill{cursor:pointer}
+        button.cto-port-pill:disabled{cursor:default}
         .cto-port-pill.used{background:#fef2f2;border-color:#fecaca;color:#991b1b}
+        .cto-port-pill.selected{background:#fef3c7;border-color:#f59e0b;color:#92400e;box-shadow:0 0 0 2px rgba(245,158,11,.18) inset}
         .map-toast{position:absolute;left:12px;bottom:12px;z-index:10000;background:#111827;color:white;padding:10px 14px;border-radius:8px;font-weight:700;box-shadow:0 8px 20px rgba(0,0,0,.25)}
         .cto-add-modal{position:absolute;left:12px;top:12px;z-index:10001;width:min(360px,calc(100% - 24px));background:#fff;border-radius:10px;box-shadow:0 12px 32px rgba(15,23,42,.25);overflow:hidden}
         .cto-add-modal header{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:12px 14px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
@@ -726,6 +729,7 @@
         let clienteDetalheAtual = null;
         let ctoHoverAtivoId = null;
         let ctoSelecionadaAtual = null;
+        let portaCtoDestacada = '';
         let marcadorClienteSelecionado = null;
         let modoAjustarCliente = null;
         let marcadorAjusteCliente = null;
@@ -738,6 +742,7 @@
         let ajusteCtoPosicao = null;
         let destaquesRadio = [];
         let clientesBuscaMapa = [];
+        let ctoBuscaDestinoAtual = null;
         const CAIXAS_MAP_LAYER_KEY = 'caixas_modo_visualizacao_mapa';
         function getCaixasMapMode() { return (localStorage.getItem(CAIXAS_MAP_LAYER_KEY) === 'satelite') ? 'satelite' : 'mapa'; }
         function setCaixasMapMode(mode) { localStorage.setItem(CAIXAS_MAP_LAYER_KEY, mode === 'satelite' ? 'satelite' : 'mapa'); }
@@ -802,11 +807,13 @@
         function fecharBuscaClienteMapa() {
             const painel = document.getElementById('ctoClientSearchPanel');
             if (painel) painel.remove();
+            ctoBuscaDestinoAtual = null;
         }
 
-        function abrirBuscaClienteMapa() {
+        function abrirBuscaClienteMapa(ctoDestinoId) {
             const mapElement = document.getElementById('map');
             if (!mapElement) return;
+            ctoBuscaDestinoAtual = ctoDestinoId ? (ctosData.find(item => String(item.id) === String(ctoDestinoId)) || null) : null;
             let painel = document.getElementById('ctoClientSearchPanel');
             if (!painel) {
                 painel = document.createElement('div');
@@ -814,9 +821,10 @@
                 painel.className = 'cto-client-search-panel';
                 mapElement.appendChild(painel);
             }
+            const titulo = ctoBuscaDestinoAtual ? 'Adicionar cliente na ' + (ctoBuscaDestinoAtual.nome || 'CTO') : 'Buscar cliente';
             painel.innerHTML = `
                 <header>
-                    <span>Buscar cliente</span>
+                    <span>${escapeHtml(titulo)}</span>
                     <button type="button" class="cto-small-btn cancel" onclick="fecharBuscaClienteMapa()">x</button>
                 </header>
                 <div class="body">
@@ -863,7 +871,21 @@
         function selecionarClienteBuscaMapa(index) {
             const cliente = clientesBuscaMapa[index];
             if (!cliente) return;
+            const ctoDestino = ctoBuscaDestinoAtual;
             fecharBuscaClienteMapa();
+            if (ctoDestino) {
+                if (!estadoMapaAntesAcao) estadoMapaAntesAcao = capturarEstadoVisual();
+                modoAtrelarCliente = cliente;
+                ctoSelecionadaAtual = ctoDestino;
+                limparMarcadoresClientesHover();
+                limparMarcadorClienteSelecionado();
+                adicionarMarcadores(false);
+                destacarClienteSelecionado(cliente);
+                selecionarCtoDestinoAtrelamento(ctoDestino);
+                ajustarViewportAtrelamento(cliente, ctoDestino);
+                mostrarAvisoMapa('Cliente selecionado. Escolha a porta e clique em Gravar.');
+                return;
+            }
             abrirDetalheCliente(cliente);
             destacarClienteSelecionado(cliente);
             if (clienteTemCoordenada(cliente)) ajustarZoomAtrelamento(cliente);
@@ -969,23 +991,23 @@
             setTimeout(() => {
                 if (MAP_PROVIDER === 'openstreet' && window.L) {
                     if (pontos.length === 1) {
-                        mapa.setView([pontos[0].lat, pontos[0].lng], Math.min(Math.max(mapa.getZoom ? mapa.getZoom() : 15, 15), 16), {animate: true});
+                        mapa.setView([pontos[0].lat, pontos[0].lng], Math.min(Math.max(mapa.getZoom ? mapa.getZoom() : 14, 14), 15), {animate: true});
                     } else {
                         mapa.fitBounds(L.latLngBounds(pontos.map(p => [p.lat, p.lng])), {
-                            paddingTopLeft: [40, 60],
-                            paddingBottomRight: [360, 80],
-                            maxZoom: 15
+                            paddingTopLeft: [70, 80],
+                            paddingBottomRight: [460, 130],
+                            maxZoom: 13
                         });
                     }
                 } else if (window.google && google.maps) {
                     if (pontos.length === 1) {
                         mapa.panTo(pontos[0]);
-                        if (!mapa.getZoom || mapa.getZoom() < 14 || mapa.getZoom() > 16) mapa.setZoom(15);
+                        if (!mapa.getZoom || mapa.getZoom() < 13 || mapa.getZoom() > 15) mapa.setZoom(14);
                     } else {
                         const bounds = new google.maps.LatLngBounds();
                         pontos.forEach(p => bounds.extend(p));
-                        mapa.fitBounds(bounds, 80);
-                        setTimeout(() => { if (mapa.getZoom && mapa.getZoom() > 15) mapa.setZoom(15); }, 120);
+                        mapa.fitBounds(bounds, 110);
+                        setTimeout(() => { if (mapa.getZoom && mapa.getZoom() > 13) mapa.setZoom(13); }, 120);
                     }
                 }
             }, 120);
@@ -1046,6 +1068,7 @@
             const ctoDaRota = ctoSelecionadaAtual || encontrarCtoDoCliente(cliente);
             if (ctoDaRota && clienteTemCoordenada(cliente)) {
                 desenharPreviewAtrelamento(cliente, ctoDaRota);
+                ajustarViewportAtrelamento(cliente, ctoDaRota);
             }
             let box = document.getElementById('ctoClientDetail');
             if (!box) {
@@ -1149,6 +1172,7 @@
             modoClicarCtoAtrelamento = false;
             desenharPreviewAtrelamento(modoAtrelarCliente, cto);
             abrirConfirmacaoAtrelamento(cto);
+            ajustarViewportAtrelamento(modoAtrelarCliente, cto);
         }
 
         function desenharPreviewAtrelamento(cliente, cto) {
@@ -1281,6 +1305,37 @@
             }
         }
 
+        function ajustarViewportAtrelamento(cliente, cto) {
+            if (!clienteTemCoordenada(cliente) || !cto || !mapa) return;
+            const latCliente = parseFloat(cliente.latitude);
+            const lngCliente = parseFloat(cliente.longitude);
+            const latCto = parseFloat(cto.latitude);
+            const lngCto = parseFloat(cto.longitude);
+            if ([latCliente, lngCliente, latCto, lngCto].some(v => isNaN(v))) return;
+
+            setTimeout(() => {
+                if (MAP_PROVIDER === 'openstreet' && window.L) {
+                    const bounds = L.latLngBounds([[latCliente, lngCliente], [latCto, lngCto]]);
+                    mapa.fitBounds(bounds, {
+                        paddingTopLeft: [360, 110],
+                        paddingBottomRight: [500, 150],
+                        maxZoom: 13
+                    });
+                    setTimeout(() => {
+                        if (mapa.getZoom && mapa.getZoom() > 13) mapa.setZoom(13, {animate: false});
+                    }, 80);
+                } else if (window.google && google.maps) {
+                    const bounds = new google.maps.LatLngBounds();
+                    bounds.extend({lat: latCliente, lng: lngCliente});
+                    bounds.extend({lat: latCto, lng: lngCto});
+                    mapa.fitBounds(bounds, 210);
+                    setTimeout(() => {
+                        if (mapa.getZoom && mapa.getZoom() > 13) mapa.setZoom(13);
+                    }, 120);
+                }
+            }, 140);
+        }
+
         function portasLivresDaCto(cto, clienteAtual) {
             const capacidade = parseInt(cto.capacidade, 10) || 0;
             const usadas = {};
@@ -1352,14 +1407,16 @@
 
         function prepararMapaParaEscolherCto() {
             const viewport = capturarViewportMapa();
-            clientesFixosAtivos = true;
+            const cliente = modoAtrelarCliente;
+            clientesFixosAtivos = false;
             todosClientesFixosAtivos = false;
             ctoUnicaVisivelId = null;
             ctoSelecionadaAtual = null;
             fecharPainelCto(false);
             limparMarcadoresClientesHover();
+            limparMarcadorClienteSelecionado();
+            modoAtrelarCliente = cliente;
             adicionarMarcadores(false);
-            destacarClienteSelecionado(modoAtrelarCliente);
             atualizarBotaoClientes();
             restaurarViewportMapa(viewport);
         }
@@ -1506,6 +1563,7 @@
         function abrirConfirmacaoAtrelamento(cto) {
             const mapElement = document.getElementById('map');
             if (!mapElement || !modoAtrelarCliente) return;
+            const distanciaReta = distanciaClienteCto(modoAtrelarCliente, cto);
             let modal = document.getElementById('ctoLinkConfirm');
             if (modal) modal.remove();
             modal = document.createElement('div');
@@ -1523,6 +1581,8 @@
                     <p><strong>Porta atual:</strong> ${escapeHtml(modoAtrelarCliente.porta || '-')}</p>
                 </div>
                 <p><strong>Nova CTO:</strong> ${escapeHtml(cto.nome || 'CTO')}</p>
+                ${distanciaReta !== null ? `<p><strong>Distancia reta:</strong> ${escapeHtml(formatarDistancia(distanciaReta))}</p>` : ''}
+                <p><strong>Rota:</strong> linha amarela reta e linha azul por vias, quando disponivel.</p>
                 <p><strong>Portas:</strong> selecione uma porta livre e depois clique em Gravar.</p>
                 ${montarGradePortasAtrelamento(cto)}
                 <div id="portaSelecionadaAtrelamentoInfo" class="cto-selected-port-note" style="display:${portaSelecionadaAtrelamento ? 'block' : 'none'};">${portaSelecionadaAtrelamento ? 'Porta selecionada: ' + escapeHtml(portaSelecionadaAtrelamento) : ''}</div>
@@ -1574,6 +1634,51 @@
             return `<div class="cto-hover-clients">${rows}</div>`;
         }
 
+        function normalizarPortaCto(valor, fallback) {
+            const texto = String(valor || '').trim();
+            const numero = parseInt(texto, 10);
+            if (!isNaN(numero) && numero > 0) return String(numero).padStart(2, '0');
+            return fallback ? String(fallback).padStart(2, '0') : '';
+        }
+
+        function clienteDaPortaCto(cto, portaAlvo) {
+            const portaNormalizada = normalizarPortaCto(portaAlvo);
+            const clientes = Array.isArray(cto && cto.clientes) ? cto.clientes : [];
+            return clientes.find((cliente, index) => {
+                const portaCliente = normalizarPortaCto(cliente.porta || cliente.porta_splitter, index + 1);
+                return portaCliente === portaNormalizada;
+            }) || null;
+        }
+
+        function mostrarClientePortaCto(ctoId, porta) {
+            const cto = ctosData.find(item => String(item.id) === String(ctoId));
+            if (!cto) return;
+            const portaNormalizada = normalizarPortaCto(porta);
+            const cliente = clienteDaPortaCto(cto, portaNormalizada);
+            if (!cliente) {
+                mostrarAvisoMapa('Porta ' + portaNormalizada + ' livre.');
+                return;
+            }
+            portaCtoDestacada = portaNormalizada;
+            filtroClientesCtoAtual = 'total';
+            ctoSelecionadaAtual = cto;
+            ctoUnicaVisivelId = String(cto.id);
+            clientesFixosAtivos = true;
+            todosClientesFixosAtivos = false;
+            limparMarcadoresClientesHover();
+            adicionarMarcadores(false);
+            abrirPainelCto(montarPainelCto(cto));
+            abrirDetalheCliente(cliente);
+            destacarClienteSelecionado(cliente);
+            if (clienteTemCoordenada(cliente)) {
+                desenharPreviewAtrelamento(cliente, cto);
+                ajustarViewportAtrelamento(cliente, cto);
+                mostrarAvisoMapa('Porta ' + portaNormalizada + ': ' + (cliente.nome || 'cliente') + '.');
+            } else {
+                mostrarAvisoMapa('Porta ' + portaNormalizada + ': cliente sem coordenada.');
+            }
+        }
+
         function montarPortasCto(cto) {
             const capacidade = parseInt(cto.capacidade, 10) || 0;
             const clientes = Array.isArray(cto.clientes) ? cto.clientes : [];
@@ -1581,7 +1686,7 @@
 
             const portasUsadas = {};
             clientes.forEach((cliente, index) => {
-                const porta = String(cliente.porta || cliente.porta_splitter || '').trim() || String(index + 1).padStart(2, '0');
+                const porta = normalizarPortaCto(cliente.porta || cliente.porta_splitter, index + 1);
                 portasUsadas[parseInt(porta, 10)] = cliente;
             });
 
@@ -1589,7 +1694,12 @@
             for (let i = 1; i <= capacidade; i++) {
                 const cliente = portasUsadas[i];
                 const porta = String(i).padStart(2, '0');
-                html += `<div class="cto-port-pill ${cliente ? 'used' : ''} ${cliente && clienteDesativado(cliente) ? 'inactive' : ''}" title="${cliente ? escapeHtml(nomeClienteComStatus(cliente)) : 'Porta livre'}">${porta}${cliente ? '<br>Uso' : '<br>Livre'}</div>`;
+                if (cliente) {
+                    const selecionada = portaCtoDestacada === porta;
+                    html += `<button type="button" class="cto-port-pill used ${selecionada ? 'selected' : ''} ${clienteDesativado(cliente) ? 'inactive' : ''}" onclick='mostrarClientePortaCto(${JSON.stringify(String(cto.id))}, ${JSON.stringify(porta)})' title="${escapeHtml(nomeClienteComStatus(cliente))}">${porta}<br>Uso</button>`;
+                } else {
+                    html += `<button type="button" class="cto-port-pill" disabled title="Porta livre">${porta}<br>Livre</button>`;
+                }
             }
             html += '</div>';
             return html;
@@ -2063,17 +2173,18 @@
         function fixarClientesCto(ctoId, filtro) {
             const cto = ctosData.find(item => String(item.id) === String(ctoId));
             if (!cto) return;
+            portaCtoDestacada = '';
             limparLinhasClienteCto();
-            filtroClientesCtoAtual = filtro || filtroClientesCtoAtual || 'total';
+            filtroClientesCtoAtual = filtro || 'total';
             ctoUnicaVisivelId = String(cto.id);
             ctoSelecionadaAtual = cto;
             clientesFixosAtivos = true;
             todosClientesFixosAtivos = false;
             atualizarBotaoClientes();
             adicionarMarcadores();
-            mostrarClientesCtoNoMapa(cto, true, filtroClientesCtoAtual);
+            mostrarClientesCtoNoMapa(cto, true, 'total');
             abrirPainelCto(montarPainelCto(cto));
-            ajustarViewportCtoComClientes(cto, filtroClientesCtoAtual);
+            ajustarViewportCtoComClientes(cto, 'total');
             mostrarAvisoMapa('Exibindo somente ' + (cto.nome || 'CTO') + ' e seus clientes.');
         }
 
@@ -2528,7 +2639,7 @@
                 marker.addListener('mouseover', () => {
                     if (ctoHoverTimer) clearTimeout(ctoHoverTimer);
                     ctoHoverAtivoId = String(cto.id);
-                    if (!clientesFixosAtivos) mostrarClientesCtoNoMapa(cto, false);
+                    if (!clientesFixosAtivos && !modoAtrelarCliente) mostrarClientesCtoNoMapa(cto, false);
                     hoverInfoWindow.setContent(`
                         <div class="cto-hover-tooltip">
                             <div class="cto-hover-title">${escapeHtml(cto.nome)}</div>
@@ -2548,7 +2659,7 @@
                     ctoHoverTimer = setTimeout(() => {
                         if (ctoHoverAtivoId === String(cto.id)) return;
                         hoverInfoWindow.close();
-                        if (!clientesFixosAtivos) limparMarcadoresClientesHover();
+                        if (!clientesFixosAtivos && !modoAtrelarCliente) limparMarcadoresClientesHover();
                     }, 1200);
                     ctoHoverAtivoId = null;
                 });
@@ -2639,7 +2750,8 @@
                             <div class="progress-bar"><div class="progress-fill" style="width: ${percentualUso}%;"></div></div>
                         </div>
                         <div class="cto-section cto-section-full" style="margin-bottom:0;">
-                            <button type="button" class="cto-edit" onclick="fixarClientesCto('${String(cto.id)}')" style="border:0;width:100%;cursor:pointer;">Mostrar clientes desta CTO</button>
+                            <button type="button" class="cto-edit" onclick="abrirBuscaClienteMapa('${String(cto.id)}')" style="border:0;width:100%;cursor:pointer;background:#10b981;">Adicionar cliente nesta CTO</button>
+                            <button type="button" class="cto-edit" onclick="fixarClientesCto('${String(cto.id)}')" style="border:0;width:100%;cursor:pointer;margin-top:8px;">Mostrar clientes desta CTO</button>
                             <button type="button" class="cto-edit" onclick="iniciarAjusteLocalizacaoCto('${String(cto.id)}')" style="border:0;width:100%;cursor:pointer;margin-top:8px;background:#64748b;">Editar localizacao da CTO</button>
                         </div>
                     </div>
@@ -2690,14 +2802,14 @@
                     marker.openPopup();
                 });
                 marker.on('mouseover', () => {
-                    if (!clientesFixosAtivos) mostrarClientesCtoNoMapa(cto, false);
+                    if (!clientesFixosAtivos && !modoAtrelarCliente) mostrarClientesCtoNoMapa(cto, false);
                 });
                 marker.on('mouseout', () => {
                     ctoHoverAtivoId = null;
                     ctoHoverTimer = setTimeout(() => {
                         if (ctoHoverAtivoId === String(cto.id)) return;
                         marker.closePopup();
-                        if (!clientesFixosAtivos) limparMarcadoresClientesHover();
+                        if (!clientesFixosAtivos && !modoAtrelarCliente) limparMarcadoresClientesHover();
                     }, 1200);
                 });
                 marker.on('click', () => {
