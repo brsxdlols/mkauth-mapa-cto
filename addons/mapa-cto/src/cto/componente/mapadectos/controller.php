@@ -6,6 +6,7 @@
 
 $component_base = dirname(__FILE__);
 $ctos_data = array();
+$todos_clientes_data = array();
 
 if (isset($connection) && $connection) {
     $has_cto_id = false;
@@ -120,8 +121,13 @@ if (isset($connection) && $connection) {
                             " . $cliente_porta_select . " as porta_splitter,
                             " . $cliente_latitude_select . " as latitude,
                             " . $cliente_longitude_select . " as longitude,
+                            sc.cli_ativado,
                             'Cliente' as tipo_cliente,
-                            CASE WHEN ra.radacctid IS NOT NULL THEN 'online' ELSE 'offline' END as status
+                            CASE
+                                WHEN LOWER(COALESCE(sc.cli_ativado, '')) <> 's' THEN 'desativado'
+                                WHEN ra.radacctid IS NOT NULL THEN 'online'
+                                ELSE 'offline'
+                            END as status
                             FROM sis_cliente sc
                             LEFT JOIN radacct ra ON ra.username = sc.login AND ra.acctstoptime IS NULL
                             WHERE " . $cliente_where_sc . "
@@ -139,6 +145,7 @@ if (isset($connection) && $connection) {
                         'latitude' => $cliente['latitude'] ?? '',
                         'longitude' => $cliente['longitude'] ?? '',
                         'status' => $cliente['status'],
+                        'desativado' => (strtolower($cliente['cli_ativado'] ?? '') !== 's') ? 1 : 0,
                         'tipo' => $cliente['tipo_cliente']
                     );
                 }
@@ -174,6 +181,7 @@ if (isset($connection) && $connection) {
                             'latitude' => $cliente['latitude'] ?? '',
                             'longitude' => $cliente['longitude'] ?? '',
                             'status' => $cliente['status'],
+                            'desativado' => 0,
                             'tipo' => $cliente['tipo_cliente']
                         );
                     }
@@ -212,10 +220,46 @@ if (isset($connection) && $connection) {
             );
         }
     }
+
+    $todos_cliente_porta_select = $has_cliente_porta ? "sc.porta_splitter" : "''";
+    $todos_cliente_latitude_select = $has_cliente_latitude ? "sc.latitude" : "''";
+    $todos_cliente_longitude_select = $has_cliente_longitude ? "sc.longitude" : "''";
+    $todos_clientes_sql = "SELECT sc.id, sc.nome, sc.login, sc.caixa_herm,
+                        " . $todos_cliente_porta_select . " as porta_splitter,
+                        " . $todos_cliente_latitude_select . " as latitude,
+                        " . $todos_cliente_longitude_select . " as longitude,
+                        sc.cli_ativado,
+                        CASE
+                            WHEN LOWER(COALESCE(sc.cli_ativado, '')) <> 's' THEN 'desativado'
+                            WHEN ra.radacctid IS NOT NULL THEN 'online'
+                            ELSE 'offline'
+                        END as status
+                        FROM sis_cliente sc
+                        LEFT JOIN radacct ra ON ra.username = sc.login AND ra.acctstoptime IS NULL
+                        ORDER BY sc.nome
+                        LIMIT 5000";
+    $todos_clientes_result = mysqli_query($connection, $todos_clientes_sql);
+    if ($todos_clientes_result) {
+        while ($cliente = mysqli_fetch_assoc($todos_clientes_result)) {
+            $todos_clientes_data[] = array(
+                'id' => $cliente['id'],
+                'nome' => $cliente['nome'],
+                'login' => $cliente['login'],
+                'caixa_herm' => $cliente['caixa_herm'] ?? '',
+                'porta' => $cliente['porta_splitter'] ?? '',
+                'latitude' => $cliente['latitude'] ?? '',
+                'longitude' => $cliente['longitude'] ?? '',
+                'status' => $cliente['status'],
+                'desativado' => (strtolower($cliente['cli_ativado'] ?? '') !== 's') ? 1 : 0,
+                'tipo' => 'Cliente'
+            );
+        }
+    }
 }
 
 // Converter para JSON para uso no JavaScript
 $ctos_json = json_encode($ctos_data);
+$todos_clientes_json = json_encode($todos_clientes_data);
 
 // Renderizar a view
 require_once __DIR__ . '/mapadectos.view.php';

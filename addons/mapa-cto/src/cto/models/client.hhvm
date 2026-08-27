@@ -262,7 +262,8 @@ function tabelaCliente($connection, $table_name, $nomeCaixa, $id, $orden = 'nome
     //
 
     if ($nomeCaixa != '') {
-        $result = mysqli_query($connection, "SELECT * FROM $tabela_cliente WHERE caixa_herm = '" . $nomeCaixa . "' AND cli_ativado = 's' ORDER BY porta_splitter");
+        $nomeCaixa = mysqli_real_escape_string($connection, $nomeCaixa);
+        $result = mysqli_query($connection, "SELECT * FROM $tabela_cliente WHERE caixa_herm = '" . $nomeCaixa . "' ORDER BY porta_splitter");
     } elseif ($id != '') {
         $result = mysqli_query($connection, "SELECT * FROM $tabela_cliente WHERE id = '" . $id . "' ");
     } else {

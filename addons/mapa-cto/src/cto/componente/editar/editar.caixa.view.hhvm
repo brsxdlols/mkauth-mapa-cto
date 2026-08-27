@@ -1,10 +1,17 @@
 <?php
 $apOptions = array();
+$torreOptions = array();
 if (isset($connection) && $connection) {
     $apResult = mysqli_query($connection, "SELECT nome FROM mp_caixa WHERE tipo = 'AP' ORDER BY nome");
     if ($apResult) {
         while ($apRow = mysqli_fetch_assoc($apResult)) {
             $apOptions[] = $apRow['nome'];
+        }
+    }
+    $torreResult = mysqli_query($connection, "SELECT nome FROM mp_caixa WHERE tipo = 'TO' ORDER BY nome");
+    if ($torreResult) {
+        while ($torreRow = mysqli_fetch_assoc($torreResult)) {
+            $torreOptions[] = $torreRow['nome'];
         }
     }
 }// Verifica se $dadosCaixa é válido antes do loop (compatibilidade PHP 8)
@@ -15,6 +22,11 @@ if ($dadosCaixa && mysqli_num_rows($dadosCaixa) > 0) {
         <datalist id="AP_OPTIONS">
         <?php foreach ($apOptions as $apNome): ?>
             <option value="<?= htmlspecialchars($apNome, ENT_QUOTES, 'UTF-8') ?>"></option>
+        <?php endforeach; ?>
+    </datalist>
+        <datalist id="TORRE_OPTIONS">
+        <?php foreach ($torreOptions as $torreNome): ?>
+            <option value="<?= htmlspecialchars($torreNome, ENT_QUOTES, 'UTF-8') ?>"></option>
         <?php endforeach; ?>
     </datalist>    <form id="form" name="form" method="post" action="#" autocomplete="off">
         <input type="hidden" name="_tipoAcao" id="_tipoAcao" value="ed" />
@@ -153,13 +165,13 @@ if ($dadosCaixa && mysqli_num_rows($dadosCaixa) > 0) {
                 oltLabel.innerHTML = 'Painel/Equipamento:';
                 olt.placeholder = 'Ex: Painel setorial, Rocket, LiteBeam';
                 if (valor === 'STA') {
-                    fspLabel.innerHTML = 'AP vinculado:';
+                    fspLabel.innerHTML = 'AP vinculado (opcional):';
                     fsp.placeholder = 'Selecione ou digite o AP';
                     fsp.setAttribute('list', 'AP_OPTIONS');
                 } else if (valor === 'AP') {
-                    fspLabel.innerHTML = 'Canal/Setor:';
-                    fsp.placeholder = 'Ex: Setor 1 / 5.8GHz';
-                    fsp.removeAttribute('list');
+                    fspLabel.innerHTML = 'Torre vinculada (opcional):';
+                    fsp.placeholder = 'Selecione ou digite a torre';
+                    fsp.setAttribute('list', 'TORRE_OPTIONS');
                 } else {
                     fspLabel.innerHTML = 'Estrutura/Setor:';
                     fsp.placeholder = 'Ex: Torre principal / setor norte';
