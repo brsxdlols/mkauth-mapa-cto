@@ -731,6 +731,7 @@
         let ctoSelecionadaAtual = null;
         let portaCtoDestacada = '';
         let marcadorClienteSelecionado = null;
+        let marcadorClienteCasaSelecionado = null;
         let modoAjustarCliente = null;
         let marcadorAjusteCliente = null;
         let ajusteClientePosicao = null;
@@ -994,9 +995,9 @@
                         mapa.setView([pontos[0].lat, pontos[0].lng], Math.min(Math.max(mapa.getZoom ? mapa.getZoom() : 14, 14), 15), {animate: true});
                     } else {
                         mapa.fitBounds(L.latLngBounds(pontos.map(p => [p.lat, p.lng])), {
-                            paddingTopLeft: [70, 80],
-                            paddingBottomRight: [460, 130],
-                            maxZoom: 13
+                            paddingTopLeft: [55, 70],
+                            paddingBottomRight: [410, 100],
+                            maxZoom: 14
                         });
                     }
                 } else if (window.google && google.maps) {
@@ -1006,8 +1007,8 @@
                     } else {
                         const bounds = new google.maps.LatLngBounds();
                         pontos.forEach(p => bounds.extend(p));
-                        mapa.fitBounds(bounds, 110);
-                        setTimeout(() => { if (mapa.getZoom && mapa.getZoom() > 13) mapa.setZoom(13); }, 120);
+                        mapa.fitBounds(bounds, 90);
+                        setTimeout(() => { if (mapa.getZoom && mapa.getZoom() > 14) mapa.setZoom(14); }, 120);
                     }
                 }
             }, 120);
@@ -1257,6 +1258,11 @@
                 else if (typeof marcadorClienteSelecionado.remove === 'function') marcadorClienteSelecionado.remove();
             }
             marcadorClienteSelecionado = null;
+            if (marcadorClienteCasaSelecionado) {
+                if (typeof marcadorClienteCasaSelecionado.setMap === 'function') marcadorClienteCasaSelecionado.setMap(null);
+                else if (typeof marcadorClienteCasaSelecionado.remove === 'function') marcadorClienteCasaSelecionado.remove();
+            }
+            marcadorClienteCasaSelecionado = null;
         }
 
         function destacarClienteSelecionado(cliente) {
@@ -1274,6 +1280,11 @@
                         iconAnchor: [17, 17]
                     })
                 }).addTo(mapa);
+                marcadorClienteCasaSelecionado = L.marker([lat, lng], {
+                    interactive: false,
+                    zIndexOffset: 1000000,
+                    icon: criarLeafletIconCliente(cliente)
+                }).addTo(mapa);
             } else if (window.google && google.maps) {
                 marcadorClienteSelecionado = new google.maps.Marker({
                     position: {lat, lng},
@@ -1288,6 +1299,13 @@
                         strokeColor: '#f59e0b',
                         strokeWeight: 3
                     }
+                });
+                marcadorClienteCasaSelecionado = new google.maps.Marker({
+                    position: {lat, lng},
+                    map: mapa,
+                    clickable: false,
+                    zIndex: 1000000,
+                    icon: googleIconCliente(cliente)
                 });
             }
         }
@@ -1317,20 +1335,20 @@
                 if (MAP_PROVIDER === 'openstreet' && window.L) {
                     const bounds = L.latLngBounds([[latCliente, lngCliente], [latCto, lngCto]]);
                     mapa.fitBounds(bounds, {
-                        paddingTopLeft: [360, 110],
-                        paddingBottomRight: [500, 150],
-                        maxZoom: 13
+                        paddingTopLeft: [330, 90],
+                        paddingBottomRight: [430, 120],
+                        maxZoom: 14
                     });
                     setTimeout(() => {
-                        if (mapa.getZoom && mapa.getZoom() > 13) mapa.setZoom(13, {animate: false});
+                        if (mapa.getZoom && mapa.getZoom() > 14) mapa.setZoom(14, {animate: false});
                     }, 80);
                 } else if (window.google && google.maps) {
                     const bounds = new google.maps.LatLngBounds();
                     bounds.extend({lat: latCliente, lng: lngCliente});
                     bounds.extend({lat: latCto, lng: lngCto});
-                    mapa.fitBounds(bounds, 210);
+                    mapa.fitBounds(bounds, 170);
                     setTimeout(() => {
-                        if (mapa.getZoom && mapa.getZoom() > 13) mapa.setZoom(13);
+                        if (mapa.getZoom && mapa.getZoom() > 14) mapa.setZoom(14);
                     }, 120);
                 }
             }, 140);
