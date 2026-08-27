@@ -15,8 +15,24 @@ function mapa_cto_cliente_tem_coord($cliente) {
     return !empty($lat) && !empty($lng) && $lat != 0 && $lng != 0;
 }
 
+function mapa_cto_normalizar_coord_cliente($cliente) {
+    $lat = isset($cliente['latitude']) ? trim((string)$cliente['latitude']) : '';
+    $lng = isset($cliente['longitude']) ? trim((string)$cliente['longitude']) : '';
+    if (($lat === '' || $lng === '' || floatval($lat) == 0 || floatval($lng) == 0) && !empty($cliente['coordenadas'])) {
+        $coordenadas = trim((string)$cliente['coordenadas']);
+        if (preg_match('/(-?\d+(?:[\.,]\d+)?)\s*[,; ]\s*(-?\d+(?:[\.,]\d+)?)/', $coordenadas, $matches)) {
+            $lat = str_replace(',', '.', $matches[1]);
+            $lng = str_replace(',', '.', $matches[2]);
+        }
+    }
+    $cliente['latitude'] = $lat;
+    $cliente['longitude'] = $lng;
+    return $cliente;
+}
+
 function mapa_cto_adicionar_todos_clientes(&$todos_clientes_data, &$todos_clientes_index, $cliente) {
     if (empty($cliente['id'])) return;
+    $cliente = mapa_cto_normalizar_coord_cliente($cliente);
     $tipo = !empty($cliente['tipo']) ? $cliente['tipo'] : 'Cliente';
     $key = $tipo . ':' . $cliente['id'];
     if (!isset($todos_clientes_index[$key])) {
@@ -45,12 +61,15 @@ if (isset($connection) && $connection) {
     $has_cliente_porta = false;
     $has_cliente_latitude = false;
     $has_cliente_longitude = false;
+    $has_cliente_coordenadas = false;
     $cliente_porta_check = mysqli_query($connection, "SHOW COLUMNS FROM sis_cliente LIKE 'porta_splitter'");
     $has_cliente_porta = $cliente_porta_check && mysqli_num_rows($cliente_porta_check) > 0;
     $cliente_latitude_check = mysqli_query($connection, "SHOW COLUMNS FROM sis_cliente LIKE 'latitude'");
     $has_cliente_latitude = $cliente_latitude_check && mysqli_num_rows($cliente_latitude_check) > 0;
     $cliente_longitude_check = mysqli_query($connection, "SHOW COLUMNS FROM sis_cliente LIKE 'longitude'");
     $has_cliente_longitude = $cliente_longitude_check && mysqli_num_rows($cliente_longitude_check) > 0;
+    $cliente_coordenadas_check = mysqli_query($connection, "SHOW COLUMNS FROM sis_cliente LIKE 'coordenadas'");
+    $has_cliente_coordenadas = $cliente_coordenadas_check && mysqli_num_rows($cliente_coordenadas_check) > 0;
     $table_check = mysqli_query($connection, "SHOW TABLES LIKE 'sis_adicional'");
     if ($table_check && mysqli_num_rows($table_check) > 0) {
         $has_sis_adicional = true;
@@ -140,10 +159,12 @@ if (isset($connection) && $connection) {
             $cliente_porta_select = $has_cliente_porta ? "sc.porta_splitter" : "''";
             $cliente_latitude_select = $has_cliente_latitude ? "sc.latitude" : "''";
             $cliente_longitude_select = $has_cliente_longitude ? "sc.longitude" : "''";
+            $cliente_coordenadas_select = $has_cliente_coordenadas ? "sc.coordenadas" : "''";
             $clientes_sql = "SELECT sc.id, sc.nome, sc.login,
                             " . $cliente_porta_select . " as porta_splitter,
                             " . $cliente_latitude_select . " as latitude,
                             " . $cliente_longitude_select . " as longitude,
+                            " . $cliente_coordenadas_select . " as coordenadas,
                             sc.cli_ativado,
                             'Cliente' as tipo_cliente,
                             CASE
@@ -160,17 +181,18 @@ if (isset($connection) && $connection) {
             
             if ($clientes_result) {
                 while ($cliente = mysqli_fetch_assoc($clientes_result)) {
-                    $clientes_list[] = array(
+                    $clientes_list[] = mapa_cto_normalizar_coord_cliente(array(
                         'id' => $cliente['id'],
                         'nome' => $cliente['nome'],
                         'login' => $cliente['login'],
                         'porta' => $cliente['porta_splitter'] ?? '',
                         'latitude' => $cliente['latitude'] ?? '',
                         'longitude' => $cliente['longitude'] ?? '',
+                        'coordenadas' => $cliente['coordenadas'] ?? '',
                         'status' => $cliente['status'],
                         'desativado' => (strtolower($cliente['cli_ativado'] ?? '') !== 's') ? 1 : 0,
                         'tipo' => $cliente['tipo_cliente']
-                    );
+                    ));
                 }
             }
 
@@ -252,10 +274,12 @@ if (isset($connection) && $connection) {
     $todos_cliente_porta_select = $has_cliente_porta ? "sc.porta_splitter" : "''";
     $todos_cliente_latitude_select = $has_cliente_latitude ? "sc.latitude" : "''";
     $todos_cliente_longitude_select = $has_cliente_longitude ? "sc.longitude" : "''";
+    $todos_cliente_coordenadas_select = $has_cliente_coordenadas ? "sc.coordenadas" : "''";
     $todos_clientes_sql = "SELECT sc.id, sc.nome, sc.login, sc.caixa_herm,
                         " . $todos_cliente_porta_select . " as porta_splitter,
                         " . $todos_cliente_latitude_select . " as latitude,
                         " . $todos_cliente_longitude_select . " as longitude,
+                        " . $todos_cliente_coordenadas_select . " as coordenadas,
                         sc.cli_ativado,
                         CASE
                             WHEN LOWER(COALESCE(sc.cli_ativado, '')) <> 's' THEN 'desativado'
@@ -277,6 +301,7 @@ if (isset($connection) && $connection) {
                 'porta' => $cliente['porta_splitter'] ?? '',
                 'latitude' => $cliente['latitude'] ?? '',
                 'longitude' => $cliente['longitude'] ?? '',
+                'coordenadas' => $cliente['coordenadas'] ?? '',
                 'status' => $cliente['status'],
                 'desativado' => (strtolower($cliente['cli_ativado'] ?? '') !== 's') ? 1 : 0,
                 'tipo' => 'Cliente'
