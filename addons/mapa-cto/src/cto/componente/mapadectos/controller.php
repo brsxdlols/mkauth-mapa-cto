@@ -7,6 +7,29 @@
 $component_base = dirname(__FILE__);
 $ctos_data = array();
 $todos_clientes_data = array();
+$todos_clientes_index = array();
+
+function mapa_cto_cliente_tem_coord($cliente) {
+    $lat = isset($cliente['latitude']) ? floatval($cliente['latitude']) : 0;
+    $lng = isset($cliente['longitude']) ? floatval($cliente['longitude']) : 0;
+    return !empty($lat) && !empty($lng) && $lat != 0 && $lng != 0;
+}
+
+function mapa_cto_adicionar_todos_clientes(&$todos_clientes_data, &$todos_clientes_index, $cliente) {
+    if (empty($cliente['id'])) return;
+    $tipo = !empty($cliente['tipo']) ? $cliente['tipo'] : 'Cliente';
+    $key = $tipo . ':' . $cliente['id'];
+    if (!isset($todos_clientes_index[$key])) {
+        $todos_clientes_index[$key] = count($todos_clientes_data);
+        $todos_clientes_data[] = $cliente;
+        return;
+    }
+
+    $pos = $todos_clientes_index[$key];
+    if (!mapa_cto_cliente_tem_coord($todos_clientes_data[$pos]) && mapa_cto_cliente_tem_coord($cliente)) {
+        $todos_clientes_data[$pos] = $cliente;
+    }
+}
 
 if (isset($connection) && $connection) {
     $has_cto_id = false;
@@ -200,6 +223,11 @@ if (isset($connection) && $connection) {
                 continue; // Pular CTOs sem coordenadas válidas
             }
             
+            foreach ($clientes_list as $cliente_mapa) {
+                $cliente_mapa['caixa_herm'] = $row['nome'];
+                mapa_cto_adicionar_todos_clientes($todos_clientes_data, $todos_clientes_index, $cliente_mapa);
+            }
+
             $ctos_data[] = array(
                 'id' => $cto_id,
                 'nome' => $row['nome'],
@@ -241,7 +269,7 @@ if (isset($connection) && $connection) {
     $todos_clientes_result = mysqli_query($connection, $todos_clientes_sql);
     if ($todos_clientes_result) {
         while ($cliente = mysqli_fetch_assoc($todos_clientes_result)) {
-            $todos_clientes_data[] = array(
+            mapa_cto_adicionar_todos_clientes($todos_clientes_data, $todos_clientes_index, array(
                 'id' => $cliente['id'],
                 'nome' => $cliente['nome'],
                 'login' => $cliente['login'],
@@ -252,7 +280,7 @@ if (isset($connection) && $connection) {
                 'status' => $cliente['status'],
                 'desativado' => (strtolower($cliente['cli_ativado'] ?? '') !== 's') ? 1 : 0,
                 'tipo' => 'Cliente'
-            );
+            ));
         }
     }
 }
