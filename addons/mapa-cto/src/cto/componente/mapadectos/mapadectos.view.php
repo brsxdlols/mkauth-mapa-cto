@@ -995,9 +995,9 @@
                         mapa.setView([pontos[0].lat, pontos[0].lng], Math.min(Math.max(mapa.getZoom ? mapa.getZoom() : 14, 14), 15), {animate: true});
                     } else {
                         mapa.fitBounds(L.latLngBounds(pontos.map(p => [p.lat, p.lng])), {
-                            paddingTopLeft: [55, 70],
-                            paddingBottomRight: [410, 100],
-                            maxZoom: 14
+                            paddingTopLeft: [45, 60],
+                            paddingBottomRight: [380, 90],
+                            maxZoom: 15
                         });
                     }
                 } else if (window.google && google.maps) {
@@ -1007,8 +1007,8 @@
                     } else {
                         const bounds = new google.maps.LatLngBounds();
                         pontos.forEach(p => bounds.extend(p));
-                        mapa.fitBounds(bounds, 90);
-                        setTimeout(() => { if (mapa.getZoom && mapa.getZoom() > 14) mapa.setZoom(14); }, 120);
+                        mapa.fitBounds(bounds, 70);
+                        setTimeout(() => { if (mapa.getZoom && mapa.getZoom() > 15) mapa.setZoom(15); }, 120);
                     }
                 }
             }, 120);
@@ -1094,6 +1094,7 @@
                 ${ctoSelecionadaAtual ? `<button type="button" class="cto-small-btn save" style="margin-top:10px;width:100%;" onclick="vincularClienteNaCtoSelecionada()">${escapeHtml(textoVincularCtoAtual)}</button>` : ''}
                 <button type="button" class="cto-small-btn cancel" style="margin-top:10px;width:100%;" onclick="iniciarAjusteLocalizacaoCliente()">Ajustar localizacao do cliente</button>
                 <button type="button" class="cto-small-btn save" style="margin-top:10px;width:100%;" onclick="iniciarAtrelamentoCliente()">${textoAcao}</button>
+                ${cliente.caixa_herm || cliente.porta ? `<button type="button" class="cto-small-btn" style="margin-top:10px;width:100%;background:#ef4444;color:#fff;" onclick="confirmarRemoverClienteCto()">Remover da CTO/porta</button>` : ''}
             `;
             bloquearWheelMapa(box);
         }
@@ -1159,6 +1160,23 @@
             if (!clienteDetalheAtual || !ctoSelecionadaAtual) return;
             modoAtrelarCliente = clienteDetalheAtual;
             selecionarCtoDestinoAtrelamento(ctoSelecionadaAtual);
+        }
+
+        function confirmarRemoverClienteCto() {
+            if (!clienteDetalheAtual || !clienteDetalheAtual.id) return;
+            const nome = clienteDetalheAtual.nome || 'cliente';
+            const ctoAtual = clienteDetalheAtual.caixa_herm || 'CTO atual';
+            const portaAtual = clienteDetalheAtual.porta || '-';
+            if (!confirm('Deseja realmente remover ' + nome + ' da ' + ctoAtual + ' e liberar a porta ' + portaAtual + '?')) return;
+            enviarAcaoMapa({
+                acao_mapa_cto: 'remover_cliente_cto',
+                cliente_id: clienteDetalheAtual.id,
+                cliente_tipo: clienteDetalheAtual.tipo || 'Cliente'
+            }).then(ret => {
+                if (!ret || !ret.ok) throw new Error((ret && ret.message) || 'Erro ao remover cliente da CTO.');
+                mostrarAvisoMapa('Cliente removido da CTO e porta.');
+                window.location.reload();
+            }).catch(err => alert(err.message || 'Erro ao remover cliente da CTO.'));
         }
 
         function selecionarCtoDestinoAtrelamento(cto) {
@@ -1335,20 +1353,20 @@
                 if (MAP_PROVIDER === 'openstreet' && window.L) {
                     const bounds = L.latLngBounds([[latCliente, lngCliente], [latCto, lngCto]]);
                     mapa.fitBounds(bounds, {
-                        paddingTopLeft: [330, 90],
-                        paddingBottomRight: [430, 120],
-                        maxZoom: 14
+                        paddingTopLeft: [310, 80],
+                        paddingBottomRight: [400, 105],
+                        maxZoom: 15
                     });
                     setTimeout(() => {
-                        if (mapa.getZoom && mapa.getZoom() > 14) mapa.setZoom(14, {animate: false});
+                        if (mapa.getZoom && mapa.getZoom() > 15) mapa.setZoom(15, {animate: false});
                     }, 80);
                 } else if (window.google && google.maps) {
                     const bounds = new google.maps.LatLngBounds();
                     bounds.extend({lat: latCliente, lng: lngCliente});
                     bounds.extend({lat: latCto, lng: lngCto});
-                    mapa.fitBounds(bounds, 170);
+                    mapa.fitBounds(bounds, 145);
                     setTimeout(() => {
-                        if (mapa.getZoom && mapa.getZoom() > 14) mapa.setZoom(14);
+                        if (mapa.getZoom && mapa.getZoom() > 15) mapa.setZoom(15);
                     }, 120);
                 }
             }, 140);
@@ -3050,6 +3068,8 @@
             }
             painelCtoConteudoAtual = '';
             fecharDetalheCliente();
+            portaCtoDestacada = '';
+            limparMarcadorClienteSelecionado();
             if (!modoAtrelarCliente) limparLinhasClienteCto();
             if (restaurarMapa !== false && ctoUnicaVisivelId && !modoAtrelarCliente && !modoAjustarCto) {
                 clientesFixosAtivos = false;
