@@ -121,6 +121,45 @@ if (isset($connection) && $connection && isset($_POST['acao_mapa_cto'])) {
 
         mapa_cto_json_response(array('ok' => true, 'message' => 'Cliente atrelado com sucesso.'));
     }
+
+    if ($acao_mapa_cto === 'remover_cliente_cto') {
+        $cliente_id = isset($_POST['cliente_id']) ? intval($_POST['cliente_id']) : 0;
+        $cliente_tipo = isset($_POST['cliente_tipo']) ? trim((string)$_POST['cliente_tipo']) : 'Cliente';
+
+        if ($cliente_id <= 0) {
+            mapa_cto_json_response(array('ok' => false, 'message' => 'Cliente invalido.'));
+        }
+
+        $is_adicional = strtolower($cliente_tipo) === 'adicional';
+        if ($is_adicional) {
+            if (!mapa_cto_tabela_existe($connection, 'sis_adicional') || !mapa_cto_coluna_existe($connection, 'sis_adicional', 'caixa_herm')) {
+                mapa_cto_json_response(array('ok' => false, 'message' => 'Tabela/campo de adicional nao encontrado.'));
+            }
+            $set = "caixa_herm = ''";
+            if (mapa_cto_coluna_existe($connection, 'sis_adicional', 'porta_splitter')) {
+                $set .= ", porta_splitter = ''";
+            }
+            $ok = mysqli_query($connection, "UPDATE sis_adicional SET " . $set . " WHERE id = " . $cliente_id . " LIMIT 1");
+        } else {
+            if (!mapa_cto_coluna_existe($connection, 'sis_cliente', 'caixa_herm')) {
+                mapa_cto_json_response(array('ok' => false, 'message' => 'Campo caixa_herm nao encontrado em sis_cliente.'));
+            }
+            $set = "caixa_herm = ''";
+            if (mapa_cto_coluna_existe($connection, 'sis_cliente', 'porta_splitter')) {
+                $set .= ", porta_splitter = ''";
+            }
+            if (mapa_cto_coluna_existe($connection, 'sis_cliente', 'cto_id')) {
+                $set .= ", cto_id = NULL";
+            }
+            $ok = mysqli_query($connection, "UPDATE sis_cliente SET " . $set . " WHERE id = " . $cliente_id . " LIMIT 1");
+        }
+
+        if (!$ok) {
+            mapa_cto_json_response(array('ok' => false, 'message' => 'Erro ao remover: ' . mysqli_error($connection)));
+        }
+
+        mapa_cto_json_response(array('ok' => true, 'message' => 'Cliente removido da CTO e porta.'));
+    }
 }
 
 if (isset($connection) && $connection) {
