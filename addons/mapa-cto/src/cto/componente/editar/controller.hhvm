@@ -161,7 +161,8 @@ if (isset($dadosCaixa) && $dadosCaixa && mysqli_num_rows($dadosCaixa) > 0) {
                 $clientesCadastrados[] = $item['id'] ?? '';
                 $portaCliente = isset($item['porta_splitter']) ? trim((string)$item['porta_splitter']) : '';
                 if ($portaCliente !== '') {
-                    $portas_ocupadas[$portaCliente] = array(
+                    $portaClienteChave = ctype_digit($portaCliente) ? (string)intval($portaCliente) : $portaCliente;
+                    $portas_ocupadas[$portaClienteChave] = array(
                         'id' => $item['id'] ?? '',
                         'nome' => $item['nome'] ?? '',
                         'login' => $item['login'] ?? '',
@@ -182,7 +183,8 @@ if (isset($dadosCaixa) && $dadosCaixa && mysqli_num_rows($dadosCaixa) > 0) {
                 $portaAdicional = isset($item['porta_splitter']) ? trim((string)$item['porta_splitter']) : '';
                 if ($portaAdicional !== '') {
                     $nomeAdicionalOcupada = $item['nome'] ?? $item['username'] ?? $item['login'] ?? '';
-                    $portas_ocupadas[$portaAdicional] = array(
+                    $portaAdicionalChave = ctype_digit($portaAdicional) ? (string)intval($portaAdicional) : $portaAdicional;
+                    $portas_ocupadas[$portaAdicionalChave] = array(
                         'id' => $item['id'] ?? '',
                         'nome' => $nomeAdicionalOcupada,
                         'login' => $item['username'] ?? $item['login'] ?? '',
