@@ -309,6 +309,19 @@
             opacity: 0.92;
         }
 
+        .cto-disabled-alert {
+            margin: 0 0 4px 0;
+            padding: 10px 12px;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            background: #fef3c7;
+            color: #92400e;
+            font-size: 12px;
+            font-weight: 900;
+            line-height: 1.25;
+            text-transform: uppercase;
+        }
+
         .cto-popup-body {
             padding: 10px;
             overflow: visible;
@@ -761,6 +774,18 @@
 
         function clienteDesativado(cliente) {
             return !!(cliente && (cliente.desativado || String(cliente.status || '').toLowerCase() === 'desativado'));
+        }
+
+        function ctoTemClienteDesativadoEmPorta(cto) {
+            return (Array.isArray(cto && cto.clientes) ? cto.clientes : []).some(cliente => {
+                const porta = String((cliente && cliente.porta) || '').trim();
+                return porta !== '' && clienteDesativado(cliente);
+            });
+        }
+
+        function alertaClienteDesativadoCto(cto) {
+            if (!ctoTemClienteDesativadoEmPorta(cto)) return '';
+            return '<div class="cto-disabled-alert">ATENÇÃO: NESTA CTO EXISTE CLIENTES DESATIVADOS EM PORTAS</div>';
         }
 
         function statusClienteLabel(cliente) {
@@ -2739,6 +2764,7 @@
                         <p>${escapeHtml(subtituloTipoCto(cto))}</p>
                     </div>
                     <div class="cto-popup-body">
+                        ${alertaClienteDesativadoCto(cto)}
                         <div class="cto-section">
                             <div class="cto-label">Endereco</div>
                             <div class="cto-text">${escapeHtml(cto.endereco || 'N/A')}</div>
