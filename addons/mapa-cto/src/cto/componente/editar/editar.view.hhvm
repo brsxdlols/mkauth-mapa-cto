@@ -1271,6 +1271,10 @@ if (isset($dadosClienteEditar) && $dadosClienteEditar && mysqli_num_rows($dadosC
                                     if ($portaCliente === '') {
                                         $nomeClientePortaJs = json_encode($cliente['nome'] ?? '', JSON_HEX_APOS | JSON_HEX_QUOT);
                                         echo '    <button type="button" class="btn-small btn-port" onclick=\'abrirModalSelecaoPorta(' . intval($cliente['id'] ?? 0) . ', ' . $nomeClientePortaJs . ', "edc", "")\'>Ativar porta</button>';
+                                    } else {
+                                        $nomeClientePortaJs = json_encode($cliente['nome'] ?? '', JSON_HEX_APOS | JSON_HEX_QUOT);
+                                        $portaClienteJs = json_encode($portaCliente, JSON_HEX_APOS | JSON_HEX_QUOT);
+                                        echo '    <button type="button" class="btn-small btn-port" onclick=\'abrirModalSelecaoPorta(' . intval($cliente['id'] ?? 0) . ', ' . $nomeClientePortaJs . ', "edc", ' . $portaClienteJs . ')\'>Trocar porta</button>';
                                     }
                                     echo '    <button type="button" class="btn-small btn-remove" onclick="removerCliente(' . $cliente['id'] . ', \'' . addslashes($cliente['nome'] ?? '') . '\', \'exc\')">Remover</button>';
                                     echo '  </div>';
@@ -1298,6 +1302,10 @@ if (isset($dadosClienteEditar) && $dadosClienteEditar && mysqli_num_rows($dadosC
                                     if ($portaAdicional === '') {
                                         $nomeAdicionalPortaJs = json_encode($nomeAdicional, JSON_HEX_APOS | JSON_HEX_QUOT);
                                         echo '    <button type="button" class="btn-small btn-port" onclick=\'abrirModalSelecaoPorta(' . intval($cliente['id'] ?? 0) . ', ' . $nomeAdicionalPortaJs . ', "edca", "")\'>Ativar porta</button>';
+                                    } else {
+                                        $nomeAdicionalPortaJs = json_encode($nomeAdicional, JSON_HEX_APOS | JSON_HEX_QUOT);
+                                        $portaAdicionalJs = json_encode($portaAdicional, JSON_HEX_APOS | JSON_HEX_QUOT);
+                                        echo '    <button type="button" class="btn-small btn-port" onclick=\'abrirModalSelecaoPorta(' . intval($cliente['id'] ?? 0) . ', ' . $nomeAdicionalPortaJs . ', "edca", ' . $portaAdicionalJs . ')\'>Trocar porta</button>';
                                     }
                                     echo '    <button type="button" class="btn-small btn-remove" onclick="removerCliente(' . $cliente['id'] . ', \'' . addslashes($nomeAdicional) . '\', \'exca\')">Remover</button>';
                                     echo '  </div>';
