@@ -1422,6 +1422,13 @@ function escapeHtml(value) {
         .replace(/'/g, '&#039;');
 }
 
+function infoPortaOcupada(ocupadas, porta) {
+    const numero = parseInt(String(porta || '').trim(), 10);
+    const chaveNumero = String(numero || porta);
+    const chaveDoisDigitos = String(numero || porta).padStart(2, '0');
+    return ocupadas[chaveNumero] || ocupadas[chaveDoisDigitos] || ocupadas[String(porta)] || null;
+}
+
 function abrirModalSelecaoPorta(clienteId, clienteNome, tipoAcao, portaAtual) {
     fecharModalSelecaoPorta();
     const capacidadeCampo = document.getElementById('CAPACIDADE');
@@ -1438,7 +1445,7 @@ function abrirModalSelecaoPorta(clienteId, clienteNome, tipoAcao, portaAtual) {
         portasHtml = '<div class="empty-state"><p>Esta CTO esta sem capacidade cadastrada. Ajuste a capacidade antes de atribuir clientes.</p></div>';
     } else {
         for (let porta = 1; porta <= capacidade; porta++) {
-            const info = ocupadas[String(porta)] || ocupadas[porta];
+            const info = infoPortaOcupada(ocupadas, porta);
             const isCurrent = portaAtualNumero === porta;
             if (info && !isCurrent) {
                 portasHtml += '<button type="button" class="port-btn is-busy" title="' + escapeHtml(info.nome || '') + '" disabled>' + String(porta).padStart(2, '0') + '<small>Ocupada</small><small>' + escapeHtml(nomeCurtoPorta(info.nome)) + '</small></button>';
