@@ -372,6 +372,29 @@ $mapProvider = function_exists('getSystemMapProvider') ? getSystemMapProvider() 
             box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
         }
 
+        .btn-port {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .btn-port:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .cto-disabled-alert {
+            margin: 0 0 12px 0;
+            padding: 10px 12px;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            background: #fef3c7;
+            color: #92400e;
+            font-size: 12px;
+            font-weight: 900;
+            line-height: 1.25;
+            text-transform: uppercase;
+        }
+
         .empty-state {
             text-align: center;
             padding: 40px 20px;
@@ -1092,6 +1115,22 @@ $mapProvider = function_exists('getSystemMapProvider') ? getSystemMapProvider() 
 </head>
 <body>
 
+<?php
+$temClienteDesativadoEmPorta = false;
+if (isset($dadosClienteEditar) && $dadosClienteEditar && mysqli_num_rows($dadosClienteEditar) > 0) {
+    mysqli_data_seek($dadosClienteEditar, 0);
+    while ($clienteAviso = mysqli_fetch_assoc($dadosClienteEditar)) {
+        $portaAviso = isset($clienteAviso['porta_splitter']) ? trim((string)$clienteAviso['porta_splitter']) : '';
+        $desativadoAviso = isset($clienteAviso['cli_ativado']) && strtolower((string)$clienteAviso['cli_ativado']) !== 's';
+        if ($portaAviso !== '' && $desativadoAviso) {
+            $temClienteDesativadoEmPorta = true;
+            break;
+        }
+    }
+    mysqli_data_seek($dadosClienteEditar, 0);
+}
+?>
+
 <div class="container">
     <!-- Header -->
     <div class="header">
@@ -1111,6 +1150,9 @@ $mapProvider = function_exists('getSystemMapProvider') ? getSystemMapProvider() 
         <!-- Form Section -->
         <div class="form-section">
             <h3> Dados da CTO</h3>
+            <?php if ($temClienteDesativadoEmPorta): ?>
+                <div class="cto-disabled-alert">ATENÇÃO: NESTA CTO EXISTE CLIENTES DESATIVADOS EM PORTAS</div>
+            <?php endif; ?>
             <?php include "editar.caixa.view.hhvm"; ?>
         </div>
 
@@ -1226,6 +1268,10 @@ $mapProvider = function_exists('getSystemMapProvider') ? getSystemMapProvider() 
                                     }
                                     echo '  </div>';
                                     echo '  <div class="action-buttons">';
+                                    if ($portaCliente === '') {
+                                        $nomeClientePortaJs = json_encode($cliente['nome'] ?? '', JSON_HEX_APOS | JSON_HEX_QUOT);
+                                        echo '    <button type="button" class="btn-small btn-port" onclick=\'abrirModalSelecaoPorta(' . intval($cliente['id'] ?? 0) . ', ' . $nomeClientePortaJs . ', "edc", "")\'>Ativar porta</button>';
+                                    }
                                     echo '    <button type="button" class="btn-small btn-remove" onclick="removerCliente(' . $cliente['id'] . ', \'' . addslashes($cliente['nome'] ?? '') . '\', \'exc\')">Remover</button>';
                                     echo '  </div>';
                                     echo '</div>';
@@ -1249,6 +1295,10 @@ $mapProvider = function_exists('getSystemMapProvider') ? getSystemMapProvider() 
                                     }
                                     echo '  </div>';
                                     echo '  <div class="action-buttons">';
+                                    if ($portaAdicional === '') {
+                                        $nomeAdicionalPortaJs = json_encode($nomeAdicional, JSON_HEX_APOS | JSON_HEX_QUOT);
+                                        echo '    <button type="button" class="btn-small btn-port" onclick=\'abrirModalSelecaoPorta(' . intval($cliente['id'] ?? 0) . ', ' . $nomeAdicionalPortaJs . ', "edca", "")\'>Ativar porta</button>';
+                                    }
                                     echo '    <button type="button" class="btn-small btn-remove" onclick="removerCliente(' . $cliente['id'] . ', \'' . addslashes($nomeAdicional) . '\', \'exca\')">Remover</button>';
                                     echo '  </div>';
                                     echo '</div>';
@@ -1444,7 +1494,8 @@ function abrirModalSelecaoPorta(clienteId, clienteNome, tipoAcao, portaAtual) {
 function confirmarAtribuicaoPorta(clienteId, tipoAcao, porta) {
     const formData = new FormData();
     formData.append('_tipoAcao', tipoAcao);
-    formData.append(tipoAcao === 'adca' ? 'idAdicionalCaixa' : 'idClienteCaixa', clienteId);
+    const campoId = (tipoAcao === 'adca' || tipoAcao === 'edca') ? 'idAdicionalCaixa' : 'idClienteCaixa';
+    formData.append(campoId, clienteId);
     formData.append('porta_splitter', porta);
     formData.append('_route', 'editar');
     formData.append('id', '<?php echo isset($ID) ? $ID : ""; ?>');
