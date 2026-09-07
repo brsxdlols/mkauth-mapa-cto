@@ -108,6 +108,7 @@ $nomeCaixaEditar = '';
 $clientesCadastrados = [];
 $adicionalCadastrados = [];
 $todosClientesLista = [];
+$portas_ocupadas = [];
 $textoSubTitulo = '';
 
 if (isset($dadosCaixa) && $dadosCaixa && mysqli_num_rows($dadosCaixa) > 0) {
@@ -158,7 +159,17 @@ if (isset($dadosCaixa) && $dadosCaixa && mysqli_num_rows($dadosCaixa) > 0) {
         if ($dadosClienteEditar && mysqli_num_rows($dadosClienteEditar) > 0) {
             while ($item = mysqli_fetch_array($dadosClienteEditar)) {
                 $clientesCadastrados[] = $item['id'] ?? '';
+                $portaCliente = isset($item['porta_splitter']) ? trim((string)$item['porta_splitter']) : '';
+                if ($portaCliente !== '') {
+                    $portas_ocupadas[$portaCliente] = array(
+                        'id' => $item['id'] ?? '',
+                        'nome' => $item['nome'] ?? '',
+                        'login' => $item['login'] ?? '',
+                        'tipo' => 'cliente'
+                    );
+                }
             }
+            mysqli_data_seek($dadosClienteEditar, 0);
         }
     }
 
@@ -168,7 +179,18 @@ if (isset($dadosCaixa) && $dadosCaixa && mysqli_num_rows($dadosCaixa) > 0) {
         if ($dadosAdicionalEditar && mysqli_num_rows($dadosAdicionalEditar) > 0) {
             while ($item = mysqli_fetch_array($dadosAdicionalEditar)) {
                 $adicionalCadastrados[] = $item['id'] ?? '';
+                $portaAdicional = isset($item['porta_splitter']) ? trim((string)$item['porta_splitter']) : '';
+                if ($portaAdicional !== '') {
+                    $nomeAdicionalOcupada = $item['nome'] ?? $item['username'] ?? $item['login'] ?? '';
+                    $portas_ocupadas[$portaAdicional] = array(
+                        'id' => $item['id'] ?? '',
+                        'nome' => $nomeAdicionalOcupada,
+                        'login' => $item['username'] ?? $item['login'] ?? '',
+                        'tipo' => 'adicional'
+                    );
+                }
             }
+            mysqli_data_seek($dadosAdicionalEditar, 0);
         }
     }
     
