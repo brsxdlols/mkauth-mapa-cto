@@ -13,47 +13,83 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f5f5;
-            padding: 20px;
+            background-color: #f4f6fb;
+            padding: 16px;
+            color: #111827;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1280px;
             margin: 0 auto;
         }
 
         .header {
             background: white;
-            padding: 20px;
+            padding: 18px 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+            margin-bottom: 16px;
         }
 
         .header h2 {
-            color: #333;
+            color: #111827;
             font-size: 24px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .header p {
-            color: #666;
+            color: #64748b;
             font-size: 14px;
+        }
+
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 14px;
+        }
+
+        .top-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .top-link {
+            display: inline-block;
+            padding: 10px 14px;
+            border-radius: 6px;
+            color: #fff;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .top-link.map {
+            background: #059669;
+        }
+
+        .top-link.panel {
+            background: #4f46e5;
         }
 
         .filters {
             background: white;
-            padding: 20px;
+            padding: 14px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+            margin-bottom: 16px;
         }
 
         .filter-group {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
-            margin-bottom: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+            margin-bottom: 12px;
         }
 
         .filter-item {
@@ -64,15 +100,15 @@
 
         .filter-item label {
             font-weight: 600;
-            color: #333;
-            font-size: 14px;
+            color: #475569;
+            font-size: 12px;
         }
 
         .filter-item input,
         .filter-item select {
             padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            border: 1px solid #dbe2ea;
+            border-radius: 6px;
             font-size: 14px;
             font-family: inherit;
         }
@@ -81,7 +117,7 @@
         .filter-item select:focus {
             outline: none;
             border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.10);
         }
 
         .buttons {
@@ -93,27 +129,26 @@
         .btn {
             padding: 10px 20px;
             border: none;
-            border-radius: 4px;
-            font-size: 14px;
+            border-radius: 6px;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #4f46e5;
             color: white;
         }
 
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            background: #4338ca;
         }
 
         .table-wrapper {
             background: white;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
             overflow: hidden;
         }
 
@@ -123,31 +158,31 @@
         }
 
         table thead {
-            background: #f8f9fa;
-            border-bottom: 2px solid #dee2e6;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
         }
 
         table th {
-            padding: 15px;
+            padding: 12px;
             text-align: left;
             font-weight: 600;
-            color: #333;
-            font-size: 14px;
+            color: #334155;
+            font-size: 13px;
         }
 
         table td {
-            padding: 12px 15px;
-            border-bottom: 1px solid #dee2e6;
-            font-size: 14px;
-            color: #555;
+            padding: 10px 12px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 13px;
+            color: #334155;
         }
 
         table tbody tr:hover {
-            background-color: #f8f9fa;
+            background-color: #f8fafc;
         }
 
         table tbody tr:nth-child(even) {
-            background-color: #fafbfc;
+            background-color: transparent;
         }
 
         .status-badge {
@@ -174,12 +209,12 @@
         }
 
         .btn-small {
-            padding: 6px 12px;
+            padding: 7px 10px;
             font-size: 12px;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            font-weight: 700;
         }
 
         .btn-edit {
@@ -234,29 +269,34 @@
 
         .stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
         }
 
         .stat-card {
             background: white;
-            padding: 15px;
+            padding: 14px 16px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            text-align: center;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+            text-align: left;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
         }
 
         .stat-card .number {
-            font-size: 28px;
+            font-size: 26px;
             font-weight: bold;
-            color: #667eea;
-            margin: 10px 0;
+            color: #4f46e5;
+            margin: 0;
         }
 
         .stat-card .label {
-            font-size: 14px;
-            color: #666;
+            font-size: 13px;
+            color: #64748b;
         }
 
         .loading {
@@ -271,34 +311,14 @@
 <div class="container">
     <!-- Header -->
     <div class="header">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div class="header-row">
             <div>
-                <h2>📍 Listar Caixas de Terminação Óptica (CTOs)</h2>
+                <h2>Listar Caixas de Terminação Óptica (CTOs)</h2>
                 <p><?php echo isset($textoSubTitulo) ? $textoSubTitulo : 'Gerenciamento de CTOs da rede de fibra óptica'; ?></p>
             </div>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end;">
-            <a href="?_route=mapadectos" style="
-                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-                color: white;
-                padding: 10px 20px;
-                border-radius: 8px;
-                text-decoration: none;
-                font-weight: 600;
-                transition: all 0.3s ease;
-                display: inline-block;
-                white-space: nowrap;
-            " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(16, 185, 129, 0.35)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='';">🗺️ Mapa de CTOs</a>
-            <a href="?_route=painel" style="
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                padding: 10px 20px;
-                border-radius: 8px;
-                text-decoration: none;
-                font-weight: 600;
-                transition: all 0.3s ease;
-                display: inline-block;
-                white-space: nowrap;
-            " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(102, 126, 234, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='';">🏠 Painel Principal</a>
+            <div class="top-actions">
+                <a href="?_route=mapadectos" class="top-link map">Mapa de CTOs</a>
+                <a href="?_route=painel" class="top-link panel">Painel Principal</a>
             </div>
         </div>
     </div>
@@ -327,7 +347,7 @@
     <div class="filters">
         <div class="filter-group">
             <div class="filter-item">
-                <label for="buscarModelo">🔍 Buscar:</label>
+                <label for="buscarModelo">Buscar</label>
                 <input 
                     type="text" 
                     id="buscarModelo" 
@@ -336,7 +356,7 @@
                 >
             </div>
             <div class="filter-item">
-                <label for="buscarBairro">🏘️ Bairro:</label>
+                <label for="buscarBairro">Bairro</label>
                 <input 
                     type="text" 
                     id="buscarBairro" 
@@ -345,7 +365,7 @@
                 >
             </div>
             <div class="filter-item">
-                <label for="buscarCidade">🏙️ Cidade:</label>
+                <label for="buscarCidade">Cidade</label>
                 <input 
                     type="text" 
                     id="buscarCidade" 
@@ -354,7 +374,7 @@
                 >
             </div>
             <div class="filter-item">
-                <label for="buscarFiltro">📂 Filtro:</label>
+                <label for="buscarFiltro">Filtro</label>
                 <select id="buscarFiltro" onchange="filtrarTabela()">
                     <option value="">Todas as caixas</option>
                     <option value="ativa">Ativas</option>
@@ -365,7 +385,7 @@
 
         <div class="buttons">
             <button class="btn btn-primary" onclick="adicionarCTO()">
-                ➕ Adicionar CTO
+                Adicionar CTO
             </button>
         </div>
     </div>
