@@ -19,7 +19,7 @@
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1580px;
             margin: 0 auto;
         }
 
@@ -41,9 +41,9 @@
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
             overflow: hidden;
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: minmax(430px, 0.85fr) minmax(720px, 1.15fr);
             gap: 0;
-            min-height: 600px;
+            min-height: 680px;
         }
 
         .sidebar {
@@ -51,7 +51,7 @@
             border-right: 1px solid #e5e7eb;
             background: #f9fafb;
             overflow-y: auto;
-            max-height: 600px;
+            max-height: 680px;
         }
 
         .sidebar h2 {
@@ -184,6 +184,27 @@
             font-size: 0.85em;
         }
 
+        .cto-meta {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .cto-pill {
+            background: #eef2ff;
+            color: #4f46e5;
+            border-radius: 999px;
+            padding: 3px 9px;
+            font-size: 0.78em;
+            font-weight: 700;
+        }
+
+        .cto-pill.free {
+            background: #dcfce7;
+            color: #047857;
+        }
+
         .route-info {
             background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
             border: 2px solid #10b981;
@@ -243,7 +264,7 @@
 
         .map-container {
             position: relative;
-            height: 600px;
+            height: 680px;
         }
 
         #mapa {
@@ -332,7 +353,7 @@
                         <input 
                             type="text" 
                             id="enderecoInput" 
-                            placeholder="Ex: Rua das Flores, 123, São Paulo"
+                            placeholder="Digite rua, número, cidade ou CEP"
                             autocomplete="off"
                         >
                         <button id="buscarBtn">Buscar</button>
@@ -423,8 +444,8 @@
             }
             
             const opcoesMapa = {
-                center: { lat: -23.5505, lng: -46.6333 }, // São Paulo como padrão
-                zoom: 12,
+                center: { lat: -14.2350, lng: -51.9253 },
+                zoom: 5,
                 styles: [
                     {
                         featureType: 'water',
@@ -451,6 +472,49 @@
             });
 
             adicionarEventos();
+            carregarCtos();
+        }
+
+        function ctoCapacidade(cto) {
+            return parseInt(cto.capacidade || 0, 10) || 0;
+        }
+
+        function ctoClientes(cto) {
+            return parseInt(cto.clientes || 0, 10) || 0;
+        }
+
+        function ctoLivres(cto) {
+            const livres = parseInt(cto.livres || 0, 10);
+            return isNaN(livres) ? Math.max(ctoCapacidade(cto) - ctoClientes(cto), 0) : livres;
+        }
+
+        function ctoInfoHtml(cto) {
+            return `
+                <strong>${cto.nomecaixa}</strong><br>
+                ${cto.endereco || 'Sem endereço'}<br>
+                Portas: ${ctoCapacidade(cto)} total | ${ctoLivres(cto)} livres<br>
+                Clientes: ${ctoClientes(cto)}
+            `;
+        }
+
+        function ajustarMapaParaCtos(ctos) {
+            if (!ctos || !ctos.length || userLocation) return;
+            const bounds = new google.maps.LatLngBounds();
+            let total = 0;
+            ctos.forEach(cto => {
+                const lat = parseFloat(cto.latitude);
+                const lng = parseFloat(cto.longitude);
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    bounds.extend(new google.maps.LatLng(lat, lng));
+                    total++;
+                }
+            });
+            if (total === 1) {
+                mapa.setCenter(bounds.getCenter());
+                mapa.setZoom(15);
+            } else if (total > 1) {
+                mapa.fitBounds(bounds);
+            }
         }
 
         // Mostrar mensagem de erro
@@ -496,6 +560,7 @@
                         }
                         allCtos = data;
                         exibirCtos(allCtos);
+                        ajustarMapaParaCtos(allCtos);
                         
                         // Calcular distâncias apenas se houver localização do usuário
                         if (userLocation) {
@@ -547,11 +612,22 @@
                         lng: lng
                     },
                     map: mapa,
-                    title: cto.nomecaixa,
-                    icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+                    title: `${cto.nomecaixa} - ${ctoCapacidade(cto)} portas / ${ctoLivres(cto)} livres`,
+                    icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+                    label: {
+                        text: `${ctoLivres(cto)}/${ctoCapacidade(cto)}`,
+                        color: '#111827',
+                        fontSize: '11px',
+                        fontWeight: '700'
+                    }
+                });
+
+                const infoWindow = new google.maps.InfoWindow({
+                    content: ctoInfoHtml(cto)
                 });
 
                 marker.addListener('click', () => {
+                    infoWindow.open(mapa, marker);
                     selecionarCto(cto);
                 });
 
@@ -564,6 +640,11 @@
                     <div class="cto-name">${cto.nomecaixa}</div>
                     <div class="cto-distance">Distância: -</div>
                     <div class="cto-address">${cto.endereco || 'Sem endereço'}</div>
+                    <div class="cto-meta">
+                        <span class="cto-pill">${ctoCapacidade(cto)} portas</span>
+                        <span class="cto-pill free">${ctoLivres(cto)} livres</span>
+                        <span class="cto-pill">${ctoClientes(cto)} clientes</span>
+                    </div>
                 `;
 
                 ctoItem.addEventListener('click', () => {
@@ -584,7 +665,8 @@
                 return;
             }
 
-            geocoder.geocode({ address: endereco }, (results, status) => {
+            resolverEnderecoBusca(endereco).then(query => {
+            geocoder.geocode({ address: query, componentRestrictions: { country: 'BR' } }, (results, status) => {
                 if (status === 'OK' && results.length > 0) {
                     const location = results[0].geometry.location;
                     userLocation = {
@@ -618,12 +700,40 @@
                         icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
                     });
 
-                    // Carregar CTOs e depois calcular distâncias
-                    carregarCtos();
+                    if (allCtos.length > 0) {
+                        calcularDistancias();
+                    } else {
+                        carregarCtos();
+                    }
                 } else {
                     mostrarErro('Endereço não encontrado. Tente novamente com informações mais precisas.');
                 }
             });
+            });
+        }
+
+        function resolverEnderecoBusca(raw) {
+            const cepMatch = String(raw || '').match(/\b(\d{5})-?(\d{3})\b/);
+            if (!cepMatch) {
+                return Promise.resolve(raw);
+            }
+            const cep = cepMatch[1] + cepMatch[2];
+            const numeroMatch = String(raw || '').replace(cepMatch[0], '').match(/\b(\d{1,6})\b/);
+            const numero = numeroMatch ? numeroMatch[1] : '';
+            return fetch('https://viacep.com.br/ws/' + cep + '/json/', { credentials: 'omit' })
+                .then(resp => resp.ok ? resp.json() : null)
+                .then(data => {
+                    if (!data || data.erro) return raw;
+                    const partes = [];
+                    if (data.logradouro) partes.push(data.logradouro);
+                    if (numero) partes.push(numero);
+                    if (data.bairro) partes.push(data.bairro);
+                    if (data.localidade) partes.push(data.localidade);
+                    if (data.uf) partes.push(data.uf);
+                    if (data.cep) partes.push(data.cep);
+                    return partes.join(', ') || raw;
+                })
+                .catch(() => raw);
         }
 
         // Calcular distâncias para todas as CTOs
@@ -723,7 +833,7 @@
             );
 
             ctoMarkers.forEach(marker => {
-                if (marker.getTitle() === cto.nomecaixa) {
+                if (String(marker.getTitle()).indexOf(cto.nomecaixa) === 0) {
                     marker.setIcon('http://maps.google.com/mapfiles/ms/icons/yellow-dot.png');
                 }
             });
@@ -793,8 +903,11 @@
                     const bounds = new google.maps.LatLngBounds();
                     bounds.extend(leg.start_location);
                     bounds.extend(leg.end_location);
-                    mapa.fitBounds(bounds);
-                    mapa.setZoom(Math.max(mapa.getZoom() - 1, 12));
+                    mapa.fitBounds(bounds, 70);
+                    setTimeout(() => {
+                        if (mapa.getZoom() > 17) mapa.setZoom(17);
+                        if (mapa.getZoom() < 14) mapa.setZoom(14);
+                    }, 150);
                     
                     console.log('Rota traçada com sucesso:', {
                         distancia: distanciaFormatada,
@@ -839,6 +952,19 @@
                     buscarEndereco();
                 }
             });
+
+            if (google.maps.places && google.maps.places.Autocomplete) {
+                const autocomplete = new google.maps.places.Autocomplete(enderecoInput, {
+                    componentRestrictions: { country: 'br' },
+                    fields: ['formatted_address', 'geometry', 'name']
+                });
+                autocomplete.addListener('place_changed', () => {
+                    const place = autocomplete.getPlace();
+                    if (!place || !place.geometry || !place.geometry.location) return;
+                    enderecoInput.value = place.formatted_address || place.name || enderecoInput.value;
+                    buscarEndereco();
+                });
+            }
             
             console.log('Eventos adicionados com sucesso');
         }
