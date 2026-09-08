@@ -127,176 +127,187 @@ if (!empty($route) && in_array($route, ['inicio', 'adicionar', 'editar', 'backup
 
         html, body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f4f6fb;
             min-height: 100vh;
-            padding: 20px;
+            padding: 18px;
             width: 100%;
             height: 100%;
+            color: #111827;
         }
 
         .dashboard-container {
-            max-width: 1400px;
+            max-width: 1280px;
             margin: 0 auto;
         }
 
         .header {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 18px 20px;
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            gap: 20px;
-            color: white;
-            margin-bottom: 40px;
-            animation: fadeInDown 0.6s ease-out;
+            gap: 16px;
+            color: #111827;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
         }
 
         .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            font-size: 28px;
+            margin-bottom: 4px;
+            text-shadow: none;
             text-align: left;
         }
 
         .header p {
-            font-size: 1.1em;
+            font-size: 14px;
             text-align: left;
-            opacity: 0.9;
+            color: #64748b;
         }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 40px;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
         }
 
         .stat-card {
             background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            animation: fadeInUp 0.6s ease-out;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 14px 16px;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
         .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            border-color: #c7d2fe;
         }
 
         .stat-card .icon {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 12px;
+            width: 40px;
+            height: 40px;
+            background: #eef2ff;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 30px;
-            margin-bottom: 15px;
-            color: white;
+            font-size: 19px;
+            margin-bottom: 0;
+            color: #4f46e5;
+            flex-shrink: 0;
         }
 
         .stat-card h3 {
-            color: #333;
-            font-size: 0.95em;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            color: #64748b;
+            font-size: 12px;
+            margin-bottom: 2px;
+            text-transform: none;
+            letter-spacing: 0;
         }
 
         .stat-card .value {
-            color: #667eea;
-            font-size: 2.5em;
+            color: #4f46e5;
+            font-size: 28px;
             font-weight: bold;
+            line-height: 1;
         }
 
         .actions-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
         }
 
         .action-card {
             background: white;
-            border-radius: 15px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            animation: fadeInUp 0.6s ease-out;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            padding: 14px;
         }
 
         .action-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+            border-color: #c7d2fe;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
         }
 
         .action-card-header {
-            height: 120px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 40px;
+            height: 40px;
+            background: #eef2ff !important;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 50px;
+            color: #4f46e5;
+            font-size: 19px;
+            flex-shrink: 0;
         }
 
         .action-card-header.blue {
-            background: linear-gradient(135deg, #667eea 0%, #5a67d8 100%);
+            background: #eef2ff;
         }
 
         .action-card-header.cyan {
-            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+            background: #e0f2fe;
         }
 
         .action-card-header.amber {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            background: #fef3c7;
         }
 
         .action-card-header.green {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            background: #dcfce7;
         }
 
         .action-card-body {
-            padding: 25px;
+            padding: 0;
             flex-grow: 1;
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
         }
 
         .action-card-title {
-            font-size: 1.3em;
-            color: #333;
-            margin-bottom: 10px;
+            font-size: 15px;
+            color: #111827;
+            margin-bottom: 0;
             font-weight: 600;
+            flex: 1;
         }
 
         .action-card-description {
-            color: #666;
-            font-size: 0.95em;
-            margin-bottom: 20px;
-            flex-grow: 1;
+            display: none;
         }
 
         .action-card-button {
             display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #4f46e5 !important;
             color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
+            padding: 8px 12px;
+            border-radius: 6px;
             text-decoration: none;
             font-weight: 600;
-            transition: all 0.3s ease;
             text-align: center;
             border: none;
             cursor: pointer;
-            font-size: 1em;
+            font-size: 13px;
+            white-space: nowrap;
         }
 
         .action-card-button:hover {
-            transform: translateX(3px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            background: #4338ca !important;
         }
 
         .action-card-button.blue {
@@ -312,28 +323,7 @@ if (!empty($route) && in_array($route, ['inicio', 'adicionar', 'editar', 'backup
         }
 
         .action-card-button.green {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        }
-
-        .welcome-section {
-            background: white;
-            border-radius: 15px;
-            padding: 40px;
-            margin-bottom: 40px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            animation: fadeInUp 0.6s ease-out;
-        }
-
-        .welcome-section h2 {
-            color: #333;
-            margin-bottom: 15px;
-            font-size: 1.8em;
-        }
-
-        .welcome-section p {
-            color: #666;
-            line-height: 1.8;
-            margin-bottom: 10px;
+            background: #059669 !important;
         }
 
         .feature-list {
@@ -560,23 +550,6 @@ if (!empty($route) && in_array($route, ['inicio', 'adicionar', 'editar', 'backup
             </div>
         </div>
 
-        <!-- Welcome Section -->
-        <div class="welcome-section">
-            <h2>Bem-vindo ao Sistema de Gerenciamento FTTH</h2>
-            <p>
-                Este sistema foi desenvolvido para facilitar o gerenciamento de todas as Caixas de Terminação Óptica (CTOs) 
-                da sua rede de fibra óptica. Com funcionalidades intuitivas e uma interface amigável, você poderá:
-            </p>
-            <div class="feature-list">
-                <div class="feature-item">Adicionar novas CTOs</div>
-                <div class="feature-item">Editar informações existentes</div>
-                <div class="feature-item">Visualizar localização no mapa</div>
-                <div class="feature-item">Gerenciar portas e capacidade</div>
-                <div class="feature-item">Fazer backup de dados</div>
-                <div class="feature-item">Rastrear status das conexões</div>
-            </div>
-        </div>
-
         <!-- Actions Grid -->
         <div class="actions-grid">
             <!-- Card: Listar CTOs -->
@@ -584,10 +557,6 @@ if (!empty($route) && in_array($route, ['inicio', 'adicionar', 'editar', 'backup
                 <div class="action-card-header blue">📋</div>
                 <div class="action-card-body">
                     <div class="action-card-title">Listar CTOs</div>
-                    <div class="action-card-description">
-                        Visualize todas as Caixas de Terminação Óptica cadastradas no sistema com informações detalhadas 
-                        de localização, capacidade e status. Adicione, edite ou delete CTOs diretamente da listagem.
-                    </div>
                     <a href="?_route=inicio" class="action-card-button blue">Acessar</a>
                 </div>
             </div>
@@ -597,11 +566,7 @@ if (!empty($route) && in_array($route, ['inicio', 'adicionar', 'editar', 'backup
                 <div class="action-card-header" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);">🗺️</div>
                 <div class="action-card-body">
                     <div class="action-card-title">Mapa de Clientes</div>
-                    <div class="action-card-description">
-                        Visualize a localização de todas as CTOs no mapa interativo e acompanhe a distribuição 
-                        geográfica da sua rede de fibra óptica em tempo real.
-                    </div>
-                    <a href="?_route=maps" class="action-card-button" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);">Visualizar Mapa</a>
+                    <a href="?_route=maps" class="action-card-button" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);">Abrir</a>
                 </div>
             </div>
 
@@ -610,11 +575,7 @@ if (!empty($route) && in_array($route, ['inicio', 'adicionar', 'editar', 'backup
                 <div class="action-card-header amber">🗺️</div>
                 <div class="action-card-body">
                     <div class="action-card-title">Mapa de CTOs</div>
-                    <div class="action-card-description">
-                        Visualize todas as CTOs cadastradas em um mapa interativo com informações detalhadas 
-                        de clientes atribuídos, status online/offline e capacidade de portas.
-                    </div>
-                    <a href="?_route=mapadectos" class="action-card-button amber">Abrir Mapa</a>
+                    <a href="?_route=mapadectos" class="action-card-button amber">Abrir</a>
                 </div>
             </div>
 
@@ -623,10 +584,7 @@ if (!empty($route) && in_array($route, ['inicio', 'adicionar', 'editar', 'backup
                 <div class="action-card-header" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);">🚶</div>
                 <div class="action-card-body">
                     <div class="action-card-title">Viabilidade de Atendimento</div>
-                    <div class="action-card-description">
-                        Digite um endereço para encontrar a CTO mais próxima e visualize a rota até ela. Modo de deslocamento: A pé (Walking).
-                    </div>
-                    <a href="?_route=viabilidade" class="action-card-button" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);">Calcular Viabilidade</a>
+                    <a href="?_route=viabilidade" class="action-card-button" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);">Abrir</a>
                 </div>
             </div>
 
@@ -635,10 +593,6 @@ if (!empty($route) && in_array($route, ['inicio', 'adicionar', 'editar', 'backup
                 <div class="action-card-header green">💾</div>
                 <div class="action-card-body">
                     <div class="action-card-title">Backup de Dados</div>
-                    <div class="action-card-description">
-                        Crie backups de segurança de todas as informações de CTOs e restaure dados 
-                        em caso de necessidade.
-                    </div>
                     <a href="?_route=backup" class="action-card-button green">Gerenciar</a>
                 </div>
             </div>
@@ -648,10 +602,6 @@ if (!empty($route) && in_array($route, ['inicio', 'adicionar', 'editar', 'backup
                 <div class="action-card-header" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">⚙️</div>
                 <div class="action-card-body">
                     <div class="action-card-title">Configurações</div>
-                    <div class="action-card-description">
-                        Configure as APIs necessárias para o funcionamento completo do sistema, 
-                        incluindo a API do Google Maps para visualização de mapa.
-                    </div>
                     <a href="?_route=configurar" class="action-card-button" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">Configurar</a>
                 </div>
             </div>
