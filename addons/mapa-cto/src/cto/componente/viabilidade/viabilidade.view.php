@@ -64,6 +64,7 @@
 
         .search-box {
             margin-bottom: 25px;
+            position: relative;
         }
 
         .search-box label {
@@ -108,6 +109,51 @@
         #buscarBtn:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .address-suggestions {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 84px;
+            z-index: 30;
+            margin-top: 6px;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
+            overflow: hidden;
+            max-height: 260px;
+            overflow-y: auto;
+        }
+
+        .address-suggestions.active {
+            display: block;
+        }
+
+        .address-suggestion-item {
+            padding: 10px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eef2f7;
+            color: #374151;
+            font-size: 0.9em;
+            line-height: 1.35;
+        }
+
+        .address-suggestion-item:hover {
+            background: #eef2ff;
+            color: #312e81;
+        }
+
+        .address-suggestion-item:last-child {
+            border-bottom: 0;
+        }
+
+        .address-suggestion-title {
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 2px;
         }
 
         .results-section {
@@ -875,6 +921,82 @@
                 .catch(() => mostrarErro('Nao foi possivel buscar o endereco agora.'));
         }
 
+        function aplicarEnderecoOpenStreet(item) {
+            if (!item) return;
+            userLocation = {
+                lat: parseFloat(item.lat),
+                lng: parseFloat(item.lon),
+                endereco: item.display_name || item.label || ''
+            };
+            if (isNaN(userLocation.lat) || isNaN(userLocation.lng)) return;
+
+            limparErro();
+            document.getElementById('enderecoInput').value = userLocation.endereco;
+            const selectedAddr = document.getElementById('selectedAddress');
+            document.getElementById('selectedAddressText').textContent = userLocation.endereco;
+            selectedAddr.classList.add('active');
+
+            if (userMarker) {
+                mapa.removeLayer(userMarker);
+            }
+            userMarker = L.marker([userLocation.lat, userLocation.lng], {
+                title: 'Localizacao pesquisada',
+                icon: criarIconeLeaflet('#ef4444', 'A')
+            }).addTo(mapa);
+            mapa.setView([userLocation.lat, userLocation.lng], 15);
+
+            if (allCtos.length > 0) {
+                calcularDistancias();
+            } else {
+                carregarCtos();
+            }
+        }
+
+        function buscarSugestoesEnderecoOpenStreet(raw) {
+            return resolverEnderecoBusca(raw).then(query => {
+                const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=6&addressdetails=1&countrycodes=br&accept-language=pt-BR&q=' + encodeURIComponent(query);
+                return fetch(url, { credentials: 'omit' })
+                    .then(resp => resp.ok ? resp.json() : [])
+                    .then(items => Array.isArray(items) ? items : []);
+            });
+        }
+
+        function esconderSugestoesEndereco() {
+            const box = document.getElementById('addressSuggestions');
+            if (!box) return;
+            box.classList.remove('active');
+            box.innerHTML = '';
+        }
+
+        function renderizarSugestoesEndereco(items) {
+            const box = document.getElementById('addressSuggestions');
+            if (!box) return;
+            box.innerHTML = '';
+            if (!items || !items.length) {
+                esconderSugestoesEndereco();
+                return;
+            }
+
+            items.slice(0, 6).forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'address-suggestion-item';
+                const title = document.createElement('div');
+                title.className = 'address-suggestion-title';
+                title.textContent = item.display_name || 'Endereco encontrado';
+                const meta = document.createElement('div');
+                meta.textContent = [item.type, item.class].filter(Boolean).join(' / ');
+                div.appendChild(title);
+                div.appendChild(meta);
+                div.addEventListener('mousedown', event => {
+                    event.preventDefault();
+                    esconderSugestoesEndereco();
+                    aplicarEnderecoOpenStreet(item);
+                });
+                box.appendChild(div);
+            });
+            box.classList.add('active');
+        }
+
         function resolverEnderecoBusca(raw) {
             const cepMatch = String(raw || '').match(/\b(\d{5})-?(\d{3})\b/);
             if (!cepMatch) {
@@ -1125,16 +1247,56 @@
             
             console.log('Botão encontrado:', buscarBtn);
             console.log('Input encontrado:', enderecoInput);
+
+            let suggestionsBox = document.getElementById('addressSuggestions');
+            if (!suggestionsBox) {
+                suggestionsBox = document.createElement('div');
+                suggestionsBox.id = 'addressSuggestions';
+                suggestionsBox.className = 'address-suggestions';
+                enderecoInput.parentNode.appendChild(suggestionsBox);
+            }
             
             buscarBtn.addEventListener('click', () => {
                 console.log('Botão clicado!');
+                esconderSugestoesEndereco();
                 buscarEndereco();
             });
             
             enderecoInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     console.log('Enter pressionado!');
+                    esconderSugestoesEndereco();
                     buscarEndereco();
+                }
+            });
+
+            let sugestaoTimer = null;
+            let sugestaoSeq = 0;
+            enderecoInput.addEventListener('input', () => {
+                if (!isOpenStreet()) return;
+                const raw = enderecoInput.value.trim();
+                clearTimeout(sugestaoTimer);
+                if (raw.length < 4) {
+                    esconderSugestoesEndereco();
+                    return;
+                }
+                const ticket = ++sugestaoSeq;
+                sugestaoTimer = setTimeout(() => {
+                    buscarSugestoesEnderecoOpenStreet(raw)
+                        .then(items => {
+                            if (ticket !== sugestaoSeq) return;
+                            renderizarSugestoesEndereco(items);
+                        })
+                        .catch(() => {
+                            if (ticket !== sugestaoSeq) return;
+                            esconderSugestoesEndereco();
+                        });
+                }, 450);
+            });
+
+            document.addEventListener('click', event => {
+                if (!suggestionsBox.contains(event.target) && event.target !== enderecoInput) {
+                    esconderSugestoesEndereco();
                 }
             });
 
