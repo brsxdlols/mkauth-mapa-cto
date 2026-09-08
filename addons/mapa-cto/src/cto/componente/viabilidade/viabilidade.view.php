@@ -402,7 +402,7 @@
         </div>
     </div>
 
-    <!-- Google Maps API -->
+    <!-- Map provider API -->
     <?php
     // Estabelecer conexão com o banco de dados
     if (!isset($GLOBALS['connection'])) {
@@ -411,16 +411,22 @@
     
     require_once dirname(__FILE__) . '/../../config/api.php';
     $api_key = getGoogleMapsApiKey();
+    $map_provider = function_exists('getSystemMapProvider') ? getSystemMapProvider() : (!empty($api_key) ? 'google' : 'openstreet');
     
-    // Se não conseguir a chave, usar chave padrão
-    if (empty($api_key)) {
-        $api_key = 'AIzaSyCls-YJo8pum5wuFq3RRxtItjcFctVtXcA';
+    if ($map_provider === 'google' && empty($api_key)) {
+        $map_provider = 'openstreet';
     }
     ?>
+    <?php if ($map_provider === 'google' && !empty($api_key)): ?>
     <script src="https://maps.googleapis.com/maps/api/js?key=<?php echo htmlspecialchars($api_key); ?>&libraries=geometry,places"></script>
+    <?php else: ?>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <?php endif; ?>
 
     <script>
-        console.log('Google Maps API carregando com chave: <?php echo htmlspecialchars(substr($api_key, 0, 20)); ?>...');
+        const MAP_PROVIDER = <?php echo json_encode($map_provider); ?>;
+        console.log('Provedor de mapa da viabilidade:', MAP_PROVIDER);
         
         // Variáveis globais
         let mapa;
@@ -432,10 +438,98 @@
         let ctoMarkers = [];
         let allCtos = [];
         let selectedCto = null;
+        let routeLayer = null;
+        let leafletLayers = null;
+
+        function isOpenStreet() {
+            return MAP_PROVIDER === 'openstreet';
+        }
+
+        function criarIconeLeaflet(cor, texto) {
+            return L.divIcon({
+                className: '',
+                html: `<div style="background:${cor};color:white;border-radius:16px;padding:4px 8px;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,.25);font-weight:700;font-size:11px;white-space:nowrap;">${texto || ''}</div>`,
+                iconSize: [58, 28],
+                iconAnchor: [29, 28],
+                popupAnchor: [0, -28]
+            });
+        }
+
+        function limparRotaAtual() {
+            if (!routeLayer) return;
+            if (isOpenStreet() && mapa && mapa.removeLayer) {
+                mapa.removeLayer(routeLayer);
+            } else if (routeLayer.setMap) {
+                routeLayer.setMap(null);
+            }
+            routeLayer = null;
+        }
+
+        function limparMarcadoresCto() {
+            ctoMarkers.forEach(marker => {
+                if (isOpenStreet() && mapa && mapa.removeLayer) {
+                    mapa.removeLayer(marker);
+                } else if (marker.setMap) {
+                    marker.setMap(null);
+                }
+            });
+            ctoMarkers = [];
+        }
+
+        function distanciaMetrosEntre(a, b) {
+            if (!a || !b) return 0;
+            if (!isOpenStreet() && window.google && google.maps && google.maps.geometry) {
+                return google.maps.geometry.spherical.computeDistanceBetween(
+                    new google.maps.LatLng(a.lat, a.lng),
+                    new google.maps.LatLng(b.lat, b.lng)
+                );
+            }
+            const raio = 6371000;
+            const rad = Math.PI / 180;
+            const dLat = (b.lat - a.lat) * rad;
+            const dLng = (b.lng - a.lng) * rad;
+            const lat1 = a.lat * rad;
+            const lat2 = b.lat * rad;
+            const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+            return 2 * raio * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+        }
+
+        function formatarDistancia(metros) {
+            return metros >= 1000 ? (metros / 1000).toFixed(2) + ' km' : Math.round(metros) + ' m';
+        }
 
         // Inicializar mapa
         function inicializarMapa() {
             console.log('Iniciando mapa...');
+
+            if (isOpenStreet()) {
+                if (!window.L) {
+                    document.getElementById('mapa').innerHTML = '<div style="padding:20px;color:#b91c1c;font-weight:700">Nao foi possivel carregar o OpenStreetMap.</div>';
+                    return;
+                }
+
+                leafletLayers = {
+                    mapa: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 19,
+                        attribution: '&copy; OpenStreetMap'
+                    }),
+                    satelite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                        maxZoom: 19,
+                        attribution: 'Tiles &copy; Esri'
+                    })
+                };
+
+                mapa = L.map('mapa', {
+                    center: [-14.2350, -51.9253],
+                    zoom: 5,
+                    layers: [leafletLayers.mapa],
+                    zoomControl: true
+                });
+                L.control.layers({'Mapa': leafletLayers.mapa, 'Satelite': leafletLayers.satelite}, null, {collapsed: false}).addTo(mapa);
+                adicionarEventos();
+                carregarCtos();
+                return;
+            }
             
             if (typeof google === 'undefined' || !google.maps) {
                 console.error('Google Maps API não carregada ainda');
@@ -499,6 +593,20 @@
 
         function ajustarMapaParaCtos(ctos) {
             if (!ctos || !ctos.length || userLocation) return;
+            if (isOpenStreet()) {
+                const pontos = [];
+                ctos.forEach(cto => {
+                    const lat = parseFloat(cto.latitude);
+                    const lng = parseFloat(cto.longitude);
+                    if (!isNaN(lat) && !isNaN(lng)) pontos.push([lat, lng]);
+                });
+                if (pontos.length === 1) {
+                    mapa.setView(pontos[0], 15);
+                } else if (pontos.length > 1) {
+                    mapa.fitBounds(L.latLngBounds(pontos), {padding: [40, 40]});
+                }
+                return;
+            }
             const bounds = new google.maps.LatLngBounds();
             let total = 0;
             ctos.forEach(cto => {
@@ -592,8 +700,7 @@
             }
 
             // Limpar marcadores antigos
-            ctoMarkers.forEach(marker => marker.setMap(null));
-            ctoMarkers = [];
+            limparMarcadoresCto();
 
             ctos.forEach(cto => {
                 // Validar coordenadas
@@ -605,31 +712,44 @@
                     return;
                 }
 
-                // Adicionar marcador ao mapa
-                const marker = new google.maps.Marker({
-                    position: {
-                        lat: lat,
-                        lng: lng
-                    },
-                    map: mapa,
-                    title: `${cto.nomecaixa} - ${ctoCapacidade(cto)} portas / ${ctoLivres(cto)} livres`,
-                    icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',
-                    label: {
-                        text: `${ctoLivres(cto)}/${ctoCapacidade(cto)}`,
-                        color: '#111827',
-                        fontSize: '11px',
-                        fontWeight: '700'
-                    }
-                });
+                let marker;
+                if (isOpenStreet()) {
+                    marker = L.marker([lat, lng], {
+                        title: `${cto.nomecaixa} - ${ctoCapacidade(cto)} portas / ${ctoLivres(cto)} livres`,
+                        icon: criarIconeLeaflet('#2563eb', `${ctoLivres(cto)}/${ctoCapacidade(cto)}`)
+                    }).addTo(mapa);
+                    marker._ctoTexto = `${ctoLivres(cto)}/${ctoCapacidade(cto)}`;
+                    marker.bindPopup(ctoInfoHtml(cto));
+                    marker.on('click', () => {
+                        marker.openPopup();
+                        selecionarCto(cto);
+                    });
+                } else {
+                    marker = new google.maps.Marker({
+                        position: {
+                            lat: lat,
+                            lng: lng
+                        },
+                        map: mapa,
+                        title: `${cto.nomecaixa} - ${ctoCapacidade(cto)} portas / ${ctoLivres(cto)} livres`,
+                        icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+                        label: {
+                            text: `${ctoLivres(cto)}/${ctoCapacidade(cto)}`,
+                            color: '#111827',
+                            fontSize: '11px',
+                            fontWeight: '700'
+                        }
+                    });
 
-                const infoWindow = new google.maps.InfoWindow({
-                    content: ctoInfoHtml(cto)
-                });
+                    const infoWindow = new google.maps.InfoWindow({
+                        content: ctoInfoHtml(cto)
+                    });
 
-                marker.addListener('click', () => {
-                    infoWindow.open(mapa, marker);
-                    selecionarCto(cto);
-                });
+                    marker.addListener('click', () => {
+                        infoWindow.open(mapa, marker);
+                        selecionarCto(cto);
+                    });
+                }
 
                 ctoMarkers.push(marker);
 
@@ -666,6 +786,10 @@
             }
 
             resolverEnderecoBusca(endereco).then(query => {
+            if (isOpenStreet()) {
+                buscarEnderecoOpenStreet(query);
+                return;
+            }
             geocoder.geocode({ address: query, componentRestrictions: { country: 'BR' } }, (results, status) => {
                 if (status === 'OK' && results.length > 0) {
                     const location = results[0].geometry.location;
@@ -712,6 +836,45 @@
             });
         }
 
+        function buscarEnderecoOpenStreet(query) {
+            const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&addressdetails=1&countrycodes=br&q=' + encodeURIComponent(query);
+            fetch(url, { credentials: 'omit' })
+                .then(resp => resp.ok ? resp.json() : [])
+                .then(results => {
+                    if (!results || !results.length) {
+                        mostrarErro('Endereço não encontrado. Tente novamente com informações mais precisas.');
+                        return;
+                    }
+
+                    userLocation = {
+                        lat: parseFloat(results[0].lat),
+                        lng: parseFloat(results[0].lon),
+                        endereco: results[0].display_name || query
+                    };
+                    limparErro();
+                    const selectedAddr = document.getElementById('selectedAddress');
+                    document.getElementById('selectedAddressText').textContent = userLocation.endereco;
+                    selectedAddr.classList.add('active');
+
+                    mapa.setView([userLocation.lat, userLocation.lng], 15);
+
+                    if (userMarker) {
+                        mapa.removeLayer(userMarker);
+                    }
+                    userMarker = L.marker([userLocation.lat, userLocation.lng], {
+                        title: 'Localizacao pesquisada',
+                        icon: criarIconeLeaflet('#ef4444', 'A')
+                    }).addTo(mapa);
+
+                    if (allCtos.length > 0) {
+                        calcularDistancias();
+                    } else {
+                        carregarCtos();
+                    }
+                })
+                .catch(() => mostrarErro('Nao foi possivel buscar o endereco agora.'));
+        }
+
         function resolverEnderecoBusca(raw) {
             const cepMatch = String(raw || '').match(/\b(\d{5})-?(\d{3})\b/);
             if (!cepMatch) {
@@ -744,10 +907,10 @@
             const items = ctosList.querySelectorAll('.cto-item');
 
             const ctosComDistancia = allCtos.map((cto, index) => {
-                const distance = google.maps.geometry.spherical.computeDistanceBetween(
-                    new google.maps.LatLng(userLocation.lat, userLocation.lng),
-                    new google.maps.LatLng(parseFloat(cto.latitude), parseFloat(cto.longitude))
-                );
+                const distance = distanciaMetrosEntre(userLocation, {
+                    lat: parseFloat(cto.latitude),
+                    lng: parseFloat(cto.longitude)
+                });
 
                 return {
                     ...cto,
@@ -759,8 +922,7 @@
             // Atualizar lista com distâncias
             items.forEach((item, idx) => {
                 const cto = ctosComDistancia[idx];
-                const distKm = (cto.distancia / 1000).toFixed(2);
-                item.querySelector('.cto-distance').textContent = `Distância: ${distKm} km`;
+                item.querySelector('.cto-distance').textContent = `Distância: ${formatarDistancia(cto.distancia)}`;
                 item.dataset.ctoId = cto.id;
                 item.dataset.distancia = cto.distancia;
             });
@@ -822,21 +984,27 @@
             // Mostrar botão de fechar
             document.getElementById('fecharListaBtn').style.display = 'inline-block';
 
-            // Atualizar ícone do marcador
-            ctoMarkers.forEach(marker => {
-                marker.setIcon('http://maps.google.com/mapfiles/ms/icons/blue-dot.png');
-            });
+            if (isOpenStreet()) {
+                ctoMarkers.forEach(marker => {
+                    if (marker.setIcon) marker.setIcon(criarIconeLeaflet('#2563eb', marker._ctoTexto || ''));
+                });
+                ctoMarkers.forEach(marker => {
+                    const title = marker.options && marker.options.title ? marker.options.title : '';
+                    if (String(title).indexOf(cto.nomecaixa) === 0 && marker.setIcon) {
+                        marker.setIcon(criarIconeLeaflet('#f59e0b', `${ctoLivres(cto)}/${ctoCapacidade(cto)}`));
+                    }
+                });
+            } else {
+                ctoMarkers.forEach(marker => {
+                    marker.setIcon('http://maps.google.com/mapfiles/ms/icons/blue-dot.png');
+                });
 
-            const ctoLatLng = new google.maps.LatLng(
-                parseFloat(cto.latitude),
-                parseFloat(cto.longitude)
-            );
-
-            ctoMarkers.forEach(marker => {
-                if (String(marker.getTitle()).indexOf(cto.nomecaixa) === 0) {
-                    marker.setIcon('http://maps.google.com/mapfiles/ms/icons/yellow-dot.png');
-                }
-            });
+                ctoMarkers.forEach(marker => {
+                    if (String(marker.getTitle()).indexOf(cto.nomecaixa) === 0) {
+                        marker.setIcon('http://maps.google.com/mapfiles/ms/icons/yellow-dot.png');
+                    }
+                });
+            }
 
             // Traçar rota se houver localização do usuário
             if (userLocation) {
@@ -850,6 +1018,23 @@
         // Traçar rota
         function tracarRota(origem, destino) {
             console.log('tracarRota iniciando com origem:', origem, 'destino:', destino);
+            limparRotaAtual();
+
+            if (isOpenStreet()) {
+                const destinoLatLng = {lat: parseFloat(destino.latitude), lng: parseFloat(destino.longitude)};
+                const distancia = distanciaMetrosEntre(origem, destinoLatLng);
+                routeLayer = L.polyline([[origem.lat, origem.lng], [destinoLatLng.lat, destinoLatLng.lng]], {
+                    color: '#667eea',
+                    weight: 5,
+                    opacity: 0.85
+                }).addTo(mapa);
+                document.getElementById('routeDistance').textContent = formatarDistancia(distancia);
+                document.getElementById('routeDuration').textContent = Math.max(Math.ceil(distancia / 80), 1) + ' min';
+                document.getElementById('routeMode').textContent = 'Linha reta (OpenStreet)';
+                document.getElementById('routeInfo').classList.add('active');
+                mapa.fitBounds(routeLayer.getBounds(), {padding: [70, 70], maxZoom: 17});
+                return;
+            }
             
             const request = {
                 origin: new google.maps.LatLng(origem.lat, origem.lng),
@@ -953,7 +1138,7 @@
                 }
             });
 
-            if (google.maps.places && google.maps.places.Autocomplete) {
+            if (!isOpenStreet() && window.google && google.maps && google.maps.places && google.maps.places.Autocomplete) {
                 const autocomplete = new google.maps.places.Autocomplete(enderecoInput, {
                     componentRestrictions: { country: 'br' },
                     fields: ['formatted_address', 'geometry', 'name']
@@ -979,6 +1164,15 @@
         document.addEventListener('DOMContentLoaded', () => {
             console.log('DOM Carregado');
             setTimeout(() => {
+                if (isOpenStreet()) {
+                    if (window.L) {
+                        console.log('Leaflet disponível');
+                        inicializarMapa();
+                    } else {
+                        console.error('Leaflet não disponível');
+                    }
+                    return;
+                }
                 if (typeof google !== 'undefined' && google.maps) {
                     console.log('API disponível');
                     inicializarMapa();
