@@ -200,6 +200,27 @@
             background: #dc2626;
         }
 
+        .btn-map {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-map:hover {
+            background: #059669;
+        }
+
+        .client-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 34px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4f46e5;
+            font-weight: 700;
+        }
+
         .empty-state {
             text-align: center;
             padding: 40px;
@@ -255,6 +276,18 @@
                 <h2>📍 Listar Caixas de Terminação Óptica (CTOs)</h2>
                 <p><?php echo isset($textoSubTitulo) ? $textoSubTitulo : 'Gerenciamento de CTOs da rede de fibra óptica'; ?></p>
             </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end;">
+            <a href="?_route=mapadectos" style="
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                color: white;
+                padding: 10px 20px;
+                border-radius: 8px;
+                text-decoration: none;
+                font-weight: 600;
+                transition: all 0.3s ease;
+                display: inline-block;
+                white-space: nowrap;
+            " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(16, 185, 129, 0.35)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='';">🗺️ Mapa de CTOs</a>
             <a href="?_route=painel" style="
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 color: white;
@@ -266,6 +299,7 @@
                 display: inline-block;
                 white-space: nowrap;
             " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(102, 126, 234, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='';">🏠 Painel Principal</a>
+            </div>
         </div>
     </div>
 
@@ -347,9 +381,10 @@
                         <th width="20%">Endereço</th>
                         <th width="10%">Tipo</th>
                         <th width="8%">Cap.</th>
+                        <th width="9%">Clientes</th>
                         <th width="8%">Sinal</th>
                         <th width="12%">OLT</th>
-                        <th width="22%">Ações</th>
+                        <th width="21%">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -365,6 +400,7 @@
                             <td><?php echo htmlspecialchars($row['endereco'] ?? ''); ?></td>
                             <td><?php echo htmlspecialchars($row['tipo'] ?? ''); ?></td>
                             <td><?php echo htmlspecialchars($row['capacidade'] ?? '0'); ?> portas</td>
+                            <td><span class="client-count"><?php echo (int)($clientesPorCaixa[$row['id']] ?? 0); ?></span></td>
                             <td><strong><?php echo $row['sinal'] ?? '0'; ?> dB</strong></td>
                             <td><?php echo htmlspecialchars($row['olt'] ?? ''); ?></td>
                             <td>
