@@ -19,6 +19,7 @@ $numeroCaixas = 0;
 $numeroPortas = 0;
 $numeroPortasLivres = 0;
 $numeroPortasAtivas = 0;
+$clientesPorCaixa = [];
 
 // Processar exclusão via POST (clique no botão deletar)
 if (isset($id_deletar) && !empty($id_deletar)) {
@@ -84,20 +85,25 @@ if ($dadosCaixa && mysqli_num_rows($dadosCaixa) > 0) {
     
     while ($item = mysqli_fetch_array($dadosCaixa)) {
         if (($item['nome'] ?? '') != '') {
+            $nomeCaixaAtual = $item['nome'] ?? '';
+            $clientesCaixaTotal = 0;
             // CONTADOR PARA SUBTITULO
-            $dadosClienteContador = tabelaCliente($connection, $table_name, $item['nome'], null, null);
+            $dadosClienteContador = tabelaCliente($connection, $table_name, $nomeCaixaAtual, null, null);
             if ($dadosClienteContador && mysqli_num_rows($dadosClienteContador) > 0) {
                 while ($rowCliente = mysqli_fetch_array($dadosClienteContador)) {
+                    $clientesCaixaTotal++;
                     $numeroPortasAtivas++;
                 }
             }
 
-            $dadosAdicionalContador = tabelaAdicional($connection, $table_name, $item['nome'], null, null);
+            $dadosAdicionalContador = tabelaAdicional($connection, $table_name, $nomeCaixaAtual, null, null);
             if ($dadosAdicionalContador && mysqli_num_rows($dadosAdicionalContador) > 0) {
                 while ($rowAdicional = mysqli_fetch_array($dadosAdicionalContador)) {
+                    $clientesCaixaTotal++;
                     $numeroPortasAtivas++;
                 }
             }
+            $clientesPorCaixa[$item['id']] = $clientesCaixaTotal;
 
             $numeroCaixas++;
             $numeroPortas += $item['capacidade'] ?? 0;
