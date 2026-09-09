@@ -119,310 +119,61 @@ if (!empty($route) && in_array($route, ['inicio', 'adicionar', 'editar', 'backup
     <title>MK - AUTH :: <?php echo $Manifest->name; ?></title>
     
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html, body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f4f6fb;
-            min-height: 100vh;
-            padding: 18px;
-            width: 100%;
-            height: 100%;
-            color: #111827;
-        }
-
-        .dashboard-container {
-            max-width: 1280px;
-            margin: 0 auto;
-        }
-
-        .header {
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 10px;
-            padding: 18px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 16px;
-            color: #111827;
-            margin-bottom: 16px;
-            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-        }
-
-        .header h1 {
-            font-size: 28px;
-            margin-bottom: 4px;
-            text-shadow: none;
-            text-align: left;
-        }
-
-        .header p {
-            font-size: 14px;
-            text-align: left;
-            color: #64748b;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .stat-card {
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 14px 16px;
-            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .stat-card:hover {
-            border-color: #c7d2fe;
-        }
-
-        .stat-card .icon {
-            width: 40px;
-            height: 40px;
-            background: #eef2ff;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 19px;
-            margin-bottom: 0;
-            color: #4f46e5;
-            flex-shrink: 0;
-        }
-
-        .stat-card h3 {
-            color: #64748b;
-            font-size: 12px;
-            margin-bottom: 2px;
-            text-transform: none;
-            letter-spacing: 0;
-        }
-
-        .stat-card .value {
-            color: #4f46e5;
-            font-size: 28px;
-            font-weight: bold;
-            line-height: 1;
-        }
-
-        .actions-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 12px;
-        }
-
-        .action-card {
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 14px;
-        }
-
-        .action-card:hover {
-            border-color: #c7d2fe;
-            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
-        }
-
-        .action-card-header {
-            width: 40px;
-            height: 40px;
-            background: #eef2ff !important;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #4f46e5;
-            font-size: 19px;
-            flex-shrink: 0;
-        }
-
-        .action-card-header.blue {
-            background: #eef2ff;
-        }
-
-        .action-card-header.cyan {
-            background: #e0f2fe;
-        }
-
-        .action-card-header.amber {
-            background: #fef3c7;
-        }
-
-        .action-card-header.green {
-            background: #dcfce7;
-        }
-
-        .action-card-body {
-            padding: 0;
-            flex-grow: 1;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            min-width: 0;
-        }
-
-        .action-card-title {
-            font-size: 15px;
-            color: #111827;
-            margin-bottom: 0;
-            font-weight: 600;
-            flex: 1;
-        }
-
-        .action-card-description {
-            display: none;
-        }
-
-        .action-card-button {
-            display: inline-block;
-            background: #4f46e5 !important;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 600;
-            text-align: center;
-            border: none;
-            cursor: pointer;
-            font-size: 13px;
-            white-space: nowrap;
-        }
-
-        .action-card-button:hover {
-            background: #4338ca !important;
-        }
-
-        .action-card-button.blue {
-            background: linear-gradient(135deg, #667eea 0%, #5a67d8 100%);
-        }
-
-        .action-card-button.cyan {
-            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
-        }
-
-        .action-card-button.amber {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-        }
-
-        .action-card-button.green {
-            background: #059669 !important;
-        }
-
-        .feature-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .feature-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #333;
-        }
-
-        .feature-item:before {
-            content: "✓";
-            color: #10b981;
-            font-weight: bold;
-            font-size: 1.3em;
-        }
-
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 1.8em;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .actions-grid {
-                grid-template-columns: 1fr;
-            }
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { min-height: 100%; background: #f5f7fb; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; color: #17243b; padding: 32px; min-height: 100vh; }
+        button, input { font: inherit; }
+        .dashboard-container { max-width: 1200px; margin: 0 auto; }
+        .header { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 28px; padding: 24px; background: #fff; border: 1px solid #e3e8f0; border-radius: 16px; }
+        .header-brand { display: flex; align-items: center; gap: 16px; min-width: 0; }
+        .brand-icon { display: grid; place-items: center; width: 52px; height: 52px; flex-shrink: 0; border-radius: 14px; color: #fff; background: #4f46e5; }
+        svg { width: 24px; height: 24px; }
+        .header h1 { font-size: 26px; line-height: 1.25; letter-spacing: -.6px; font-weight: 700; }
+        .header p { margin-top: 5px; color: #64748b; font-size: 14px; }
+        .header-actions { display: flex; gap: 8px; flex-shrink: 0; }
+        .header-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 10px 14px; border: 1px solid #dde3ee; border-radius: 9px; color: #475569; background: #fff; font-size: 13px; font-weight: 600; text-decoration: none; cursor: pointer; }
+        .header-button:hover { color: #4338ca; border-color: #b9b5f4; background: #f6f5ff; }
+        .header-button.icon-only { width: 42px; padding: 10px; }
+        .header-button svg { width: 18px; height: 18px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 30px; }
+        .stat-card { position: relative; min-width: 0; padding: 20px; border: 1px solid #e3e8f0; border-radius: 12px; background: #fff; }
+        .stat-card .icon { position: absolute; right: 18px; top: 18px; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 9px; color: #6366f1; background: #f0f0ff; }
+        .stat-card .icon svg { width: 19px; height: 19px; }
+        .stat-card h3 { color: #64748b; font-size: 13px; line-height: 1.4; font-weight: 500; padding-right: 36px; }
+        .stat-card .value { margin-top: 14px; color: #24334d; font-size: 32px; line-height: 1; font-weight: 700; letter-spacing: -.6px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+        .stat-card:nth-child(3) .icon, .stat-card:nth-child(4) .icon { color: #15836b; background: #eaf7f1; }
+        .section-heading { font-size: 13px; font-weight: 600; color: #64748b; margin-bottom: 12px; }
+        .actions-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+        .action-card { --accent: #4f46e5; --tint: #eeedff; position: relative; display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; gap: 20px; min-height: 148px; min-width: 0; padding: 22px 24px; border: 1px solid #e0e6ef; border-radius: 14px; background: #fff; color: #24334d; text-decoration: none; transition: border-color .15s, box-shadow .15s, background .15s; }
+        .action-card:hover { border-color: var(--accent); background: #fdfdff; box-shadow: 0 4px 16px #2533540a; }
+        .action-icon { display: grid; place-items: center; width: 44px; height: 44px; background: var(--tint); color: var(--accent); border-radius: 12px; }
+        .action-title { font-size: 17px; line-height: 1.4; font-weight: 600; padding-right: 8px; overflow-wrap: anywhere; }
+        .action-arrow { position: absolute; right: 24px; top: 30px; color: #94a3b8; font-size: 22px; line-height: 1; }
+        .action-card:hover .action-arrow { color: var(--accent); }
+        .action-card.clients { --accent: #167bad; --tint: #eaf5fb; }
+        .action-card.map { --accent: #b47719; --tint: #fdf4e5; }
+        .action-card.viability { --accent: #168367; --tint: #e8f7f0; }
+        .action-card.backup { --accent: #526787; --tint: #edf1f7; }
+        .action-card.settings { --accent: #8553c0; --tint: #f3ecfb; }
+        a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid #818cf8; outline-offset: 4px; }
+        @media (max-width: 900px) { body { padding: 24px; } .header { align-items: flex-start; } .header h1 { font-size: 23px; } .header-actions { flex-wrap: wrap; justify-content: flex-end; } .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .actions-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (max-width: 600px) { body { padding: 16px; } .header { flex-direction: column; gap: 18px; padding: 20px; margin-bottom: 20px; } .header h1 { font-size: 21px; } .header p { font-size: 13px; } .brand-icon { width: 44px; height: 44px; } .header-actions { justify-content: flex-start; } .stats-grid { gap: 10px; margin-bottom: 24px; } .stat-card { padding: 16px; } .stat-card .icon { display: none; } .stat-card h3 { padding: 0; font-size: 12px; } .stat-card .value { font-size: 28px; } .actions-grid { grid-template-columns: 1fr; gap: 12px; } .action-card { min-height: 84px; flex-direction: row; align-items: center; justify-content: flex-start; padding: 18px; gap: 16px; } .action-icon { flex-shrink: 0; } .action-title { padding-right: 24px; font-size: 16px; } .action-arrow { right: 18px; top: calc(50% - 11px); } }
+        @media (prefers-reduced-motion: reduce) { .action-card { transition: none; } }
     </style>
 </head>
 
 <body>
     <div class="dashboard-container">
-        <!-- Header -->
-        <div class="header">
-            <div style="flex: 1;">
-                <h1>🗺️ Gerenciamento FTTH</h1>
-                <p>Sistema de Gerenciamento de Caixas de Terminação Óptica</p>
+        <header class="header">
+            <div class="header-brand">
+                <span class="brand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
+                <div><h1>Gerenciamento FTTH</h1><p>Caixas de terminação óptica</p></div>
             </div>
-            <div style="display: flex; gap: 10px; align-items: flex-start;">
-                <a href="<?php echo htmlspecialchars($admin_url); ?>" id="btn-voltar" style="
-                    background: #667eea;
-                    color: white;
-                    padding: 12px 24px;
-                    border-radius: 8px;
-                    text-decoration: none;
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 8px;
-                    margin-top: 10px;
-                    transition: all 0.3s ease;
-                " onmouseover="this.style.background='#5568d3'" onmouseout="this.style.background='#667eea'">
-                    ← Voltar ao MK-AUTH
-                </a>
-                <button onclick="abrirEditorUrl()" style="
-                    background: #667eea;
-                    color: white;
-                    border: none;
-                    padding: 12px 16px;
-                    border-radius: 8px;
-                    cursor: pointer;
-                    font-size: 1.1em;
-                    margin-top: 10px;
-                    transition: all 0.3s ease;
-                " onmouseover="this.style.background='#5568d3'" onmouseout="this.style.background='#667eea'" title="Editar URL do MK-AUTH">
-                    ✏️
-                </button>
+            <div class="header-actions">
+                <a href="<?php echo htmlspecialchars($admin_url); ?>" id="btn-voltar" class="header-button">← Voltar ao MK-AUTH</a>
+                <button type="button" class="header-button icon-only" onclick="abrirEditorUrl()" title="Editar URL do MK-AUTH" aria-label="Editar URL do MK-AUTH"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="currentColor"/><circle cx="15" cy="17" r="3" fill="currentColor"/></svg></button>
             </div>
-        </div>
+        </header>
 
         <!-- Modal de Edição de URL -->
         <div id="modal-url" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
@@ -526,86 +277,63 @@ if (!empty($route) && in_array($route, ['inicio', 'adicionar', 'editar', 'backup
 <!-- Stats Section -->
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="icon">📍</div>
+                <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></div>
                 <h3>CTOs Cadastradas</h3>
                 <div class="value"><?php echo $ctos_cadastradas; ?></div>
             </div>
 
             <div class="stat-card">
-                <div class="icon">🔌</div>
+                <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3v5M16 3v5M6 8h12v3a6 6 0 0 1-12 0V8ZM12 17v5"/></svg></div>
                 <h3>Portas Totais</h3>
                 <div class="value"><?php echo $portas_totais; ?></div>
             </div>
 
             <div class="stat-card">
-                <div class="icon">✅</div>
+                <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg></div>
                 <h3>Portas Livres</h3>
                 <div class="value"><?php echo $portas_livres; ?></div>
             </div>
 
             <div class="stat-card">
-                <div class="icon">🟢</div>
+                <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12h5l3-8 4 16 3-8h5"/></svg></div>
                 <h3>Portas Ativas</h3>
                 <div class="value"><?php echo $portas_ativas; ?></div>
             </div>
         </div>
 
-        <!-- Actions Grid -->
-        <div class="actions-grid">
-            <!-- Card: Listar CTOs -->
-            <div class="action-card">
-                <div class="action-card-header blue">📋</div>
-                <div class="action-card-body">
-                    <div class="action-card-title">Listar CTOs</div>
-                    <a href="?_route=inicio" class="action-card-button blue">Acessar</a>
-                </div>
-            </div>
-
-            <!-- Card: Mapa de Clientes -->
-            <div class="action-card">
-                <div class="action-card-header" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);">🗺️</div>
-                <div class="action-card-body">
-                    <div class="action-card-title">Mapa de Clientes</div>
-                    <a href="?_route=maps" class="action-card-button" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);">Abrir</a>
-                </div>
-            </div>
-
-            <!-- Card: Mapa de CTOs -->
-            <div class="action-card">
-                <div class="action-card-header amber">🗺️</div>
-                <div class="action-card-body">
-                    <div class="action-card-title">Mapa de CTOs</div>
-                    <a href="?_route=mapadectos" class="action-card-button amber">Abrir</a>
-                </div>
-            </div>
-
-            <!-- Card: Viabilidade de Atendimento -->
-            <div class="action-card">
-                <div class="action-card-header" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);">🚶</div>
-                <div class="action-card-body">
-                    <div class="action-card-title">Viabilidade de Atendimento</div>
-                    <a href="?_route=viabilidade" class="action-card-button" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);">Abrir</a>
-                </div>
-            </div>
-
-            <!-- Card: Backup -->
-            <div class="action-card">
-                <div class="action-card-header green">💾</div>
-                <div class="action-card-body">
-                    <div class="action-card-title">Backup de Dados</div>
-                    <a href="?_route=backup" class="action-card-button green">Gerenciar</a>
-                </div>
-            </div>
-
-            <!-- Card: Configurações -->
-            <div class="action-card">
-                <div class="action-card-header" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">⚙️</div>
-                <div class="action-card-body">
-                    <div class="action-card-title">Configurações</div>
-                    <a href="?_route=configurar" class="action-card-button" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">Configurar</a>
-                </div>
-            </div>
-        </div>
+        <h2 class="section-heading">Acesso rápido</h2>
+        <nav class="actions-grid" aria-label="Ferramentas FTTH">
+            <a href="?_route=inicio" class="action-card list">
+                <span class="action-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2M9 10h6M9 14h6M9 18h4"/></svg></span>
+                <span class="action-title">Listar CTOs</span>
+                <span class="action-arrow" aria-hidden="true">↗</span>
+            </a>
+            <a href="?_route=maps" class="action-card clients">
+                <span class="action-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 21v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6M18 15a5 5 0 0 1 3 4v2"/></svg></span>
+                <span class="action-title">Mapa de Clientes</span>
+                <span class="action-arrow" aria-hidden="true">↗</span>
+            </a>
+            <a href="?_route=mapadectos" class="action-card map">
+                <span class="action-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6ZM9 3v15M15 6v15"/></svg></span>
+                <span class="action-title">Mapa de CTOs</span>
+                <span class="action-arrow" aria-hidden="true">↗</span>
+            </a>
+            <a href="?_route=viabilidade" class="action-card viability">
+                <span class="action-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></span>
+                <span class="action-title">Viabilidade de Atendimento</span>
+                <span class="action-arrow" aria-hidden="true">↗</span>
+            </a>
+            <a href="?_route=backup" class="action-card backup">
+                <span class="action-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v7c0 4 16 4 16 0V5M4 12v7c0 4 16 4 16 0v-7"/></svg></span>
+                <span class="action-title">Backup de Dados</span>
+                <span class="action-arrow" aria-hidden="true">↗</span>
+            </a>
+            <a href="?_route=configurar" class="action-card settings">
+                <span class="action-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="currentColor"/><circle cx="15" cy="17" r="3" fill="currentColor"/></svg></span>
+                <span class="action-title">Configurações</span>
+                <span class="action-arrow" aria-hidden="true">↗</span>
+            </a>
+        </nav>
     </div>
 </body>
 </html>

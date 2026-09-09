@@ -13,19 +13,19 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f6fb;
-            padding: 16px;
+            background-color: #f5f7fb;
+            padding: 32px;
             color: #111827;
         }
 
         .container {
-            max-width: 1280px;
+            max-width: 1200px;
             margin: 0 auto;
         }
 
         .header {
             background: white;
-            padding: 18px 20px;
+            padding: 24px;
             border-radius: 8px;
             border: 1px solid #e5e7eb;
             box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
@@ -34,7 +34,7 @@
 
         .header h2 {
             color: #111827;
-            font-size: 24px;
+            font-size: 26px;
             margin-bottom: 8px;
         }
 
@@ -149,11 +149,12 @@
             border-radius: 8px;
             border: 1px solid #e5e7eb;
             box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-            overflow: hidden;
+            overflow-x: auto;
         }
 
         table {
             width: 100%;
+            min-width: 900px;
             border-collapse: collapse;
         }
 
@@ -304,6 +305,23 @@
             padding: 40px;
             color: #999;
         }
+        .header { border-radius: 16px; }
+        .header-row { align-items: center; }
+        .filters { padding: 20px; border-radius: 12px; }
+        .table-wrapper { border-radius: 12px; }
+        .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+        .stat-card { padding: 20px; border-radius: 12px; flex-direction: column; align-items: flex-start; gap: 12px; }
+        .stat-card .number { color: #24334d; font-size: 30px; }
+        .top-link, .btn, .btn-small { font-family: inherit; }
+        .action-buttons { flex-wrap: nowrap; }
+        .btn-small { white-space: nowrap; }
+        .btn-edit { background: #eef2ff; color: #4338ca; }
+        .btn-edit:hover { background: #e0e7ff; }
+        .btn-delete { background: #fff1f2; color: #be123c; }
+        .btn-delete:hover { background: #ffe4e6; }
+        a:focus-visible, button:focus-visible { outline: 3px solid #818cf8; outline-offset: 3px; }
+        @media (max-width: 900px) { .header-row { flex-direction: column; align-items: stretch; } .top-actions { justify-content: flex-start; } .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (max-width: 600px) { body { padding: 16px; } .header { padding: 20px; } .header h2 { font-size: 23px; } .filter-group { grid-template-columns: 1fr; } .stats { gap: 10px; } .stat-card { padding: 16px; } .filters { padding: 16px; } }
     </style>
 </head>
 <body>
@@ -313,7 +331,7 @@
     <div class="header">
         <div class="header-row">
             <div>
-                <h2>Listar Caixas de Terminação Óptica (CTOs)</h2>
+                <h2>Listar CTOs</h2>
                 <p><?php echo isset($textoSubTitulo) ? $textoSubTitulo : 'Gerenciamento de CTOs da rede de fibra óptica'; ?></p>
             </div>
             <div class="top-actions">
