@@ -4,7 +4,7 @@ $keyGoogleMaps = function_exists('getGoogleMapsApiKey') ? getGoogleMapsApiKey() 
 $mapProvider = function_exists('getSystemMapProvider') ? getSystemMapProvider() : (!empty($keyGoogleMaps) ? 'google' : 'openstreet');
 ?>
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="ftth-theme">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1127,8 +1127,9 @@ $mapProvider = function_exists('getSystemMapProvider') ? getSystemMapProvider() 
         /* codex-assigned-port-badge-end */
 
     </style>
+    <style data-ftth-theme="1.1.35"><?php readfile(__DIR__ . '/../../../../assets/css/ftth-theme.css'); ?></style>
 </head>
-<body>
+<body class="ftth-theme">
 
 <?php
 $temClienteDesativadoEmPorta = false;

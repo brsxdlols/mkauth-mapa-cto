@@ -1,0 +1,56 @@
+/* Paleta compartilhada do addon FTTH. Nao altera controles ou camadas dos mapas. */
+html.ftth-theme { background: #e8edf5; padding: 0; }
+body.ftth-theme { background: #e8edf5; color: #172b48; font-family: 'Segoe UI', Tahoma, sans-serif; }
+.ftth-theme .header, .ftth-theme .header-maps {
+    background: #20375c; color: #fff; border: 1px solid #20375c;
+    border-radius: 14px; padding: 22px 24px; box-shadow: 0 8px 22px #20375c18;
+}
+.ftth-theme .header :is(h1,h2,h3), .ftth-theme .header-maps :is(h1,h2,h3) { color: #fff; text-shadow: none; }
+.ftth-theme .header p, .ftth-theme .header-maps p { color: #ccd9ee; }
+.ftth-theme .header :is(a,button), .ftth-theme .header-maps :is(a,button) {
+    background: #304b74 !important; color: #fff !important; border: 1px solid #577096; box-shadow: none;
+}
+.ftth-theme .header :is(a,button):hover, .ftth-theme .header-maps :is(a,button):hover { background: #3f5e8c !important; border-color: #9fb5d7; }
+.ftth-theme :is(.content,.form-section,.clients-section,.filters,.table-wrapper,.controls-maps,.legend) {
+    border: 1px solid #c7d3e4; box-shadow: 0 3px 12px #20375c0b;
+}
+.ftth-theme :is(.form-section,.clients-section,.content) { background-color: #fff; }
+.ftth-theme :is(.form-section,.clients-section) > h2, .ftth-theme .section-title {
+    color: #20375c; border-color: #c7d3e4;
+}
+.ftth-theme .stat-card { background: #fff; color: #24334d; border: 1px solid #c7d3e4; border-top: 3px solid #6076cc; box-shadow: 0 3px 9px #20375c08; }
+.ftth-theme .stat-card:nth-child(3), .ftth-theme .stat-card:nth-child(4) { border-top-color: #24846d; }
+.ftth-theme .stat-card :is(.value,.number,h3) { color: #24334d; }
+.ftth-theme .stat-card :is(p,.label) { color: #475569; }
+.ftth-theme :is(.btn-primary,.btn-back,.btn-voltar,.voltar-btn,.btn-backup,.map-icon,.map-button,#buscarBtn) { background: #4864cf; color: #fff; border-color: #4864cf; box-shadow: none; }
+.ftth-theme :is(.btn-primary,.btn-back,.btn-voltar,.voltar-btn,.btn-backup,.map-icon,.map-button,#buscarBtn):hover { background: #354eac; color: #fff; }
+.ftth-theme :is(.btn-success,.btn-submit) { background: #168367; color: #fff; }
+.ftth-theme :is(.btn-secondary,.btn-cancel) { background: #e7edf5; color: #344762; }
+.ftth-theme .filter-btn { background: #edf1fa; border-color: #b9c6df; color: #344762; }
+.ftth-theme .filter-btn.active, .ftth-theme .filter-btn.active:hover { background: #4864cf; color: #fff; border-color: #4864cf; }
+.ftth-theme .action-btn { background: #168367; color: #fff; border-color: #168367; }
+.ftth-theme .action-btn.secondary { background: #526787; color: #fff; border-color: #526787; }
+.ftth-theme .action-btn.secondary.active { background: #4864cf; border-color: #4864cf; }
+.ftth-theme :is(.info-box,.selected-address,.port-client-summary) { background: #eaf3fb; color: #24456a; border-color: #bad1e7; }
+.ftth-theme :is(.client-list,.sidebar) { background: #f1f5fa; border-color: #c7d3e4; }
+.ftth-theme .usage-card-right { background: #20375c; color: #fff; border-color: #304b74; }
+.ftth-theme .port-modal-header { background: #20375c; color: #fff; }
+.ftth-theme .port-modal-header h3 { color: #fff; }
+.ftth-theme .cto-popup-header { background: #20375c; color: #fff; }
+.ftth-theme .cto-popup-header :is(h2,h3) { color: #fff; }
+.ftth-theme input:not([type=checkbox]):not([type=radio]):not([type=hidden]), .ftth-theme select, .ftth-theme textarea { border-color: #b9c7dc; }
+.ftth-theme :is(input,select,textarea):focus { border-color: #6076cc; }
+.ftth-theme :is(a,button,input,select,textarea):focus-visible { outline: 3px solid #8195df; outline-offset: 3px; }
+.ftth-theme :is(button,a):disabled { opacity: .55; }
+body.ftth-map .header { padding: 12px 18px; }
+body.ftth-map .header-maps { padding: 16px; }
+body.ftth-viabilidade .content { grid-template-columns: minmax(320px, .85fr) minmax(0, 1.15fr); }
+.ftth-theme .ftth-network-art { margin: 34px auto 8px; max-width: 1200px; pointer-events: none; }
+.ftth-theme .ftth-network-art svg { display: block; width: 100%; height: auto; max-height: 250px; }
+@media (max-width: 800px) { body.ftth-viabilidade .content { grid-template-columns: 1fr; } }
+@media (max-width: 600px) {
+    .ftth-theme .header { padding: 18px; }
+    body.ftth-map .header { padding: 10px 12px; }
+    .ftth-theme .ftth-network-art { margin-top: 24px; overflow: hidden; }
+    .ftth-theme .ftth-network-art svg { width: 660px; max-width: none; height: 160px; position: relative; left: 50%; transform: translateX(-50%); }
+}

@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 250" role="img" aria-labelledby="ftth-art-title ftth-art-desc">
+  <title id="ftth-art-title">Rede de fibra óptica FTTH</title>
+  <desc id="ftth-art-desc">Uma central de rede conecta caixas de terminação óptica e casas por cabos de fibra.</desc>
+  <defs>
+    <linearGradient id="ftth-ground" x1="0" x2="1"><stop stop-color="#dce5f1" stop-opacity="0"/><stop offset=".5" stop-color="#d1ddeb"/><stop offset="1" stop-color="#dce5f1" stop-opacity="0"/></linearGradient>
+    <g id="ftth-home" stroke="#6983a4" stroke-width="2" stroke-linejoin="round">
+      <path d="M-32 0V-43L0-68 32-43V0Z" fill="#e1e9f4"/><path d="m-40-39 40-33 40 33" fill="none"/>
+      <path d="M-9 0v-27H9V0" fill="#c6d5e8"/><rect x="-23" y="-39" width="12" height="12" rx="2" fill="#f4f7fb"/>
+      <rect x="11" y="-39" width="12" height="12" rx="2" fill="#f4f7fb"/>
+    </g>
+    <g id="ftth-tree" fill="none" stroke="#9ab6b4" stroke-width="2"><path d="M0 0v-45"/><path d="M0-60c-26 16-27 41 0 41 27 0 26-25 0-41Z" fill="#d9e8e2"/></g>
+    <g id="ftth-box" stroke="#537597" stroke-width="2"><rect x="-20" y="-26" width="40" height="52" rx="7" fill="#d7e4f0"/><path d="M-10-13h20M-10-5h20M-8 11v6M0 11v6M8 11v6"/><circle cy="3" r="3" fill="#268b79" stroke="none"/></g>
+  </defs>
+  <ellipse cx="600" cy="222" rx="575" ry="17" fill="url(#ftth-ground)"/>
+  <g fill="none" stroke="#c8d5e5" stroke-width="1.5"><path d="M55 215V139h38v76M200 215v-83h46v83M949 215v-89h43v89M1094 215v-76h37v76"/><path d="M58 93h122M1027 95h115M366 44h91M733 42h95" stroke-dasharray="4 7"/></g>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M578 160H358V107H140V153M358 160v41H278M622 160h220V107h218v46M842 160v41h80" stroke="#88a4c5" stroke-width="5"/>
+    <path d="M578 160H358V107H140V153M358 160v41H278M622 160h220V107h218v46M842 160v41h80" stroke="#dbe6f3" stroke-width="1.5"/>
+    <path d="M358 133v-57M842 133V76" stroke="#4e91a3" stroke-width="3"/>
+  </g>
+  <g opacity=".9"><use href="#ftth-home" transform="translate(140 216)"/><use href="#ftth-home" transform="translate(278 216) scale(.8)"/><use href="#ftth-home" transform="translate(1060 216)"/><use href="#ftth-home" transform="translate(920 216) scale(.8)"/>
+    <use href="#ftth-home" transform="translate(358 88) scale(.7)"/><use href="#ftth-home" transform="translate(842 88) scale(.7)"/>
+    <use href="#ftth-tree" transform="translate(75 217)"/><use href="#ftth-tree" transform="translate(449 217) scale(.85)"/><use href="#ftth-tree" transform="translate(752 217) scale(.85)"/><use href="#ftth-tree" transform="translate(1130 217)"/>
+  </g>
+  <g transform="translate(600 146)">
+    <path d="M-51 72V-67a10 10 0 0 1 10-10h82a10 10 0 0 1 10 10V72" fill="#d4dfef" stroke="#6580a4" stroke-width="2"/>
+    <path d="M-60 73H60" stroke="#6580a4" stroke-width="2"/>
+    <g fill="#edf2f9" stroke="#7892b5" stroke-width="1.5"><rect x="-35" y="-54" width="70" height="29" rx="5"/><rect x="-35" y="-16" width="70" height="29" rx="5"/><rect x="-35" y="22" width="70" height="29" rx="5"/></g>
+    <g fill="#248b76"><circle cx="-22" cy="-39" r="3"/><circle cx="-22" cy="-1" r="3"/><circle cx="-22" cy="37" r="3"/></g>
+    <g stroke="#94aac6" stroke-width="2"><path d="M-8-39h30M-8-1h30M-8 37h30"/></g>
+    <text y="-91" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" font-weight="600" fill="#60799a" letter-spacing="2">REDE FTTH</text>
+  </g>
+  <use href="#ftth-box" transform="translate(358 151)"/><use href="#ftth-box" transform="translate(842 151)"/>
+  <g font-family="Segoe UI, sans-serif" font-size="10" font-weight="600" text-anchor="middle" fill="#6a83a2" letter-spacing="1"><text x="358" y="189">CTO</text><text x="842" y="189">CTO</text><text x="600" y="237">CENTRAL · OLT</text></g>
+  <g fill="#388b9a" stroke="#e8edf5" stroke-width="3"><circle cx="465" cy="160" r="5"/><circle cx="733" cy="160" r="5"/><circle cx="217" cy="107" r="4"/><circle cx="983" cy="107" r="4"/></g>
+</svg>

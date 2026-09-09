@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="ftth-theme">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
@@ -190,8 +190,9 @@
             }
         }
     </style>
+    <style data-ftth-theme="1.1.35"><?php readfile(__DIR__ . '/../../../../assets/css/ftth-theme.css'); ?></style>
 </head>
-<body>
+<body class="ftth-theme">
     <div class="container">
         <!-- Header -->
         <div class="header">

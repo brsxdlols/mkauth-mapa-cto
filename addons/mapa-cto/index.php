@@ -112,7 +112,7 @@ if (!empty($route) && in_array($route, ['inicio', 'adicionar', 'editar', 'backup
 // === RENDERIZAR DASHBOARD PADRÃO ===
 ?>
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="ftth-theme">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
@@ -181,9 +181,10 @@ if (!empty($route) && in_array($route, ['inicio', 'adicionar', 'editar', 'backup
         @media (max-width: 600px) { body { padding: 16px; } .header { flex-direction: column; gap: 18px; padding: 20px; margin-bottom: 20px; } .header h1 { font-size: 21px; } .header p { font-size: 13px; } .brand-icon { width: 44px; height: 44px; } .header-actions { justify-content: flex-start; } .stats-grid { gap: 10px; margin-bottom: 24px; } .stat-card { padding: 16px; } .stat-card .icon { display: none; } .stat-card h3 { padding: 0; font-size: 12px; } .stat-card .value { font-size: 28px; } .actions-grid { grid-template-columns: 1fr; gap: 12px; } .action-card { min-height: 84px; flex-direction: row; align-items: center; justify-content: flex-start; padding: 18px; gap: 16px; } .action-icon { flex-shrink: 0; } .action-title { padding-right: 24px; font-size: 16px; } .action-arrow { right: 18px; top: calc(50% - 11px); } }
         @media (prefers-reduced-motion: reduce) { .action-card { transition: none; } }
     </style>
+    <style data-ftth-theme="1.1.35"><?php readfile(__DIR__ . '/assets/css/ftth-theme.css'); ?></style>
 </head>
 
-<body>
+<body class="ftth-theme">
     <div class="dashboard-container">
         <header class="header">
             <div class="header-brand">
@@ -355,6 +356,7 @@ if (!empty($route) && in_array($route, ['inicio', 'adicionar', 'editar', 'backup
                 <span class="action-arrow" aria-hidden="true">↗</span>
             </a>
         </nav>
+        <figure class="ftth-network-art"><?php readfile(__DIR__ . '/assets/images/ftth-network.svg'); ?></figure>
     </div>
 </body>
 </html>

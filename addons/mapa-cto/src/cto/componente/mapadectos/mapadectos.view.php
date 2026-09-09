@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="ftth-theme">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
@@ -636,8 +636,9 @@
         .cto-client-search-row span{display:block;font-size:11px;color:#64748b}
         @keyframes ctoPulse{0%{transform:scale(.75);box-shadow:0 0 0 0 rgba(245,158,11,.7)}70%{transform:scale(1.2);box-shadow:0 0 0 14px rgba(245,158,11,0)}100%{transform:scale(.75);box-shadow:0 0 0 0 rgba(245,158,11,0)}}
     </style>
+    <style data-ftth-theme="1.1.35"><?php readfile(__DIR__ . '/../../../../assets/css/ftth-theme.css'); ?></style>
 </head>
-<body>
+<body class="ftth-theme ftth-map">
     <div class="container">
         <!-- Header -->
         <div class="header">
