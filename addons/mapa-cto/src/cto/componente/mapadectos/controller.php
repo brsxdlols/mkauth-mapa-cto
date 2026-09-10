@@ -198,6 +198,58 @@ if (isset($connection) && $connection) {
         $has_sis_adicional_longitude = $adicional_longitude_check && mysqli_num_rows($adicional_longitude_check) > 0;
     }
 
+    // Load associations in bulk; preserve SQL collation and ID-or-name matching.
+    $map_join_principal = "(sc.caixa_herm = c.nome AND sc.caixa_herm IS NOT NULL AND sc.caixa_herm != '')";
+    if ($has_cto_id) $map_join_principal = "((sc.cto_id = c.id AND sc.cto_id > 0) OR " . $map_join_principal . ")";
+    $map_principais = array(); $map_adicionais = array();
+            $cliente_porta_select = $has_cliente_porta ? "sc.porta_splitter" : "''";
+            $cliente_latitude_select = $has_cliente_latitude ? "sc.latitude" : "''";
+            $cliente_longitude_select = $has_cliente_longitude ? "sc.longitude" : "''";
+            $cliente_coordenadas_select = $has_cliente_coordenadas ? "sc.coordenadas" : "''";
+            $clientes_sql = "SELECT c.id as map_cto_id, (ra.radacctid IS NOT NULL) as map_online, sc.id, sc.nome, sc.login,
+                            " . $cliente_porta_select . " as porta_splitter,
+                            " . $cliente_latitude_select . " as latitude,
+                            " . $cliente_longitude_select . " as longitude,
+                            " . $cliente_coordenadas_select . " as coordenadas,
+                            sc.cli_ativado,
+                            'Cliente' as tipo_cliente,
+                            CASE
+                                WHEN LOWER(COALESCE(sc.cli_ativado, '')) <> 's' THEN 'desativado'
+                                WHEN ra.radacctid IS NOT NULL THEN 'online'
+                                ELSE 'offline'
+                            END as status
+                            FROM sis_cliente sc INNER JOIN mp_caixa c ON " . $map_join_principal . "
+                            LEFT JOIN (SELECT username, MAX(radacctid) AS radacctid FROM radacct WHERE acctstoptime IS NULL GROUP BY username) ra ON ra.username = sc.login
+                            
+                            ORDER BY sc.nome";
+
+    $bulk = mysqli_query($connection, $clientes_sql);
+    if (!$bulk) throw new Exception('Falha ao carregar clientes do mapa');
+    while ($item = mysqli_fetch_assoc($bulk)) $map_principais[$item['map_cto_id']][] = $item;
+    if ($has_sis_adicional && $has_sis_adicional_caixa) {
+                $adicional_porta_select = $has_sis_adicional_porta ? "sa.porta_splitter" : "''";
+                $adicional_latitude_select = $has_sis_adicional_latitude ? "sa.latitude" : "''";
+                $adicional_longitude_select = $has_sis_adicional_longitude ? "sa.longitude" : "''";
+                $adicionais_sql = "SELECT c.id as map_cto_id, (ra.radacctid IS NOT NULL) as map_online, sa.id,
+                                COALESCE(NULLIF(sa.nome, ''), sa.username, sa.login) as nome,
+                                sa.username as login,
+                                " . $adicional_porta_select . " as porta_splitter,
+                                " . $adicional_latitude_select . " as latitude,
+                                " . $adicional_longitude_select . " as longitude,
+                                'Adicional' as tipo_cliente,
+                                CASE WHEN ra.radacctid IS NOT NULL THEN 'online' ELSE 'offline' END as status
+                                FROM sis_adicional sa INNER JOIN mp_caixa c ON sa.caixa_herm = c.nome AND sa.caixa_herm IS NOT NULL AND sa.caixa_herm != ''
+                                LEFT JOIN (SELECT username, MAX(radacctid) AS radacctid FROM radacct WHERE acctstoptime IS NULL GROUP BY username) ra ON ra.username = sa.username
+                                LEFT JOIN sis_cliente scp ON scp.login = sa.login
+                                WHERE 1=1
+                                AND (scp.id IS NULL OR scp.cli_ativado = 's')
+                                ORDER BY nome";
+
+        $bulk = mysqli_query($connection, $adicionais_sql);
+        if (!$bulk) throw new Exception('Falha ao carregar adicionais do mapa');
+        while ($item = mysqli_fetch_assoc($bulk)) $map_adicionais[$item['map_cto_id']][] = $item;
+    }
+
     // Buscar todas as CTOs com dados de clientes
     $sql = "SELECT 
                 c.id,
@@ -218,84 +270,11 @@ if (isset($connection) && $connection) {
     if ($result) {
         while ($row = mysqli_fetch_assoc($result)) {
             $cto_id = (int)$row['id'];
-            $cto_nome = mysqli_real_escape_string($connection, $row['nome']);
-
-            $cliente_where = "(caixa_herm = '" . $cto_nome . "' AND caixa_herm IS NOT NULL AND caixa_herm != '')";
-            $cliente_where_sc = "(sc.caixa_herm = '" . $cto_nome . "' AND sc.caixa_herm IS NOT NULL AND sc.caixa_herm != '')";
-            $adicional_where_sa = "(sa.caixa_herm = '" . $cto_nome . "' AND sa.caixa_herm IS NOT NULL AND sa.caixa_herm != '')";
-
-            if ($has_cto_id) {
-                $cliente_where = "((cto_id = " . $cto_id . " AND cto_id IS NOT NULL AND cto_id > 0) OR " . $cliente_where . ")";
-                $cliente_where_sc = "((sc.cto_id = " . $cto_id . " AND sc.cto_id IS NOT NULL AND sc.cto_id > 0) OR " . $cliente_where_sc . ")";
-            }
-            
-            $count_sql = "SELECT COUNT(DISTINCT id) as total FROM sis_cliente WHERE " . $cliente_where;
-            $count_result = mysqli_query($connection, $count_sql);
-            $count_row = $count_result ? mysqli_fetch_assoc($count_result) : ['total' => 0];
-            $total_clientes_principal = intval($count_row['total'] ?? 0);
-
-            $total_adicionais = 0;
-            if ($has_sis_adicional && $has_sis_adicional_caixa) {
-                $count_adicional_sql = "SELECT COUNT(DISTINCT sa.id) as total
-                              FROM sis_adicional sa
-                              LEFT JOIN sis_cliente scp ON scp.login = sa.login
-                              WHERE " . $adicional_where_sa . "
-                              AND (scp.id IS NULL OR scp.cli_ativado = 's')";
-                $count_adicional_result = mysqli_query($connection, $count_adicional_sql);
-                $count_adicional_row = $count_adicional_result ? mysqli_fetch_assoc($count_adicional_result) : ['total' => 0];
-                $total_adicionais = intval($count_adicional_row['total'] ?? 0);
-            }
-            $total_clientes = $total_clientes_principal + $total_adicionais;
-            
-            $online_sql = "SELECT COUNT(DISTINCT sc.id) as total FROM sis_cliente sc
-                          INNER JOIN radacct ra ON ra.username = sc.login 
-                          WHERE ra.acctstoptime IS NULL
-                          AND " . $cliente_where_sc;
-            $online_result = mysqli_query($connection, $online_sql);
-            $online_row = $online_result ? mysqli_fetch_assoc($online_result) : ['total' => 0];
-            $total_online_principal = intval($online_row['total'] ?? 0);
-
-            $total_online_adicional = 0;
-            if ($has_sis_adicional && $has_sis_adicional_caixa) {
-                $online_adicional_sql = "SELECT COUNT(DISTINCT sa.id) as total
-                              FROM sis_adicional sa
-                              INNER JOIN radacct ra ON ra.username = sa.username AND ra.acctstoptime IS NULL
-                              LEFT JOIN sis_cliente scp ON scp.login = sa.login
-                              WHERE " . $adicional_where_sa . "
-                              AND (scp.id IS NULL OR scp.cli_ativado = 's')";
-                $online_adicional_result = mysqli_query($connection, $online_adicional_sql);
-                $online_adicional_row = $online_adicional_result ? mysqli_fetch_assoc($online_adicional_result) : ['total' => 0];
-                $total_online_adicional = intval($online_adicional_row['total'] ?? 0);
-            }
-            $total_online = $total_online_principal + $total_online_adicional;
-            
-            $total_offline = max(0, $total_clientes - $total_online);
-            
-            $cliente_porta_select = $has_cliente_porta ? "sc.porta_splitter" : "''";
-            $cliente_latitude_select = $has_cliente_latitude ? "sc.latitude" : "''";
-            $cliente_longitude_select = $has_cliente_longitude ? "sc.longitude" : "''";
-            $cliente_coordenadas_select = $has_cliente_coordenadas ? "sc.coordenadas" : "''";
-            $clientes_sql = "SELECT sc.id, sc.nome, sc.login,
-                            " . $cliente_porta_select . " as porta_splitter,
-                            " . $cliente_latitude_select . " as latitude,
-                            " . $cliente_longitude_select . " as longitude,
-                            " . $cliente_coordenadas_select . " as coordenadas,
-                            sc.cli_ativado,
-                            'Cliente' as tipo_cliente,
-                            CASE
-                                WHEN LOWER(COALESCE(sc.cli_ativado, '')) <> 's' THEN 'desativado'
-                                WHEN ra.radacctid IS NOT NULL THEN 'online'
-                                ELSE 'offline'
-                            END as status
-                            FROM sis_cliente sc
-                            LEFT JOIN radacct ra ON ra.username = sc.login AND ra.acctstoptime IS NULL
-                            WHERE " . $cliente_where_sc . "
-                            ORDER BY sc.nome";
-            $clientes_result = mysqli_query($connection, $clientes_sql);
             $clientes_list = array();
-            
-            if ($clientes_result) {
-                while ($cliente = mysqli_fetch_assoc($clientes_result)) {
+            $map_ids = array(); $map_online_ids = array();
+            foreach (($map_principais[$cto_id] ?? array()) as $cliente) {
+                $map_ids['p:' . $cliente['id']] = true;
+                if ($cliente['map_online']) $map_online_ids['p:' . $cliente['id']] = true;
                     $clientes_list[] = mapa_cto_normalizar_coord_cliente(array(
                         'id' => $cliente['id'],
                         'nome' => $cliente['nome'],
@@ -308,31 +287,11 @@ if (isset($connection) && $connection) {
                         'desativado' => (strtolower($cliente['cli_ativado'] ?? '') !== 's') ? 1 : 0,
                         'tipo' => $cliente['tipo_cliente']
                     ));
-                }
+
             }
-
-            if ($has_sis_adicional && $has_sis_adicional_caixa) {
-                $adicional_porta_select = $has_sis_adicional_porta ? "sa.porta_splitter" : "''";
-                $adicional_latitude_select = $has_sis_adicional_latitude ? "sa.latitude" : "''";
-                $adicional_longitude_select = $has_sis_adicional_longitude ? "sa.longitude" : "''";
-                $adicionais_sql = "SELECT sa.id,
-                                COALESCE(NULLIF(sa.nome, ''), sa.username, sa.login) as nome,
-                                sa.username as login,
-                                " . $adicional_porta_select . " as porta_splitter,
-                                " . $adicional_latitude_select . " as latitude,
-                                " . $adicional_longitude_select . " as longitude,
-                                'Adicional' as tipo_cliente,
-                                CASE WHEN ra.radacctid IS NOT NULL THEN 'online' ELSE 'offline' END as status
-                                FROM sis_adicional sa
-                                LEFT JOIN radacct ra ON ra.username = sa.username AND ra.acctstoptime IS NULL
-                                LEFT JOIN sis_cliente scp ON scp.login = sa.login
-                                WHERE " . $adicional_where_sa . "
-                                AND (scp.id IS NULL OR scp.cli_ativado = 's')
-                                ORDER BY nome";
-                $adicionais_result = mysqli_query($connection, $adicionais_sql);
-
-                if ($adicionais_result) {
-                    while ($cliente = mysqli_fetch_assoc($adicionais_result)) {
+            foreach (($map_adicionais[$cto_id] ?? array()) as $cliente) {
+                $map_ids['a:' . $cliente['id']] = true;
+                if ($cliente['map_online']) $map_online_ids['a:' . $cliente['id']] = true;
                         $clientes_list[] = array(
                             'id' => $cliente['id'],
                             'nome' => $cliente['nome'],
@@ -344,10 +303,12 @@ if (isset($connection) && $connection) {
                             'desativado' => 0,
                             'tipo' => $cliente['tipo_cliente']
                         );
-                    }
-                }
+
             }
-            
+            $total_clientes = count($map_ids);
+            $total_online = count($map_online_ids);
+            $total_offline = max(0, $total_clientes - $total_online);
+
             // Calcular portas livres
             $portas_utilizadas = $total_clientes;
             $portas_livres = $row['capacidade'] - $portas_utilizadas;
@@ -402,7 +363,7 @@ if (isset($connection) && $connection) {
                             ELSE 'offline'
                         END as status
                         FROM sis_cliente sc
-                        LEFT JOIN radacct ra ON ra.username = sc.login AND ra.acctstoptime IS NULL
+                        LEFT JOIN (SELECT username, MAX(radacctid) AS radacctid FROM radacct WHERE acctstoptime IS NULL GROUP BY username) ra ON ra.username = sc.login
                         ORDER BY sc.nome
                         LIMIT 5000";
     $todos_clientes_result = mysqli_query($connection, $todos_clientes_sql);

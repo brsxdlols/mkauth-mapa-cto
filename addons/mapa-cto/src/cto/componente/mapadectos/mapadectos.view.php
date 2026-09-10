@@ -653,22 +653,10 @@
         <div class="content">
             <!-- Estatsticas -->
             <div class="stats">
-                <div class="stat-card">
-                    <h3 id="totalCtos">0</h3>
-                    <p>CTOs Cadastradas</p>
-                </div>
-                <div class="stat-card">
-                    <h3 id="totalClientes">0</h3>
-                    <p>Clientes em CTO</p>
-                </div>
-                <div class="stat-card">
-                    <h3 id="clientesOnline">0</h3>
-                    <p>Online em CTO</p>
-                </div>
-                <div class="stat-card">
-                    <h3 id="clientesOffline">0</h3>
-                    <p>Offline em CTO</p>
-                </div>
+                <button type="button" class="stat-card map-stat-filter" data-map-card="todos" aria-pressed="false"><span class="map-stat-value" id="totalCtos">0</span><span>CTOs Cadastradas</span></button>
+                <button type="button" class="stat-card map-stat-filter" data-map-card="clientes" aria-pressed="false"><span class="map-stat-value" id="totalClientes">0</span><span>Clientes em CTO</span></button>
+                <button type="button" class="stat-card map-stat-filter" data-map-card="online" aria-pressed="false"><span class="map-stat-value" id="clientesOnline">0</span><span>Online em CTO</span></button>
+                <button type="button" class="stat-card map-stat-filter" data-map-card="offline" aria-pressed="false"><span class="map-stat-value" id="clientesOffline">0</span><span>Offline em CTO</span></button>
             </div>
 
             <!-- Filtros -->
@@ -2346,7 +2334,11 @@
 
         function ctoVisivelNoFiltro(cto) {
             if (ctoUnicaVisivelId && String(cto.id) !== String(ctoUnicaVisivelId)) return false;
-            return FtthFilters.ctoMatches(cto, filtrosMapa);
+            if (!FtthFilters.ctoMatches(cto, filtrosMapa)) return false;
+            if (todosClientesFixosAtivos && filtrosMapa.clienteCom && !filtrosMapa.clienteSem && !filtrosMapa.ctoSem) {
+                return (cto.clientes || []).some(cliente => FtthFilters.clientMatches(Object.assign({}, cliente, {caixa_herm: cto.nome || 'CTO'}), filtrosMapa));
+            }
+            return true;
         }
 
         function montarConteudoHover(cto) {
@@ -2742,10 +2734,7 @@
             }
 
             // Atualizar contadores visveis
-            document.getElementById('totalCtos').textContent = marcadores.length;
-            document.getElementById('totalClientes').textContent = totalClientesVisiveis;
-            document.getElementById('clientesOnline').textContent = totalOnlineVisiveis;
-            document.getElementById('clientesOffline').textContent = totalOfflineVisiveis;
+            atualizarEstatisticas();
             adicionarVinculosRadioGoogle();
         }
 
@@ -2887,10 +2876,7 @@
 
             if (bounds.length > 0 && ajustarViewport !== false) mapa.fitBounds(bounds, {padding: [30, 30]});
 
-            document.getElementById('totalCtos').textContent = marcadores.length;
-            document.getElementById('totalClientes').textContent = totalClientesVisiveis;
-            document.getElementById('clientesOnline').textContent = totalOnlineVisiveis;
-            document.getElementById('clientesOffline').textContent = totalOfflineVisiveis;
+            atualizarEstatisticas();
             adicionarVinculosRadioOpenStreet();
         }
 
@@ -3153,7 +3139,11 @@
             if (visible) visible.checked = todosClientesFixosAtivos;
             const disabledCount = Object.values(filtrosMapa).filter(value => !value).length;
             document.getElementById('mapFilterCount').textContent = disabledCount || todosClientesFixosAtivos ? String(disabledCount + (todosClientesFixosAtivos ? 1 : 0)) : '';
-            const ctoCount = ctosData.filter(cto => FtthFilters.ctoMatches(cto, filtrosMapa)).length;
+            const preset = !todosClientesFixosAtivos && Object.values(filtrosMapa).every(Boolean) ? 'todos' :
+                todosClientesFixosAtivos && filtrosMapa.ctoCom && !filtrosMapa.ctoSem && filtrosMapa.clienteCom && !filtrosMapa.clienteSem ?
+                (filtrosMapa.online && filtrosMapa.offline ? 'clientes' : filtrosMapa.online && !filtrosMapa.offline ? 'online' : !filtrosMapa.online && filtrosMapa.offline ? 'offline' : '') : '';
+            document.querySelectorAll('[data-map-card]').forEach(card => card.setAttribute('aria-pressed', String(card.dataset.mapCard === preset)));
+            const ctoCount = ctosData.filter(ctoVisivelNoFiltro).length;
             const clientCount = todosClientesFixosAtivos ? todosClientesData.filter(clienteTemCoordenada).filter(clientePassaFiltroTodos).length : 0;
             document.getElementById('mapFilterSummary').textContent = ctoCount + ' CTOs • ' + (todosClientesFixosAtivos ? clientCount + ' clientes no mapa' : 'Clientes ocultos');
         }
@@ -3187,6 +3177,19 @@
             aplicarFiltrosMapa();
         }
 
+        document.querySelectorAll('[data-map-card]').forEach(card => card.addEventListener('click', () => {
+            const mode = card.dataset.mapCard;
+            filtrosMapa = FtthFilters.defaults();
+            todosClientesFixosAtivos = mode !== 'todos';
+            if (mode !== 'todos') {
+                filtrosMapa.ctoSem = false;
+                filtrosMapa.clienteSem = false;
+                filtrosMapa.online = mode !== 'offline';
+                filtrosMapa.offline = mode !== 'online';
+            }
+            sincronizarFiltrosMapa();
+            aplicarFiltrosMapa();
+        }));
         document.querySelectorAll('[data-map-option], #filtroExibirClientes').forEach(input => input.addEventListener('change', aplicarFiltrosMapa));
         document.getElementById('restaurarFiltrosMapa').addEventListener('click', restaurarFiltrosMapa);
         document.getElementById('fecharFiltrosMapa').addEventListener('click', () => { document.getElementById('mapFilterMenu').open = false; });
@@ -3198,44 +3201,41 @@
 
         // Inicializar ao carregar
         // Funo para recarregar dados em tempo real
-        function atualizarDadosEmTempoReal() {
-            if (bloqueiaAtualizacaoTempoReal || modoAdicionarCto || tempAddMarker || modoAjustarCto) return;
-            fetch(window.location.href, {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.text())
-            .then(html => {
-                // Extrair dados JSON da resposta
+        let atualizacaoMapaEmCurso = false;
+        async function atualizarDadosEmTempoReal() {
+            if (atualizacaoMapaEmCurso || document.hidden || bloqueiaAtualizacaoTempoReal || modoAdicionarCto || tempAddMarker || modoAjustarCto) return;
+            atualizacaoMapaEmCurso = true;
+            const abort = new AbortController();
+            const timeout = setTimeout(() => abort.abort(), 15000);
+            try {
+                const response = await fetch(window.location.href, {headers: {'X-Requested-With':'XMLHttpRequest'}, signal: abort.signal});
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                const html = await response.text();
                 const match = html.match(/const ctosData = (\[[\s\S]*?\]);/);
-                if (match && match[1]) {
-                    const novosDados = JSON.parse(match[1]);
-                    
-                    // Verificar se h mudanas
-                    if (JSON.stringify(ctosData) !== JSON.stringify(novosDados)) {
-                        // Atualizar dados
-                        while (ctosData.length > 0) ctosData.pop();
-                        ctosData.push(...novosDados);
-                        
-                        // Limpar marcadores antigos
-                        limparMarcadores();
-                        
-                        // Re-renderizar mapa
-                        adicionarMarcadores();
-                        atualizarEstatisticas();
-                        
-                        console.log(' Mapa atualizado em tempo real');
-                    }
+                const clientMatch = html.match(/const todosClientesData = (\[[\s\S]*?\]);/);
+                if (!match || !clientMatch) return;
+                const novosDados = JSON.parse(match[1]);
+                const novosClientes = JSON.parse(clientMatch[1]);
+                // A user may start editing while the request is in flight.
+                if (bloqueiaAtualizacaoTempoReal || modoAdicionarCto || tempAddMarker || modoAjustarCto) return;
+                if (JSON.stringify(ctosData) !== JSON.stringify(novosDados) || JSON.stringify(todosClientesData) !== JSON.stringify(novosClientes)) {
+                    ctosData.splice(0, ctosData.length, ...novosDados);
+                    todosClientesData.splice(0, todosClientesData.length, ...novosClientes);
+                    adicionarMarcadores(false);
+                    if (todosClientesFixosAtivos) desenharTodosClientesNoMapa(false);
+                    atualizarEstatisticas();
+                    sincronizarFiltrosMapa();
                 }
-            })
-            .catch(error => console.error('Erro ao atualizar:', error));
+            } catch (error) {
+                if (error.name !== 'AbortError') console.error('Erro ao atualizar mapa:', error);
+            } finally {
+                clearTimeout(timeout);
+                atualizacaoMapaEmCurso = false;
+            }
         }
-        
-        // Atualizar a cada 10 segundos
         setInterval(atualizarDadosEmTempoReal, 10000);
-        window.addEventListener('load', initializeMap);
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initializeMap, {once:true});
+        else initializeMap();
     </script>
 </body>
 </html>
