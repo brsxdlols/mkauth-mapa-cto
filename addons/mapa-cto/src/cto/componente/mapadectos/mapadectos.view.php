@@ -2194,6 +2194,8 @@
             desenharTodosClientesNoMapa(true);
         }
 
+        let rendererClientesMapa = null;
+        let mapaEmMovimento = false;
         function desenharTodosClientesNoMapa(mostrarToast) {
             limparMarcadoresClientesHover();
             const clientes = (Array.isArray(todosClientesData) ? todosClientesData : []).filter(clienteTemCoordenada).filter(clientePassaFiltroTodos);
@@ -2202,7 +2204,13 @@
                 const lng = parseFloat(cliente.longitude);
                 const titulo = `${cliente.nome || ''} | CTO: ${cliente.caixa_herm || 'sem CTO'} | Porta: ${cliente.porta || '-'}`;
                 if (MAP_PROVIDER === 'openstreet' && window.L) {
-                    const marker = L.marker([lat, lng], {icon: criarLeafletIconCliente(cliente)}).addTo(mapa);
+                    if (!rendererClientesMapa) rendererClientesMapa = L.canvas({padding:0.3, tolerance:4});
+                    const marker = L.circleMarker([lat, lng], {
+                        renderer: rendererClientesMapa,
+                        radius: 6, color: '#ffffff', weight: 1.5,
+                        fillColor: corClienteMapa(cliente), fillOpacity: 0.95,
+                        bubblingMouseEvents: false
+                    }).addTo(mapa);
                     marker.bindTooltip(escapeHtml(titulo), {direction: 'top'});
                     marker.on('click', () => abrirClienteNoMapa(cliente));
                     marcadoresClientesHover.push(marker);
@@ -2617,8 +2625,12 @@
                 center: centro,
                 zoom: 4,
                 layers: [getCaixasMapMode() === 'satelite' ? camadas.satelite : camadas.mapa],
-                zoomControl: true
+                zoomControl: true,
+                preferCanvas: true,
+                wheelDebounceTime: 100
             });
+            mapa.on('movestart zoomstart', () => { mapaEmMovimento = true; });
+            mapa.on('moveend zoomend', () => { mapaEmMovimento = false; });
 
             L.control.layers({'Mapa': camadas.mapa, 'Satelite': camadas.satelite}, null, {collapsed: false}).addTo(mapa);
             mapa.on('baselayerchange', event => setCaixasMapMode(event.name === 'Satelite' ? 'satelite' : 'mapa'));
@@ -3203,7 +3215,7 @@
         // Funo para recarregar dados em tempo real
         let atualizacaoMapaEmCurso = false;
         async function atualizarDadosEmTempoReal() {
-            if (atualizacaoMapaEmCurso || document.hidden || bloqueiaAtualizacaoTempoReal || modoAdicionarCto || tempAddMarker || modoAjustarCto) return;
+            if (atualizacaoMapaEmCurso || mapaEmMovimento || document.hidden || bloqueiaAtualizacaoTempoReal || modoAdicionarCto || tempAddMarker || modoAjustarCto) return;
             atualizacaoMapaEmCurso = true;
             const abort = new AbortController();
             const timeout = setTimeout(() => abort.abort(), 15000);
@@ -3217,7 +3229,7 @@
                 const novosDados = JSON.parse(match[1]);
                 const novosClientes = JSON.parse(clientMatch[1]);
                 // A user may start editing while the request is in flight.
-                if (bloqueiaAtualizacaoTempoReal || modoAdicionarCto || tempAddMarker || modoAjustarCto) return;
+                if (mapaEmMovimento || bloqueiaAtualizacaoTempoReal || modoAdicionarCto || tempAddMarker || modoAjustarCto) return;
                 if (JSON.stringify(ctosData) !== JSON.stringify(novosDados) || JSON.stringify(todosClientesData) !== JSON.stringify(novosClientes)) {
                     ctosData.splice(0, ctosData.length, ...novosDados);
                     todosClientesData.splice(0, todosClientesData.length, ...novosClientes);
