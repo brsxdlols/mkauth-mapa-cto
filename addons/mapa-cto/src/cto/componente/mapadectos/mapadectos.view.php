@@ -673,17 +673,21 @@
 
             <!-- Filtros -->
             <div class="controls">
-                <button class="filter-btn active" data-filter="todos">Todas as CTOs</button>
-                <button class="filter-btn" data-filter="comclientes">CTO com clientes</button>
-                <button class="filter-btn" data-filter="semclientes">CTO sem clientes</button>
-                <button class="filter-btn cto-client-search-btn" id="btnBuscaClienteMapa" type="button">Buscar cliente</button>
+                <details id="mapFilterMenu" class="map-filter-menu">
+                    <summary>☷ Filtros <span id="mapFilterCount" class="map-filter-count"></span></summary>
+                    <div class="map-filter-panel">
+                        <fieldset><legend>CTOs no mapa</legend><label><input type="checkbox" data-map-option="ctoCom" checked> Com clientes</label><label><input type="checkbox" data-map-option="ctoSem" checked> Sem clientes</label></fieldset>
+                        <fieldset><legend>Clientes no mapa</legend><label><input type="checkbox" id="filtroExibirClientes"> Exibir clientes</label><label><input type="checkbox" data-map-option="clienteCom" checked> Com CTO</label><label><input type="checkbox" data-map-option="clienteSem" checked> Sem CTO</label></fieldset>
+                        <fieldset><legend>Situação dos clientes</legend><label><input type="checkbox" data-map-option="online" checked> Online</label><label><input type="checkbox" data-map-option="offline" checked> Offline</label></fieldset>
+                        <p class="filter-note">As opções são aplicadas ao marcar. Desmarque as duas opções de um grupo para ocultá-lo.</p>
+                        <button type="button" id="restaurarFiltrosMapa" class="filter-reset">Restaurar padrão</button>
+                        <button type="button" id="fecharFiltrosMapa" class="filter-reset">Concluir</button>
+                    </div>
+                </details>
+                <span id="mapFilterSummary" class="map-filter-summary" role="status" aria-live="polite"></span>
                 <span class="controls-spacer"></span>
+                <button class="filter-btn cto-client-search-btn" id="btnBuscaClienteMapa" type="button">Buscar cliente</button>
                 <button class="filter-btn action-btn" id="btnAdicionarCto" type="button">Adicionar CTO no mapa</button>
-                <button class="filter-btn action-btn secondary" id="btnMostrarTodosClientes" type="button">Mostrar clientes</button>
-                <button class="filter-btn action-btn secondary" data-client-filter="todos" type="button">Todos clientes</button>
-                <button class="filter-btn action-btn secondary" data-client-filter="semcto" type="button">Clientes sem CTO</button>
-                <button class="filter-btn action-btn secondary" data-client-filter="comcto" type="button">Clientes com CTO</button>
-                <button class="filter-btn action-btn secondary" id="btnLimparClientes" type="button">Limpar clientes</button>
             </div>
             <div class="cto-map-legend">
                 <span><i class="legend-house legend-blue"></i>Cliente online</span>
@@ -716,6 +720,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <?php endif; ?>
 
+    <script><?php readfile(__DIR__ . '/../../../../assets/js/ftth-filters.js'); ?></script>
     <script>
         // Dados das CTOs
         const ctosData = <?php echo $ctos_json; ?>;
@@ -725,6 +730,7 @@
         let marcadores = [];
         let marcadoresClientesHover = [];
         let filtroAtual = 'todos';
+        let filtrosMapa = FtthFilters.defaults();
         let painelCtoConteudoAtual = '';
         let ctoHoverTimer = null;
         let modoAdicionarCto = false;
@@ -803,16 +809,7 @@
             return String(valor || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
         }
 
-        function atualizarBotaoClientes() {
-            const btn = document.getElementById('btnMostrarTodosClientes');
-            if (btn) {
-                btn.textContent = todosClientesFixosAtivos ? 'Ocultar clientes' : 'Mostrar clientes';
-                btn.classList.toggle('active', todosClientesFixosAtivos);
-            }
-            document.querySelectorAll('[data-client-filter]').forEach(b => {
-                b.classList.toggle('active', todosClientesFixosAtivos && b.getAttribute('data-client-filter') === filtroTodosClientesAtual);
-            });
-        }
+        function atualizarBotaoClientes() { sincronizarFiltrosMapa(); }
 
         function clientesDisponiveisParaBusca() {
             const mapaClientes = new Map();
@@ -1043,6 +1040,7 @@
         function capturarEstadoVisual() {
             return {
                 filtroAtual,
+                filtrosMapa: Object.assign({}, filtrosMapa),
                 clientesFixosAtivos,
                 todosClientesFixosAtivos,
                 filtroTodosClientesAtual,
@@ -1056,6 +1054,7 @@
         function restaurarEstadoVisual(estado) {
             if (!estado) return;
             filtroAtual = estado.filtroAtual || 'todos';
+            filtrosMapa = Object.assign(FtthFilters.defaults(), estado.filtrosMapa || {});
             clientesFixosAtivos = !!estado.clientesFixosAtivos;
             todosClientesFixosAtivos = !!estado.todosClientesFixosAtivos;
             filtroTodosClientesAtual = estado.filtroTodosClientesAtual || 'todos';
@@ -2186,6 +2185,7 @@
         }
 
         function clientePassaFiltroTodos(cliente) {
+            if (!FtthFilters.clientMatches(cliente, filtrosMapa)) return false;
             const temCto = String(cliente.caixa_herm || '').trim() !== '';
             if (filtroTodosClientesAtual === 'semcto') return !temCto;
             if (filtroTodosClientesAtual === 'comcto') return temCto;
@@ -2346,9 +2346,7 @@
 
         function ctoVisivelNoFiltro(cto) {
             if (ctoUnicaVisivelId && String(cto.id) !== String(ctoUnicaVisivelId)) return false;
-            if (filtroAtual === 'comclientes' && cto.total_clientes === 0) return false;
-            if (filtroAtual === 'semclientes' && cto.total_clientes > 0) return false;
-            return true;
+            return FtthFilters.ctoMatches(cto, filtrosMapa);
         }
 
         function montarConteudoHover(cto) {
@@ -3137,6 +3135,7 @@
         }
 
         function tratarEscapeMapa(event) {
+            if (document.getElementById('mapFilterMenu').open) return;
             if (!event || event.key !== 'Escape') return;
             if (modoAjustarCto) { event.preventDefault(); cancelarAjusteLocalizacaoCto(true); return; }
             if (modoAjustarCliente) { event.preventDefault(); cancelarAjusteLocalizacaoCliente(); return; }
@@ -3148,46 +3147,54 @@
 
         document.addEventListener('keydown', tratarEscapeMapa);
 
-        // Configurar filtros
-        document.querySelectorAll('.filter-btn[data-filter]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.filter-btn[data-filter]').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                filtroAtual = btn.getAttribute('data-filter');
-                clientesFixosAtivos = false;
-                todosClientesFixosAtivos = false;
-                ctoUnicaVisivelId = null;
-                ctoSelecionadaAtual = null;
-                modoAtrelarCliente = null;
-                limparMarcadorClienteSelecionado();
-                cancelarAjusteLocalizacaoCliente();
-                cancelarAjusteLocalizacaoCto(false);
-                fecharPainelCto(false);
-                adicionarMarcadores();
-                atualizarBotaoClientes();
-            });
-        });
+        function sincronizarFiltrosMapa() {
+            document.querySelectorAll('[data-map-option]').forEach(input => { input.checked = !!filtrosMapa[input.dataset.mapOption]; });
+            const visible = document.getElementById('filtroExibirClientes');
+            if (visible) visible.checked = todosClientesFixosAtivos;
+            const disabledCount = Object.values(filtrosMapa).filter(value => !value).length;
+            document.getElementById('mapFilterCount').textContent = disabledCount || todosClientesFixosAtivos ? String(disabledCount + (todosClientesFixosAtivos ? 1 : 0)) : '';
+            const ctoCount = ctosData.filter(cto => FtthFilters.ctoMatches(cto, filtrosMapa)).length;
+            const clientCount = todosClientesFixosAtivos ? todosClientesData.filter(clienteTemCoordenada).filter(clientePassaFiltroTodos).length : 0;
+            document.getElementById('mapFilterSummary').textContent = ctoCount + ' CTOs • ' + (todosClientesFixosAtivos ? clientCount + ' clientes no mapa' : 'Clientes ocultos');
+        }
 
-        const btnAdicionarCto = document.getElementById('btnAdicionarCto');
-        if (btnAdicionarCto) btnAdicionarCto.addEventListener('click', ativarModoAdicionarCto);
+        function aplicarFiltrosMapa() {
+            document.querySelectorAll('[data-map-option]').forEach(input => { filtrosMapa[input.dataset.mapOption] = input.checked; });
+            const showClients = document.getElementById('filtroExibirClientes').checked;
+            filtroAtual = filtrosMapa.ctoCom ? (filtrosMapa.ctoSem ? 'todos' : 'comclientes') : (filtrosMapa.ctoSem ? 'semclientes' : 'nenhum');
+            filtroTodosClientesAtual = 'todos';
+            ctoUnicaVisivelId = null;
+            ctoSelecionadaAtual = null;
+            modoAtrelarCliente = null;
+            limparMarcadorClienteSelecionado();
+            cancelarAjusteLocalizacaoCliente();
+            cancelarAjusteLocalizacaoCto(false);
+            fecharPainelCto(false);
+            limparMarcadoresClientesHover();
+            clientesFixosAtivos = showClients;
+            todosClientesFixosAtivos = showClients;
+            if (mapa) {
+                adicionarMarcadores(false);
+                if (showClients) desenharTodosClientesNoMapa(false);
+            }
+            sincronizarFiltrosMapa();
+        }
 
-        const btnMostrarTodosClientes = document.getElementById('btnMostrarTodosClientes');
-        if (btnMostrarTodosClientes) btnMostrarTodosClientes.addEventListener('click', () => mostrarTodosClientesNoMapa(false));
+        function restaurarFiltrosMapa() {
+            filtrosMapa = FtthFilters.defaults();
+            todosClientesFixosAtivos = false;
+            sincronizarFiltrosMapa();
+            aplicarFiltrosMapa();
+        }
 
-        const btnBuscaClienteMapa = document.getElementById('btnBuscaClienteMapa');
-        if (btnBuscaClienteMapa) btnBuscaClienteMapa.addEventListener('click', abrirBuscaClienteMapa);
-
-        document.querySelectorAll('[data-client-filter]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const filtro = btn.getAttribute('data-client-filter') || 'todos';
-                mostrarTodosClientesNoMapa(true, filtro);
-            });
-        });
-
-        const btnLimparClientes = document.getElementById('btnLimparClientes');
-        if (btnLimparClientes) btnLimparClientes.addEventListener('click', () => {
-            limparClientesMapa();
-        });
+        document.querySelectorAll('[data-map-option], #filtroExibirClientes').forEach(input => input.addEventListener('change', aplicarFiltrosMapa));
+        document.getElementById('restaurarFiltrosMapa').addEventListener('click', restaurarFiltrosMapa);
+        document.getElementById('fecharFiltrosMapa').addEventListener('click', () => { document.getElementById('mapFilterMenu').open = false; });
+        document.addEventListener('click', event => { const menu = document.getElementById('mapFilterMenu'); if (!menu.contains(event.target)) menu.open = false; });
+        document.addEventListener('keydown', event => { const menu = document.getElementById('mapFilterMenu'); if (event.key === 'Escape' && menu.open) { menu.open = false; menu.querySelector('summary').focus(); } });
+        document.getElementById('btnAdicionarCto').addEventListener('click', ativarModoAdicionarCto);
+        document.getElementById('btnBuscaClienteMapa').addEventListener('click', abrirBuscaClienteMapa);
+        sincronizarFiltrosMapa();
 
         // Inicializar ao carregar
         // Funo para recarregar dados em tempo real

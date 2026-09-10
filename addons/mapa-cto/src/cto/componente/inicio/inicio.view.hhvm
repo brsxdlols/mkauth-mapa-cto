@@ -344,22 +344,26 @@
 
     <!-- Stats -->
     <div class="stats">
-        <div class="stat-card">
+        <button type="button" class="stat-card stat-filter" data-card-filter="" aria-pressed="true">
             <div class="label">CTOs Cadastradas</div>
             <div class="number"><?php echo isset($numeroCaixas) ? $numeroCaixas : '0'; ?></div>
-        </div>
-        <div class="stat-card">
+            <span class="filter-hint">Mostrar todas</span>
+        </button>
+        <button type="button" class="stat-card stat-filter" data-card-filter="capacidade" aria-pressed="false">
             <div class="label">Portas Totais</div>
             <div class="number"><?php echo isset($numeroPortas) ? $numeroPortas : '0'; ?></div>
-        </div>
-        <div class="stat-card">
+            <span class="filter-hint">CTOs com capacidade</span>
+        </button>
+        <button type="button" class="stat-card stat-filter" data-card-filter="livres" aria-pressed="false">
             <div class="label">Portas Livres</div>
             <div class="number"><?php echo isset($numeroPortasLivres) ? $numeroPortasLivres : '0'; ?></div>
-        </div>
-        <div class="stat-card">
+            <span class="filter-hint">CTOs com vagas</span>
+        </button>
+        <button type="button" class="stat-card stat-filter" data-card-filter="utilizadas" aria-pressed="false">
             <div class="label">Portas Ativas</div>
             <div class="number"><?php echo isset($numeroPortasAtivas) ? $numeroPortasAtivas : '0'; ?></div>
-        </div>
+            <span class="filter-hint">CTOs com clientes</span>
+        </button>
     </div>
 
     <!-- Filters -->
@@ -371,7 +375,7 @@
                     type="text" 
                     id="buscarModelo" 
                     placeholder="Digite o nome ou ID da CTO"
-                    onkeyup="filtrarTabela()"
+                    oninput="filtrarTabela()"
                 >
             </div>
             <div class="filter-item">
@@ -380,7 +384,7 @@
                     type="text" 
                     id="buscarBairro" 
                     placeholder="Digite o bairro"
-                    onkeyup="filtrarTabela()"
+                    oninput="filtrarTabela()"
                 >
             </div>
             <div class="filter-item">
@@ -389,15 +393,17 @@
                     type="text" 
                     id="buscarCidade" 
                     placeholder="Digite a cidade"
-                    onkeyup="filtrarTabela()"
+                    oninput="filtrarTabela()"
                 >
             </div>
             <div class="filter-item">
                 <label for="buscarFiltro">Filtro</label>
                 <select id="buscarFiltro" onchange="filtrarTabela()">
                     <option value="">Todas as caixas</option>
-                    <option value="ativa">Ativas</option>
-                    <option value="inativa">Inativas</option>
+                    <option value="capacidade">Com capacidade</option>
+                    <option value="livres">Com portas livres</option>
+                    <option value="utilizadas">Com clientes</option>
+                    <option value="semclientes">Sem clientes</option>
                 </select>
             </div>
         </div>
@@ -409,6 +415,8 @@
         </div>
     </div>
 
+    <div class="filter-result"><span id="filterResultText" role="status" aria-live="polite"></span><button type="button" class="filter-reset" onclick="limparFiltrosListagem()">Limpar filtros</button></div>
+    <div id="filterEmpty" class="filter-empty" hidden>Nenhuma CTO corresponde aos filtros selecionados.</div>
     <!-- Table -->
     <div class="table-wrapper">
         <?php if (isset($resultado) && $resultado && mysqli_num_rows($resultado) > 0): ?>
@@ -433,7 +441,7 @@
                         $statusClass = ($sinal >= 0) ? 'status-active' : 'status-inactive';
                         $statusText = ($sinal >= 0) ? 'Bom' : 'Fraco';
                     ?>
-                        <tr>
+                        <tr data-capacidade="<?php echo max(0, (int)($row['capacidade'] ?? 0)); ?>" data-clientes="<?php echo (int)($clientesPorCaixa[$row['id']] ?? 0); ?>">
                             <td><strong><?php echo $row['id']; ?></strong></td>
                             <td><?php echo htmlspecialchars($row['nome'] ?? ''); ?></td>
                             <td><?php echo htmlspecialchars($row['endereco'] ?? ''); ?></td>
@@ -465,44 +473,38 @@
     </div>
 </div>
 
+<script><?php readfile(__DIR__ . '/../../../../assets/js/ftth-filters.js'); ?></script>
 <script>
-function filtrarTabela() {
-    const busca = document.getElementById('buscarModelo').value.toLowerCase();
-    const bairro = document.getElementById('buscarBairro').value.toLowerCase();
-    const cidade = document.getElementById('buscarCidade').value.toLowerCase();
-    const filtro = document.getElementById('buscarFiltro').value;
-    const tabela = document.querySelector('table tbody');
-    
-    if (!tabela) return;
-    
-    const linhas = tabela.querySelectorAll('tr');
-    linhas.forEach(linha => {
-        const texto = linha.textContent.toLowerCase();
-        const enderecoColuna = linha.cells[2]?.textContent.toLowerCase() || '';
-        const status = linha.querySelector('.status-badge')?.textContent.toLowerCase() || '';
-        let mostrar = true;
-        
-        if (busca && !texto.includes(busca)) {
-            mostrar = false;
-        }
-        
-        if (bairro && !enderecoColuna.includes(bairro)) {
-            mostrar = false;
-        }
-        
-        if (cidade && !enderecoColuna.includes(cidade)) {
-            mostrar = false;
-        }
-        
-        if (filtro === 'ativa' && !status.includes('ativa')) {
-            mostrar = false;
-        } else if (filtro === 'inativa' && !status.includes('inativa')) {
-            mostrar = false;
-        }
-        
-        linha.style.display = mostrar ? '' : 'none';
-    });
+function selecionarFiltroCard(filtro) {
+    const select = document.getElementById('buscarFiltro');
+    select.value = select.value === filtro ? '' : filtro;
+    filtrarTabela();
 }
+function limparFiltrosListagem() {
+    ['buscarModelo','buscarBairro','buscarCidade','buscarFiltro'].forEach(id => { document.getElementById(id).value = ''; });
+    filtrarTabela();
+}
+function filtrarTabela() {
+    const normalizar = texto => String(texto || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    const busca = normalizar(document.getElementById('buscarModelo').value);
+    const bairro = normalizar(document.getElementById('buscarBairro').value);
+    const cidade = normalizar(document.getElementById('buscarCidade').value);
+    const filtro = document.getElementById('buscarFiltro').value;
+    const linhas = [...document.querySelectorAll('table tbody tr[data-capacidade]')];
+    let count = 0;
+    linhas.forEach(linha => {
+        const nomeId = normalizar(linha.cells[0].textContent + ' ' + linha.cells[1].textContent);
+        const endereco = normalizar(linha.cells[2].textContent);
+        const mostrar = nomeId.includes(busca) && endereco.includes(bairro) && endereco.includes(cidade) && FtthFilters.listMatches(linha.dataset.capacidade, linha.dataset.clientes, filtro);
+        linha.hidden = !mostrar;
+        if (mostrar) count++;
+    });
+    document.querySelectorAll('[data-card-filter]').forEach(card => card.setAttribute('aria-pressed', String(card.dataset.cardFilter === filtro)));
+    document.getElementById('filterResultText').textContent = count + ' de ' + linhas.length + ' CTOs exibidas';
+    document.getElementById('filterEmpty').hidden = count > 0 || linhas.length === 0;
+}
+document.querySelectorAll('[data-card-filter]').forEach(card => card.addEventListener('click', () => selecionarFiltroCard(card.dataset.cardFilter)));
+filtrarTabela();
 
 function adicionarCTO() {
     window.location.href = '?_route=adicionar';
