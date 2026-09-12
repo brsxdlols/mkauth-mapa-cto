@@ -1990,7 +1990,14 @@
                 method: 'POST',
                 body: form,
                 headers: {'X-Requested-With': 'XMLHttpRequest'}
-            }).then(resp => resp.json());
+            }).then(async resp => {
+                const text = await resp.text();
+                let ret;
+                try { ret = JSON.parse(text); }
+                catch (_) { throw new Error('O servidor nao retornou uma resposta valida. Atualize a pagina e confira se sua sessao continua ativa.'); }
+                if (!resp.ok) throw new Error(ret.message || 'Falha na comunicacao com o servidor.');
+                return ret;
+            });
         }
 
         function salvarCoordenadasCto(cto, lat, lng) {
@@ -2528,7 +2535,7 @@
                 </div>
                 <footer>
                     <button type="button" class="cto-small-btn cancel" onclick="desativarModoAdicionarCto()">Cancelar</button>
-                    <button type="button" class="cto-small-btn save" onclick="salvarNovaCtoMapa()">Gravar CTO</button>
+                    <button type="button" class="cto-small-btn save" id="btnGravarNovaCto" onclick="salvarNovaCtoMapa()">Gravar CTO</button>
                 </footer>
             `;
             mapElement.appendChild(modal);
@@ -2539,12 +2546,17 @@
             if (nome) nome.focus();
         }
 
+        let gravandoNovaCto = false;
         function salvarNovaCtoMapa() {
+            if (gravandoNovaCto) return;
             const nome = (document.getElementById('novaCtoNome') || {}).value || '';
             if (!nome.trim()) {
                 alert('Informe o nome da CTO.');
                 return;
             }
+            gravandoNovaCto = true;
+            const botao = document.getElementById('btnGravarNovaCto');
+            if (botao) { botao.disabled = true; botao.textContent = 'Gravando...'; }
             enviarAcaoMapa({
                 acao_mapa_cto: 'adicionar_cto',
                 nome: nome,
@@ -2560,7 +2572,10 @@
                 if (!ret || !ret.ok) throw new Error((ret && ret.message) || 'Erro ao cadastrar CTO.');
                 mostrarAvisoMapa('CTO cadastrada.');
                 window.location.reload();
-            }).catch(err => alert(err.message || 'Erro ao cadastrar CTO.'));
+            }).catch(err => alert(err.message || 'Erro ao cadastrar CTO.')).finally(() => {
+                gravandoNovaCto = false;
+                if (botao) { botao.disabled = false; botao.textContent = 'Gravar CTO'; }
+            });
         }
 
         function adicionarMarcadores(ajustarViewport) {

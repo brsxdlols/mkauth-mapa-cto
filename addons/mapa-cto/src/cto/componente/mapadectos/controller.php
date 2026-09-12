@@ -72,6 +72,34 @@ function mapa_cto_adicionar_todos_clientes(&$todos_clientes_data, &$todos_client
 if (isset($connection) && $connection && isset($_POST['acao_mapa_cto'])) {
     $acao_mapa_cto = isset($_POST['acao_mapa_cto']) ? (string)$_POST['acao_mapa_cto'] : '';
 
+    if ($acao_mapa_cto === 'adicionar_cto') {
+        $nome = trim((string)($_POST['nome'] ?? ''));
+        $latitude = str_replace(',', '.', trim((string)($_POST['latitude'] ?? '')));
+        $longitude = str_replace(',', '.', trim((string)($_POST['longitude'] ?? '')));
+        $capacidade = filter_var($_POST['capacidade'] ?? '', FILTER_VALIDATE_INT);
+        if ($nome === '' || !is_numeric($latitude) || !is_numeric($longitude) || abs((float)$latitude) > 90 || abs((float)$longitude) > 180 || $capacidade === false || $capacidade < 1) {
+            mapa_cto_json_response(array('ok'=>false, 'message'=>'Informe nome, capacidade positiva e coordenadas validas para a CTO.'));
+        }
+        $endereco = trim((string)($_POST['endereco'] ?? ''));
+        $tipo = trim((string)($_POST['tipo'] ?? 'CTO'));
+        $sinal = trim((string)($_POST['sinal'] ?? ''));
+        $olt = trim((string)($_POST['olt'] ?? ''));
+        $fsp = trim((string)($_POST['fsp'] ?? ''));
+        try {
+            $stmt = mysqli_prepare($connection, 'INSERT INTO mp_caixa (nome, endereco, tipo, capacidade, sinal, olt, fsp, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+            if (!$stmt) throw new Exception('prepare');
+            mysqli_stmt_bind_param($stmt, 'sssisssss', $nome, $endereco, $tipo, $capacidade, $sinal, $olt, $fsp, $latitude, $longitude);
+            $gravou = mysqli_stmt_execute($stmt);
+            $novo_id = mysqli_insert_id($connection);
+            mysqli_stmt_close($stmt);
+            if (!$gravou) throw new Exception('execute');
+        } catch (Throwable $erro) {
+            error_log('Mapa CTO: falha no cadastro: ' . $erro->getMessage());
+            mapa_cto_json_response(array('ok'=>false, 'message'=>'Nao foi possivel gravar a CTO. Verifique os campos e o registro de erros do servidor.'));
+        }
+        mapa_cto_json_response(array('ok'=>true, 'id'=>$novo_id, 'message'=>'CTO cadastrada com sucesso.'));
+    }
+
     if ($acao_mapa_cto === 'atribuir_cliente_cto') {
         $cliente_id = isset($_POST['cliente_id']) ? intval($_POST['cliente_id']) : 0;
         $cliente_tipo = isset($_POST['cliente_tipo']) ? trim((string)$_POST['cliente_tipo']) : 'Cliente';
