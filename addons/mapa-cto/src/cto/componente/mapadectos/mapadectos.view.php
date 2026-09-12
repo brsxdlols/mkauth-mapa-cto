@@ -823,6 +823,7 @@
         }
 
         function abrirBuscaClienteMapa(ctoDestinoId) {
+            fecharConsultaClienteMapa();
             const mapElement = document.getElementById('map');
             if (!mapElement) return;
             ctoBuscaDestinoAtual = ctoDestinoId ? (ctosData.find(item => String(item.id) === String(ctoDestinoId)) || null) : null;
@@ -932,6 +933,7 @@
         function bloquearWheelMapa(elemento) {
             if (!elemento || elemento._ctoWheelBloqueado) return;
             elemento._ctoWheelBloqueado = true;
+            if (window.L && MAP_PROVIDER === 'openstreet') L.DomEvent.disableClickPropagation(elemento);
             ['wheel', 'mousewheel', 'DOMMouseScroll'].forEach(evento => {
                 elemento.addEventListener(evento, ev => {
                     ev.stopPropagation();
@@ -972,7 +974,9 @@
             return metros >= 1000 ? (metros / 1000).toFixed(metros >= 10000 ? 1 : 2).replace('.', ',') + ' km' : Math.round(metros) + ' m';
         }
 
+        let versaoRotaCliente = 0;
         function limparLinhasClienteCto() {
+            versaoRotaCliente++;
             removerOverlayMapa(linhaPreviewAtrelamento);
             removerOverlayMapa(linhaRotaAtrelamento);
             linhaPreviewAtrelamento = null;
@@ -1066,20 +1070,49 @@
             return match ? match[0] : '';
         }
 
+        function mesmoClienteMapa(a, b) {
+            return !!a && !!b && String(a.id) === String(b.id) && String(a.tipo || 'Cliente') === String(b.tipo || 'Cliente');
+        }
         function encontrarCtoDoCliente(cliente) {
-            const ctoAtual = String((cliente && cliente.caixa_herm) || '').trim().toLowerCase();
-            if (!ctoAtual) return null;
-            return (Array.isArray(ctosData) ? ctosData : []).find(cto => {
-                const nome = String(cto.nome || '').trim().toLowerCase();
-                return nome === ctoAtual || String(cto.id) === ctoAtual;
-            }) || null;
+            if (!cliente) return null;
+            const lista = Array.isArray(ctosData) ? ctosData : [];
+            const contem = cto => (cto.clientes || []).some(item => mesmoClienteMapa(item, cliente));
+            if (ctoSelecionadaAtual && contem(ctoSelecionadaAtual)) return ctoSelecionadaAtual;
+            const atual = String(cliente.caixa_herm || '').trim().toLowerCase();
+            return lista.find(cto => atual && (String(cto.nome || '').trim().toLowerCase() === atual || String(cto.id) === atual)) || lista.find(contem) || null;
+        }
+        function encerrarAcaoClienteMapa() {
+            limparPreviewAtrelamento();
+            limparMarcadorClienteSelecionado();
+            cancelarAjusteLocalizacaoCliente();
+            cancelarAjusteLocalizacaoCto(false);
+            fecharBuscaClienteMapa();
+            estadoMapaAntesAcao = null;
+        }
+        function fecharConsultaClienteMapa() {
+            encerrarAcaoClienteMapa();
+            fecharDetalheCliente();
+        }
+        function alterarPortaClienteAtual() {
+            const cliente = clienteDetalheAtual;
+            const cto = encontrarCtoDoCliente(cliente);
+            if (!cliente || !cto) return;
+            encerrarAcaoClienteMapa();
+            modoAtrelarCliente = cliente;
+            ctoDestinoAtrelamento = cto;
+            portaSelecionadaAtrelamento = '';
+            abrirConfirmacaoAtrelamento(cto);
         }
 
         function abrirDetalheCliente(cliente) {
-            clienteDetalheAtual = cliente || null;
+            if (!cliente) return;
+            encerrarAcaoClienteMapa();
+            const ctoVinculada = encontrarCtoDoCliente(cliente);
+            cliente = Object.assign({}, cliente, {caixa_herm: ctoVinculada ? ctoVinculada.nome : (cliente.caixa_herm || '')});
+            clienteDetalheAtual = cliente;
             const mapElement = document.getElementById('map');
             if (!mapElement) return;
-            const ctoDaRota = ctoSelecionadaAtual || encontrarCtoDoCliente(cliente);
+            const ctoDaRota = encontrarCtoDoCliente(cliente);
             if (ctoDaRota && clienteTemCoordenada(cliente)) {
                 desenharPreviewAtrelamento(cliente, ctoDaRota);
                 ajustarViewportAtrelamento(cliente, ctoDaRota);
@@ -1091,12 +1124,12 @@
                 box.className = 'cto-client-detail';
                 mapElement.appendChild(box);
             }
-            const textoAcao = cliente.caixa_herm ? 'Alterar CTO/porta' : 'Atrelar a uma CTO';
+            const textoAcao = cliente.caixa_herm ? 'Transferir para outra CTO' : 'Vincular a uma CTO';
             const textoVincularCtoAtual = ctoSelecionadaAtual
                 ? (cliente.caixa_herm ? 'Alterar para ' : 'Vincular a ') + (ctoSelecionadaAtual.nome || 'CTO')
                 : '';
             box.innerHTML = `
-                <button type="button" class="cto-panel-close" style="top:8px;right:8px;width:28px;height:28px;font-size:20px;" onclick="fecharDetalheCliente()">x</button>
+                <button type="button" class="cto-panel-close" style="top:8px;right:8px;width:28px;height:28px;font-size:20px;" onclick="fecharConsultaClienteMapa()">x</button>
                 <h4 class="${clienteDesativado(cliente) ? 'inactive' : ''}">${escapeHtml(nomeClienteComStatus(cliente))}</h4>
                 <p><strong>Login:</strong> ${escapeHtml(cliente.login || '-')}</p>
                 <p><strong>Porta:</strong> ${escapeHtml(cliente.porta || '-')}</p>
@@ -1104,7 +1137,7 @@
                 <p><strong>Status:</strong> ${escapeHtml(statusClienteLabel(cliente))}</p>
                 <p><strong>Tipo:</strong> ${escapeHtml(cliente.tipo || 'Cliente')}</p>
                 <p><strong>Coordenadas:</strong> ${escapeHtml(cliente.latitude || '-')} / ${escapeHtml(cliente.longitude || '-')}</p>
-                ${ctoSelecionadaAtual ? `<button type="button" class="cto-small-btn save" style="margin-top:10px;width:100%;" onclick="vincularClienteNaCtoSelecionada()">${escapeHtml(textoVincularCtoAtual)}</button>` : ''}
+                ${ctoVinculada ? `<button type="button" class="cto-small-btn save" style="margin-top:10px;width:100%;" onclick="alterarPortaClienteAtual()">Alterar porta</button>` : ctoSelecionadaAtual ? `<button type="button" class="cto-small-btn save" style="margin-top:10px;width:100%;" onclick="vincularClienteNaCtoSelecionada()">${escapeHtml(textoVincularCtoAtual)}</button>` : ''}
                 <button type="button" class="cto-small-btn cancel" style="margin-top:10px;width:100%;" onclick="iniciarAjusteLocalizacaoCliente()">Ajustar localizacao do cliente</button>
                 <button type="button" class="cto-small-btn save" style="margin-top:10px;width:100%;" onclick="iniciarAtrelamentoCliente()">${textoAcao}</button>
                 ${cliente.caixa_herm || cliente.porta ? `<button type="button" class="cto-small-btn" style="margin-top:10px;width:100%;background:#ef4444;color:#fff;" onclick="confirmarRemoverClienteCto()">Remover da CTO/porta</button>` : ''}
@@ -1113,6 +1146,7 @@
         }
 
         function abrirClienteNoMapa(cliente) {
+            encerrarAcaoClienteMapa();
             const cto = encontrarCtoDoCliente(cliente);
             if (cto && (clientesFixosAtivos || todosClientesFixosAtivos)) {
                 fixarClientesCto(cto.id);
@@ -1244,6 +1278,7 @@
         }
 
         function desenharRotaAtrelamento(cliente, cto) {
+            const versao = ++versaoRotaCliente;
             removerOverlayMapa(linhaRotaAtrelamento);
             linhaRotaAtrelamento = null;
             if (!clienteTemCoordenada(cliente) || !cto || !mapa) return;
@@ -1255,7 +1290,7 @@
             if (MAP_PROVIDER === 'openstreet' && window.L) {
                 const url = 'https://router.project-osrm.org/route/v1/driving/' + lngCliente + ',' + latCliente + ';' + lngCto + ',' + latCto + '?overview=full&geometries=geojson';
                 fetch(url).then(resp => resp.json()).then(data => {
-                    if (!data || !data.routes || !data.routes.length || !window.L || !mapa) return;
+                    if (versao !== versaoRotaCliente || !data || !data.routes || !data.routes.length || !window.L || !mapa) return;
                     removerOverlayMapa(linhaRotaAtrelamento);
                     linhaRotaAtrelamento = L.geoJSON(data.routes[0].geometry, {
                         style: {color: '#2563eb', weight: 4, opacity: 0.72}
@@ -1277,7 +1312,7 @@
                     destination: {lat: latCto, lng: lngCto},
                     travelMode: google.maps.TravelMode.DRIVING
                 }, (result, status) => {
-                    if (status === 'OK') renderer.setDirections(result);
+                    if (versao === versaoRotaCliente && status === 'OK') renderer.setDirections(result);
                     else removerOverlayMapa(renderer);
                 });
             }
@@ -1622,14 +1657,14 @@
             modal.style.top = '12px';
             modal.innerHTML = `
                 <button type="button" class="cto-panel-close" style="top:8px;right:8px;width:28px;height:28px;font-size:20px;" onclick="cancelarAtrelamentoCliente(true)">x</button>
-                <h4>${escapeHtml(modoAtrelarCliente.caixa_herm ? 'Alterar cliente de CTO' : 'Atrelar cliente a CTO')}</h4>
+                <h4>${escapeHtml(encontrarCtoDoCliente(modoAtrelarCliente)?.id === cto.id ? 'Alterar porta do cliente' : modoAtrelarCliente.caixa_herm ? 'Transferir cliente de CTO' : 'Vincular cliente a CTO')}</h4>
                 <div style="background:#f8fafc;border:1px solid #dbeafe;border-radius:8px;padding:9px;margin:8px 0 10px;">
                     <p><strong>Cliente:</strong> ${escapeHtml(modoAtrelarCliente.nome || 'Cliente')}</p>
                     <p><strong>Login:</strong> ${escapeHtml(modoAtrelarCliente.login || '-')}</p>
                     <p><strong>CTO atual:</strong> ${escapeHtml(modoAtrelarCliente.caixa_herm || 'Sem CTO')}</p>
                     <p><strong>Porta atual:</strong> ${escapeHtml(modoAtrelarCliente.porta || '-')}</p>
                 </div>
-                <p><strong>Nova CTO:</strong> ${escapeHtml(cto.nome || 'CTO')}</p>
+                <p><strong>CTO destino:</strong> ${escapeHtml(cto.nome || 'CTO')}</p>
                 ${distanciaReta !== null ? `<p><strong>Distancia reta:</strong> ${escapeHtml(formatarDistancia(distanciaReta))}</p>` : ''}
                 <p><strong>Rota:</strong> linha amarela reta e linha azul por vias, quando disponivel.</p>
                 <p><strong>Portas:</strong> selecione uma porta livre e depois clique em Gravar.</p>
@@ -1807,6 +1842,8 @@
                 mostrarAvisoMapa('Selecione um cliente antes de ajustar a localizacao.');
                 return;
             }
+            limparPreviewAtrelamento();
+            estadoMapaAntesAcao = null;
             modoAjustarCliente = clienteDetalheAtual;
             bloqueiaAtualizacaoTempoReal = true;
             limparMarcadorAjusteCliente();
@@ -2646,7 +2683,11 @@
                 }
                 if (!modoAdicionarCto && !modoAjustarCliente && !modoAtrelarCliente && !modoAjustarCto && (clientesFixosAtivos || todosClientesFixosAtivos)) {
                     const cto = encontrarCtoProximaDoClique(event.latlng, 52);
-                    if (cto) abrirCtoSelecionadaNoMapa(cto);
+                    if (cto) { abrirCtoSelecionadaNoMapa(cto); return; }
+                }
+                if (!modoClicarCtoAtrelamento && !modoAjustarCliente && !modoAjustarCto) {
+                    fecharConsultaClienteMapa();
+                    fecharPainelCto(false);
                 }
             });
 
@@ -3076,10 +3117,11 @@
             painelCtoConteudoAtual = conteudo;
 
             painel.innerHTML = `
-                <button type="button" class="cto-panel-close" onclick="fecharPainelCto()" aria-label="Fechar">x</button>
+                <button type="button" class="cto-panel-close" onclick="fecharConsultaClienteMapa(); fecharPainelCto()" aria-label="Fechar">x</button>
                 ${conteudo}
             `;
             painel.classList.add('is-open');
+            bloquearWheelMapa(painel);
         }
 
         function fecharPainelCto(restaurarMapa) {
