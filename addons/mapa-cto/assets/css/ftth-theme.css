@@ -118,3 +118,16 @@ body.ftth-map .map-shell { z-index: 0; }
     body.ftth-map .cto-popup-body { padding:10px; }
     body.ftth-map .cto-add-modal { max-width:calc(100% - 16px); max-height:calc(100% - 16px); overflow-y:auto; }
 }
+
+/* Campos com tamanho legivel evitam a ampliacao automatica ao focar no iOS. */
+@media(max-width:600px) {
+    body.ftth-theme input:not([type=checkbox]):not([type=radio]),
+    body.ftth-theme select, body.ftth-theme textarea { font-size:16px!important; min-width:0; box-sizing:border-box; }
+    body.ftth-map .cto-add-modal { left:8px; right:8px; width:auto; max-width:none; top:8px; max-height:calc(100% - 16px); box-sizing:border-box; display:flex; flex-direction:column; overflow:hidden; }
+    body.ftth-map .cto-add-modal header { flex-shrink:0; padding:10px 12px; }
+    body.ftth-map .cto-add-modal .body { min-height:0; overflow-y:auto; overscroll-behavior:contain; padding:10px; }
+    body.ftth-map .cto-add-modal .grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    body.ftth-map .cto-add-modal :is(input,select,textarea) { max-width:100%; min-height:42px; }
+    body.ftth-map .cto-add-modal footer { flex-shrink:0; padding:10px; border-top:1px solid #e5e7eb; background:white; }
+    body.ftth-map .cto-add-modal footer button { min-height:42px; flex:1; }
+}
