@@ -88,3 +88,33 @@ body.ftth-map .map-shell { z-index: 0; }
 .map-stat-filter:hover,.map-stat-filter[aria-pressed="true"] {background:#e8edff!important;border-color:#4864cf!important;box-shadow:0 0 0 2px #4864cf25;}
 .map-stat-filter:focus-visible {outline:2px solid #4864cf;outline-offset:2px;}
 @media(max-width:600px){body.ftth-map .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));}.map-stat-filter{min-width:0!important;}}
+
+.list-create-action { display:flex; justify-content:flex-end; margin:16px 0; }
+.ftth-theme .coord-group .map-icon { width:auto; min-width:64px; padding:10px; flex-shrink:0; font:inherit; border-radius:8px; cursor:pointer; }
+@media(max-width:600px) {
+    body.ftth-theme { padding:10px; }
+    .ftth-theme .container { width:100%; max-width:100%; padding:0; }
+    .ftth-theme .header { padding:16px; margin-bottom:16px; }
+    .ftth-theme .header h1 { font-size:26px; }
+    .ftth-theme .form-section { padding:16px; }
+    .ftth-theme .form-grid { gap:14px; }
+    .ftth-theme .form-group { min-width:0; }
+    .ftth-theme .coord-group { flex-wrap:wrap; gap:8px; }
+    .ftth-theme .coord-group > div { min-width:0; }
+    .ftth-theme .stat-card { padding:12px; min-width:0; }
+    .ftth-theme .stat-card .number { font-size:26px; margin:8px 0; }
+    .list-create-action .btn { min-height:42px; }
+    #modalBuscaEndereco > div { width:calc(100% - 20px)!important; height:90vh!important; height:90dvh!important; padding:14px!important; overflow-y:auto; }
+    #modalBuscaEndereco > div > div:nth-of-type(1) { grid-template-columns:minmax(0,1fr) auto!important; gap:8px!important; }
+    #modalBuscaEndereco > div > div:nth-of-type(2) { grid-template-columns:minmax(0,1fr)!important; flex:none!important; min-height:auto!important; gap:10px!important; }
+    #mapaBuscaEndereco { min-height:280px!important; height:40vh; }
+    #resultadoBusca { max-height:150px; }
+    body.ftth-map .cto-map-panel { left:8px; right:8px; top:8px; bottom:8px; width:auto; }
+    body.ftth-map .cto-popup { width:100%; max-width:100%; max-height:100%; overflow-y:auto; box-sizing:border-box; }
+    body.ftth-map .cto-tech-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    body.ftth-map .cto-client-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
+    body.ftth-map .cto-count-card { padding:8px 4px; }
+    body.ftth-map .cto-popup-header { padding:12px 48px 12px 12px; }
+    body.ftth-map .cto-popup-body { padding:10px; }
+    body.ftth-map .cto-add-modal { max-width:calc(100% - 16px); max-height:calc(100% - 16px); overflow-y:auto; }
+}

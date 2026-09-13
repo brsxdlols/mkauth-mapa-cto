@@ -408,12 +408,8 @@
             </div>
         </div>
 
-        <div class="buttons">
-            <button class="btn btn-primary" onclick="adicionarCTO()">
-                Adicionar CTO
-            </button>
-        </div>
     </div>
+    <div class="list-create-action"><button type="button" class="btn btn-primary" onclick="adicionarCTO()">Adicionar CTO</button></div>
 
     <div class="filter-result"><span id="filterResultText" role="status" aria-live="polite"></span><button type="button" class="filter-reset" onclick="limparFiltrosListagem()">Limpar filtros</button></div>
     <div id="filterEmpty" class="filter-empty" hidden>Nenhuma CTO corresponde aos filtros selecionados.</div>

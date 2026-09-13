@@ -251,7 +251,7 @@ if (isset($connection) && $connection) {
                                 <input type="text" id="LONGITUDE" name="LONGITUDE" placeholder="Longitude" required>
                             </div>
                         </div>
-                        <div class="map-icon" onclick="abrirBuscaEndereco()" title="Buscar no mapa"></div>
+                        <button type="button" class="map-icon" onclick="abrirBuscaEndereco()" title="Buscar no mapa" aria-label="Buscar no mapa">Mapa</button>
                     </div>
                 </div>
 

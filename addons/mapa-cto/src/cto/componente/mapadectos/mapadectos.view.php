@@ -678,9 +678,9 @@
                 <button class="filter-btn action-btn" id="btnAdicionarCto" type="button">Adicionar CTO no mapa</button>
             </div>
             <div class="cto-map-legend">
-                <span><i class="legend-house legend-blue"></i>Cliente online</span>
+                <span><i class="legend-house legend-green"></i>Cliente online</span>
                 <span><i class="legend-house legend-red"></i>Cliente offline</span>
-                <span><i class="legend-dot legend-green"></i>CTO com online</span>
+                <span title="Login adicional"><svg width="16" height="16" viewBox="0 0 38 36" aria-hidden="true"><circle cx="19" cy="9" r="5" fill="#1976d2" stroke="#fff" stroke-width="1.5"/><circle cx="8" cy="12" r="4" fill="#1976d2" stroke="#fff" stroke-width="1.5"/><circle cx="30" cy="12" r="4" fill="#1976d2" stroke="#fff" stroke-width="1.5"/><path d="M11 31v-7c0-5 3.5-8 8-8s8 3 8 8v7zM1 30v-6c0-4 2.5-7 7-7 2 0 3.4.6 4.6 1.7-2.3 2-3.6 4.8-3.6 8.3v3zm28 0v-3c0-3.5-1.3-6.3-3.6-8.3A6.5 6.5 0 0 1 30 17c4.5 0 7 3 7 7v6z" fill="#1976d2" stroke="#fff" stroke-width="1.2"/></svg>Adicional</span><span><i class="legend-dot legend-green"></i>CTO com online</span>
                 <span><i class="legend-dot legend-gray"></i>CTO sem cliente</span>
                 <span><i class="legend-dot legend-red"></i>CTO com offline</span>
             </div>
@@ -1801,17 +1801,46 @@
         }
 
         function clienteCasaSvg(cor) {
-            return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" width="28" height="28">
-                <path d="M4 13.2 14 4l10 9.2v10.4a1.7 1.7 0 0 1-1.7 1.7H5.7A1.7 1.7 0 0 1 4 23.6V13.2z" fill="${cor}" stroke="white" stroke-width="2"/>
-                <path d="M10.5 25.3v-8.1h7v8.1" fill="rgba(15,23,42,.18)" stroke="white" stroke-width="1.5"/>
-                <path d="M2.7 14 14 3.4 25.3 14" fill="none" stroke="#111827" stroke-opacity=".45" stroke-width="2.2" stroke-linecap="round"/>
-            </svg>`;
+            return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 38 40" width="28" height="28"><path d="M3 18 19 4l16 14v18H3z" fill="${cor}" stroke="#17212b" stroke-width="2" stroke-linejoin="round"/><path d="M15 36V24h8v12M8 18V9h6v4" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/>` + '</svg>';
+        }
+        function clienteSimboloSvg(cliente) {
+            const cor = clienteDesativado(cliente) ? '#9ca3af' : cliente.status === 'online' ? '#159447' : '#ef4444';
+            if (String(cliente.tipo || '').toLowerCase() !== 'adicional') return clienteCasaSvg(cor);
+            return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="28" height="28"><circle cx="19" cy="9" r="5" fill="#1976d2" stroke="#fff" stroke-width="1.5"/><circle cx="8" cy="12" r="4" fill="#1976d2" stroke="#fff" stroke-width="1.5"/><circle cx="30" cy="12" r="4" fill="#1976d2" stroke="#fff" stroke-width="1.5"/><path d="M11 31v-7c0-5 3.5-8 8-8s8 3 8 8v7zM1 30v-6c0-4 2.5-7 7-7 2 0 3.4.6 4.6 1.7-2.3 2-3.6 4.8-3.6 8.3v3zm28 0v-3c0-3.5-1.3-6.3-3.6-8.3A6.5 6.5 0 0 1 30 17c4.5 0 7 3 7 7v6z" fill="#1976d2" stroke="#fff" stroke-width="1.2"/><circle cx="34" cy="5" r="4" fill="${cor}" stroke="white" stroke-width="1.5"/></svg>`;
+        }
+        const cacheSimbolosCliente = new Map();
+        function imagemSimboloCliente(cliente) {
+            const key = (String(cliente.tipo || '').toLowerCase() === 'adicional' ? 'adicional' : 'principal') + ':' + corClienteMapa(cliente);
+            if (!cacheSimbolosCliente.has(key)) {
+                const img = new Image();
+                img.onload = () => {
+                    if (rendererClientesMapa && rendererClientesMapa._map) {
+                        rendererClientesMapa._redrawBounds = null;
+                        rendererClientesMapa._redraw();
+                    }
+                };
+                img.src = 'data:image/svg+xml;base64,' + btoa(clienteSimboloSvg(cliente));
+                cacheSimbolosCliente.set(key, img);
+            }
+            return cacheSimbolosCliente.get(key);
+        }
+        function criarRendererSimbolosCliente() {
+            // Leaflet 1.9.4 Canvas: reuse its redraw, clipping and hit testing.
+            const Renderer = L.Canvas.extend({
+                _updateCircle: function(layer) {
+                    if (!layer.options.iconeCliente) return L.Canvas.prototype._updateCircle.call(this, layer);
+                    if (!this._drawing || layer._empty()) return;
+                    const img = layer.options.iconeCliente;
+                    if (img.complete && img.naturalWidth) this._ctx.drawImage(img, layer._point.x - 14, layer._point.y - 14, 28, 28);
+                }
+            });
+            return new Renderer({padding:0.3, tolerance:2});
         }
 
         function criarLeafletIconCliente(cliente) {
             return L.divIcon({
                 className: 'cto-leaflet-marker',
-                html: clienteCasaSvg(corClienteMapa(cliente)),
+                html: clienteSimboloSvg(cliente),
                 iconSize: [28, 28],
                 iconAnchor: [14, 26],
                 popupAnchor: [0, -26]
@@ -1820,7 +1849,7 @@
 
         function googleIconCliente(cliente) {
             return {
-                url: 'data:image/svg+xml;base64,' + btoa(clienteCasaSvg(corClienteMapa(cliente))),
+                url: 'data:image/svg+xml;base64,' + btoa(clienteSimboloSvg(cliente)),
                 scaledSize: new google.maps.Size(28, 28),
                 anchor: new google.maps.Point(14, 26)
             };
@@ -2248,10 +2277,10 @@
                 const lng = parseFloat(cliente.longitude);
                 const titulo = `${cliente.nome || ''} | CTO: ${cliente.caixa_herm || 'sem CTO'} | Porta: ${cliente.porta || '-'}`;
                 if (MAP_PROVIDER === 'openstreet' && window.L) {
-                    if (!rendererClientesMapa) rendererClientesMapa = L.canvas({padding:0.3, tolerance:4});
+                    if (!rendererClientesMapa) rendererClientesMapa = criarRendererSimbolosCliente();
                     const marker = L.circleMarker([lat, lng], {
                         renderer: rendererClientesMapa,
-                        radius: 6, color: '#ffffff', weight: 1.5,
+                        radius: 14, iconeCliente: imagemSimboloCliente(cliente), color: '#ffffff', weight: 0,
                         fillColor: corClienteMapa(cliente), fillOpacity: 0.95,
                         bubblingMouseEvents: false
                     }).addTo(mapa);
@@ -2624,7 +2653,8 @@
                     mostrarAvisoMapa('Agora arraste a casa se precisar e clique em salvar.');
                     return;
                 }
-                if (modoAdicionarCto) abrirFormularioNovaCto(event.latLng.lat(), event.latLng.lng());
+                if (modoAdicionarCto) { abrirFormularioNovaCto(event.latLng.lat(), event.latLng.lng()); return; }
+                if (!modoClicarCtoAtrelamento && !modoAjustarCliente && !modoAjustarCto) { fecharConsultaClienteMapa(); fecharPainelCto(); }
             });
 
             // Adicionar marcadores para cada CTO
@@ -2702,7 +2732,7 @@
                 }
                 if (!modoClicarCtoAtrelamento && !modoAjustarCliente && !modoAjustarCto) {
                     fecharConsultaClienteMapa();
-                    fecharPainelCto(false);
+                    fecharPainelCto();
                 }
             });
 
@@ -3164,6 +3194,14 @@
             }
             if (!clientesFixosAtivos) limparMarcadoresClientesHover();
         }
+
+        document.addEventListener('click', event => {
+            if (!ctoUnicaVisivelId || modoAdicionarCto || modoAtrelarCliente || modoAjustarCliente || modoAjustarCto) return;
+            if (event.composedPath().some(node => node.classList && node.classList.contains("map-shell"))) return;
+            if (event.target.closest('.map-shell, button, a, input, select, textarea, label, details, [role="button"]')) return;
+            fecharConsultaClienteMapa();
+            fecharPainelCto();
+        });
 
         document.addEventListener('fullscreenchange', () => {
             if (painelCtoConteudoAtual) {
