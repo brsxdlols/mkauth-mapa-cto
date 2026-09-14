@@ -92,7 +92,7 @@ if ($dadosCaixa && mysqli_num_rows($dadosCaixa) > 0) {
             if ($dadosClienteContador && mysqli_num_rows($dadosClienteContador) > 0) {
                 while ($rowCliente = mysqli_fetch_array($dadosClienteContador)) {
                     $clientesCaixaTotal++;
-                    $numeroPortasAtivas++;
+                    if (intval($rowCliente['porta_splitter'] ?? 0) > 0) $numeroPortasAtivas++;
                 }
             }
 
@@ -100,7 +100,7 @@ if ($dadosCaixa && mysqli_num_rows($dadosCaixa) > 0) {
             if ($dadosAdicionalContador && mysqli_num_rows($dadosAdicionalContador) > 0) {
                 while ($rowAdicional = mysqli_fetch_array($dadosAdicionalContador)) {
                     $clientesCaixaTotal++;
-                    $numeroPortasAtivas++;
+                    if (intval($rowAdicional['porta_splitter'] ?? 0) > 0) $numeroPortasAtivas++;
                 }
             }
             $clientesPorCaixa[$item['id']] = $clientesCaixaTotal;

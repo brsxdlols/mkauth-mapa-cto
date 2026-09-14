@@ -1133,15 +1133,16 @@
                 <button type="button" class="cto-panel-close" style="top:8px;right:8px;width:28px;height:28px;font-size:20px;" onclick="fecharConsultaClienteMapa()">x</button>
                 <h4 class="${clienteDesativado(cliente) ? 'inactive' : ''}">${escapeHtml(nomeClienteComStatus(cliente))}</h4>
                 <p><strong>Login:</strong> ${escapeHtml(cliente.login || '-')}</p>
-                <p><strong>Porta:</strong> ${escapeHtml(cliente.porta || '-')}</p>
+                <p><strong>Porta:</strong> ${escapeHtml(normalizarPortaCto(cliente.porta) || 'Sem porta')}</p>
                 <p><strong>CTO atual:</strong> ${escapeHtml(cliente.caixa_herm || '-')}</p>
                 <p><strong>Status:</strong> ${escapeHtml(statusClienteLabel(cliente))}</p>
                 <p><strong>Tipo:</strong> ${escapeHtml(cliente.tipo || 'Cliente')}</p>
                 <p><strong>Coordenadas:</strong> ${escapeHtml(cliente.latitude || '-')} / ${escapeHtml(cliente.longitude || '-')}</p>
-                ${ctoVinculada ? `<button type="button" class="cto-small-btn save" style="margin-top:10px;width:100%;" onclick="alterarPortaClienteAtual()">Alterar porta</button>` : ctoSelecionadaAtual ? `<button type="button" class="cto-small-btn save" style="margin-top:10px;width:100%;" onclick="vincularClienteNaCtoSelecionada()">${escapeHtml(textoVincularCtoAtual)}</button>` : ''}
+                ${ctoVinculada ? `<button type="button" class="cto-small-btn save" style="margin-top:10px;width:100%;" onclick="alterarPortaClienteAtual()">${normalizarPortaCto(cliente.porta) ? 'Alterar porta' : 'Atribuir porta'}</button>` : ctoSelecionadaAtual ? `<button type="button" class="cto-small-btn save" style="margin-top:10px;width:100%;" onclick="vincularClienteNaCtoSelecionada()">${escapeHtml(textoVincularCtoAtual)}</button>` : ''}
                 <button type="button" class="cto-small-btn cancel" style="margin-top:10px;width:100%;" onclick="iniciarAjusteLocalizacaoCliente()">Ajustar localizacao do cliente</button>
                 <button type="button" class="cto-small-btn save" style="margin-top:10px;width:100%;" onclick="iniciarAtrelamentoCliente()">${textoAcao}</button>
-                ${cliente.caixa_herm || cliente.porta ? `<button type="button" class="cto-small-btn" style="margin-top:10px;width:100%;background:#ef4444;color:#fff;" onclick="confirmarRemoverClienteCto()">Remover da CTO/porta</button>` : ''}
+                ${normalizarPortaCto(cliente.porta) ? `<button type="button" class="cto-small-btn" style="margin-top:10px;width:100%;background:#b45309;color:#fff;" onclick="confirmarRemoverClienteCto(true)">Remover da Porta</button>` : ''}
+                ${ctoVinculada || cliente.caixa_herm || cliente.porta ? `<button type="button" class="cto-small-btn" style="margin-top:10px;width:100%;background:#ef4444;color:#fff;" onclick="confirmarRemoverClienteCto()">Remover da CTO</button>` : ''}
             `;
             bloquearWheelMapa(box);
         }
@@ -1210,19 +1211,19 @@
             selecionarCtoDestinoAtrelamento(ctoSelecionadaAtual);
         }
 
-        function confirmarRemoverClienteCto() {
+        function confirmarRemoverClienteCto(somentePorta = false) {
             if (!clienteDetalheAtual || !clienteDetalheAtual.id) return;
             const nome = clienteDetalheAtual.nome || 'cliente';
             const ctoAtual = clienteDetalheAtual.caixa_herm || 'CTO atual';
             const portaAtual = clienteDetalheAtual.porta || '-';
-            if (!confirm('Deseja realmente remover ' + nome + ' da ' + ctoAtual + ' e liberar a porta ' + portaAtual + '?')) return;
+            if (!confirm(somentePorta ? 'Liberar a porta ' + portaAtual + ' de ' + nome + '? O cliente continuara vinculado a CTO, sem porta, para reutilizar o drop futuramente.' : 'Remover ' + nome + ' da ' + ctoAtual + ' e liberar a porta? O vinculo com a CTO sera apagado.')) return;
             enviarAcaoMapa({
-                acao_mapa_cto: 'remover_cliente_cto',
+                acao_mapa_cto: somentePorta ? 'remover_cliente_porta' : 'remover_cliente_cto',
                 cliente_id: clienteDetalheAtual.id,
                 cliente_tipo: clienteDetalheAtual.tipo || 'Cliente'
             }).then(ret => {
                 if (!ret || !ret.ok) throw new Error((ret && ret.message) || 'Erro ao remover cliente da CTO.');
-                mostrarAvisoMapa('Cliente removido da CTO e porta.');
+                mostrarAvisoMapa(ret.message || 'Vinculo atualizado.');
                 window.location.reload();
             }).catch(err => alert(err.message || 'Erro ao remover cliente da CTO.'));
         }
@@ -1730,7 +1731,7 @@
             const portaNormalizada = normalizarPortaCto(portaAlvo);
             const clientes = Array.isArray(cto && cto.clientes) ? cto.clientes : [];
             return clientes.find((cliente, index) => {
-                const portaCliente = normalizarPortaCto(cliente.porta || cliente.porta_splitter, index + 1);
+                const portaCliente = normalizarPortaCto(cliente.porta || cliente.porta_splitter);
                 return portaCliente === portaNormalizada;
             }) || null;
         }
@@ -1771,7 +1772,7 @@
 
             const portasUsadas = {};
             clientes.forEach((cliente, index) => {
-                const porta = normalizarPortaCto(cliente.porta || cliente.porta_splitter, index + 1);
+                const porta = normalizarPortaCto(cliente.porta || cliente.porta_splitter);
                 portasUsadas[parseInt(porta, 10)] = cliente;
             });
 
@@ -2886,7 +2887,7 @@
                                     return `
                                     <div class="cto-client-row ${clienteInativo ? 'inactive' : ''}">
                                         <button type="button" class="cto-client-name ${clienteInativo ? 'inactive' : ''}" onclick="abrirDetalheClienteDaCto('${String(cto.id)}', ${index})" title="${escapeHtml(nomeClienteComStatus(cliente))}" style="border:0;background:transparent;text-align:left;cursor:pointer;padding:0;font:inherit;color:#111827;"><strong>${escapeHtml(primeiroUltimoNome(cliente.nome))}</strong>${clienteInativo ? '<span class="cto-inactive-tag">Desativado</span>' : ''}</button>
-                                        <span class="cto-client-login" title="Porta ${escapeHtml(cliente.porta || '-')} | ${escapeHtml(cliente.login || '')}">Porta ${escapeHtml(cliente.porta || '-')} | ${escapeHtml(cliente.login)}</span>
+                                        <span class="cto-client-login" title="Porta ${escapeHtml(normalizarPortaCto(cliente.porta) || 'Sem porta')} | ${escapeHtml(cliente.login || '')}">Porta ${escapeHtml(normalizarPortaCto(cliente.porta) || 'Sem porta')} | ${escapeHtml(cliente.login)}</span>
                                     </div>
                                 `}).join('')}
                             </div>

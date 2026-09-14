@@ -150,6 +150,22 @@ if (isset($connection) && $connection && isset($_POST['acao_mapa_cto'])) {
         mapa_cto_json_response(array('ok' => true, 'message' => 'Cliente atrelado com sucesso.'));
     }
 
+    if ($acao_mapa_cto === 'remover_cliente_porta') {
+        $cliente_id = isset($_POST['cliente_id']) ? intval($_POST['cliente_id']) : 0;
+        $cliente_tipo = isset($_POST['cliente_tipo']) ? strtolower(trim((string)$_POST['cliente_tipo'])) : 'cliente';
+        if ($cliente_id <= 0 || !in_array($cliente_tipo, array('cliente', 'adicional'), true)) {
+            mapa_cto_json_response(array('ok' => false, 'message' => 'Cliente invalido.'));
+        }
+        $tabela = $cliente_tipo === 'adicional' ? 'sis_adicional' : 'sis_cliente';
+        if (!mapa_cto_coluna_existe($connection, $tabela, 'porta_splitter')) {
+            mapa_cto_json_response(array('ok' => false, 'message' => 'Campo de porta nao encontrado.'));
+        }
+        // Apenas a porta fisica: preservar CTO, cadastro, login e coordenadas.
+        $ok = mysqli_query($connection, "UPDATE " . $tabela . " SET porta_splitter = '' WHERE id = " . $cliente_id . " LIMIT 1");
+        if (!$ok) mapa_cto_json_response(array('ok' => false, 'message' => 'Nao foi possivel liberar a porta.'));
+        mapa_cto_json_response(array('ok' => true, 'message' => 'Porta liberada. Cliente mantido na CTO, sem porta.'));
+    }
+
     if ($acao_mapa_cto === 'remover_cliente_cto') {
         $cliente_id = isset($_POST['cliente_id']) ? intval($_POST['cliente_id']) : 0;
         $cliente_tipo = isset($_POST['cliente_tipo']) ? trim((string)$_POST['cliente_tipo']) : 'Cliente';
@@ -338,8 +354,13 @@ if (isset($connection) && $connection) {
             $total_offline = max(0, $total_clientes - $total_online);
 
             // Calcular portas livres
-            $portas_utilizadas = $total_clientes;
-            $portas_livres = $row['capacidade'] - $portas_utilizadas;
+            $portas_ocupadas = array();
+            foreach ($clientes_list as $cliente_porta) {
+                $numero_porta = intval($cliente_porta['porta'] ?? 0);
+                if ($numero_porta > 0 && $numero_porta <= intval($row['capacidade'])) $portas_ocupadas[$numero_porta] = true;
+            }
+            $portas_utilizadas = count($portas_ocupadas);
+            $portas_livres = max(0, intval($row['capacidade']) - $portas_utilizadas);
             
             // Validar coordenadas
             $lat = floatval($row['latitude']);
