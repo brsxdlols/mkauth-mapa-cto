@@ -726,6 +726,7 @@
         let bloqueiaAtualizacaoTempoReal = false;
         let clientesFixosAtivos = false;
         let todosClientesFixosAtivos = false;
+        let exibirClientesAntesSelecao = null;
         let filtroTodosClientesAtual = 'todos';
         let filtroClientesCtoAtual = 'total';
         let ctoUnicaVisivelId = null;
@@ -1834,7 +1835,10 @@
                     if (img.complete && img.naturalWidth) this._ctx.drawImage(img, layer._point.x - 14, layer._point.y - 14, 28, 28);
                 }
             });
-            return new Renderer({padding:0.3, tolerance:2});
+            // Keep the interactive client canvas above route canvases, including empty ones.
+            const pane = mapa.getPane('clientesInterativos') || mapa.createPane('clientesInterativos');
+            pane.style.zIndex = '450';
+            return new Renderer({pane:'clientesInterativos', padding:0.3, tolerance:2});
         }
 
         function criarLeafletIconCliente(cliente) {
@@ -2304,6 +2308,7 @@
         function fixarClientesCto(ctoId, filtro) {
             const cto = ctosData.find(item => String(item.id) === String(ctoId));
             if (!cto) return;
+            if (exibirClientesAntesSelecao === null) exibirClientesAntesSelecao = todosClientesFixosAtivos;
             portaCtoDestacada = '';
             limparLinhasClienteCto();
             filtroClientesCtoAtual = filtro || 'total';
@@ -2365,6 +2370,7 @@
         }
 
         function limparClientesMapa() {
+            exibirClientesAntesSelecao = null;
             clientesFixosAtivos = false;
             todosClientesFixosAtivos = false;
             ctoUnicaVisivelId = null;
@@ -3183,7 +3189,9 @@
             limparMarcadorClienteSelecionado();
             if (!modoAtrelarCliente) limparLinhasClienteCto();
             if (restaurarMapa !== false && ctoUnicaVisivelId && !modoAtrelarCliente && !modoAjustarCto) {
-                clientesFixosAtivos = false;
+                todosClientesFixosAtivos = exibirClientesAntesSelecao === null ? todosClientesFixosAtivos : exibirClientesAntesSelecao;
+                exibirClientesAntesSelecao = null;
+                clientesFixosAtivos = todosClientesFixosAtivos;
                 ctoUnicaVisivelId = null;
                 ctoSelecionadaAtual = null;
                 limparMarcadoresClientesHover();
@@ -3257,6 +3265,7 @@
         }
 
         function aplicarFiltrosMapa() {
+            exibirClientesAntesSelecao = null;
             document.querySelectorAll('[data-map-option]').forEach(input => { filtrosMapa[input.dataset.mapOption] = input.checked; });
             const showClients = document.getElementById('filtroExibirClientes').checked;
             filtroAtual = filtrosMapa.ctoCom ? (filtrosMapa.ctoSem ? 'todos' : 'comclientes') : (filtrosMapa.ctoSem ? 'semclientes' : 'nenhum');
