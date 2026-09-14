@@ -2325,6 +2325,7 @@
                 selecionarCtoDestinoAtrelamento(cto);
                 return;
             }
+            fecharConsultaClienteMapa();
             fixarClientesCto(cto.id);
             try {
                 destacarRadioCto(cto);
