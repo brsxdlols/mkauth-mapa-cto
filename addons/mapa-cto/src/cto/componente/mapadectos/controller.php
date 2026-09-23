@@ -435,6 +435,34 @@ if (isset($connection) && $connection) {
     }
 }
 
+
+// A busca deve incluir adicionais sem CTO e sem coordenadas.
+if (isset($connection) && $connection && $has_sis_adicional) {
+    $ad_caixa = $has_sis_adicional_caixa ? 'sa.caixa_herm' : "''";
+    $ad_porta = $has_sis_adicional_porta ? 'sa.porta_splitter' : "''";
+    $ad_lat = $has_sis_adicional_latitude ? 'sa.latitude' : "''";
+    $ad_lng = $has_sis_adicional_longitude ? 'sa.longitude' : "''";
+    $ad_sql = "SELECT sa.id, COALESCE(NULLIF(scp.nome,''), NULLIF(sa.nome,''), sa.username, sa.login) AS nome,
+        sa.username AS login, sa.login AS login_titular, sa.nome AS nome_adicional,
+        $ad_caixa AS caixa_herm, $ad_porta AS porta, $ad_lat AS latitude, $ad_lng AS longitude,
+        CASE WHEN scp.id IS NOT NULL AND LOWER(COALESCE(scp.cli_ativado,'')) <> 's' THEN 'desativado'
+             WHEN ra.radacctid IS NOT NULL THEN 'online' ELSE 'offline' END AS status
+        FROM sis_adicional sa
+        LEFT JOIN sis_cliente scp ON scp.login = sa.login
+        LEFT JOIN (SELECT username, MAX(radacctid) AS radacctid FROM radacct WHERE acctstoptime IS NULL GROUP BY username) ra ON ra.username = sa.username
+        ORDER BY nome, sa.id";
+    $ad_result = mysqli_query($connection, $ad_sql);
+    if ($ad_result) while ($ad = mysqli_fetch_assoc($ad_result)) {
+        $ad['tipo'] = 'Adicional';
+        $ad['desativado'] = $ad['status'] === 'desativado' ? 1 : 0;
+        $key = 'Adicional:' . $ad['id'];
+        if (isset($todos_clientes_index[$key])) {
+            $pos = $todos_clientes_index[$key];
+            $todos_clientes_data[$pos] = array_merge($todos_clientes_data[$pos], $ad);
+        } else mapa_cto_adicionar_todos_clientes($todos_clientes_data, $todos_clientes_index, $ad);
+    }
+}
+
 // Converter para JSON para uso no JavaScript
 $ctos_json = json_encode($ctos_data);
 $todos_clientes_json = json_encode($todos_clientes_data);

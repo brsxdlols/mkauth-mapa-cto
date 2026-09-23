@@ -862,6 +862,9 @@
                 const texto = normalizarBuscaTexto([
                     cliente.nome,
                     cliente.login,
+                    cliente.login_titular,
+                    cliente.nome_adicional,
+                    cliente.tipo,
                     cliente.caixa_herm,
                     cliente.porta,
                     statusClienteLabel(cliente)
@@ -876,7 +879,7 @@
                 const inactive = clienteDesativado(cliente);
                 const meta = 'Login: ' + (cliente.login || '-') + ' | CTO: ' + (cliente.caixa_herm || 'sem CTO') + ' | Porta: ' + (cliente.porta || '-');
                 return `<button type="button" class="cto-client-search-row ${inactive ? 'inactive' : ''}" onclick="selecionarClienteBuscaMapa(${index})">
-                    <strong>${escapeHtml(nomeClienteComStatus(cliente))}</strong>
+                    <strong>${escapeHtml(nomeClienteComStatus(cliente))} ${cliente.tipo === 'Adicional' ? '<span class="cto-hover-type">Adicional</span>' : ''}</strong>
                     <span>${escapeHtml(meta)}</span>
                 </button>`;
             }).join('');
