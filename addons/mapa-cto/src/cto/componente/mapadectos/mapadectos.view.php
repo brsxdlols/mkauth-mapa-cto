@@ -678,11 +678,11 @@
                 <button class="filter-btn action-btn" id="btnAdicionarCto" type="button">Adicionar CTO no mapa</button>
             </div>
             <div class="cto-map-legend">
-                <span><i class="legend-house legend-green"></i>Cliente online</span>
-                <span><i class="legend-house legend-red"></i>Cliente offline</span>
-                <span title="Login adicional"><svg width="16" height="16" viewBox="0 0 38 36" aria-hidden="true"><circle cx="19" cy="9" r="5" fill="#1976d2" stroke="#fff" stroke-width="1.5"/><circle cx="8" cy="12" r="4" fill="#1976d2" stroke="#fff" stroke-width="1.5"/><circle cx="30" cy="12" r="4" fill="#1976d2" stroke="#fff" stroke-width="1.5"/><path d="M11 31v-7c0-5 3.5-8 8-8s8 3 8 8v7zM1 30v-6c0-4 2.5-7 7-7 2 0 3.4.6 4.6 1.7-2.3 2-3.6 4.8-3.6 8.3v3zm28 0v-3c0-3.5-1.3-6.3-3.6-8.3A6.5 6.5 0 0 1 30 17c4.5 0 7 3 7 7v6z" fill="#1976d2" stroke="#fff" stroke-width="1.2"/></svg>Adicional</span><span><i class="legend-dot legend-green"></i>CTO com online</span>
-                <span><i class="legend-dot legend-gray"></i>CTO sem cliente</span>
-                <span><i class="legend-dot legend-red"></i>CTO com offline</span>
+                <button type="button" data-legend-filter="clienteOnline" aria-pressed="false"><i class="legend-house legend-green"></i>Cliente online</button>
+                <button type="button" data-legend-filter="clienteOffline" aria-pressed="false"><i class="legend-house legend-red"></i>Cliente offline</button>
+                <button type="button" data-legend-filter="adicional" aria-pressed="false"><svg width="16" height="16" viewBox="0 0 38 36" aria-hidden="true"><circle cx="19" cy="9" r="5" fill="#1976d2" stroke="#fff" stroke-width="1.5"/><circle cx="8" cy="12" r="4" fill="#1976d2" stroke="#fff" stroke-width="1.5"/><circle cx="30" cy="12" r="4" fill="#1976d2" stroke="#fff" stroke-width="1.5"/><path d="M11 31v-7c0-5 3.5-8 8-8s8 3 8 8v7zM1 30v-6c0-4 2.5-7 7-7 2 0 3.4.6 4.6 1.7-2.3 2-3.6 4.8-3.6 8.3v3zm28 0v-3c0-3.5-1.3-6.3-3.6-8.3A6.5 6.5 0 0 1 30 17c4.5 0 7 3 7 7v6z" fill="#1976d2" stroke="#fff" stroke-width="1.2"/></svg>Adicional</button><button type="button" data-legend-filter="ctoOnline" aria-pressed="false"><i class="legend-dot legend-green"></i>CTO com online</button>
+                <button type="button" data-legend-filter="ctoSem" aria-pressed="false"><i class="legend-dot legend-gray"></i>CTO sem cliente</button>
+                <button type="button" data-legend-filter="ctoOffline" aria-pressed="false"><i class="legend-dot legend-red"></i>CTO com offline</button>
             </div>
 
             <!-- Mapa -->
@@ -719,6 +719,7 @@
         let marcadoresClientesHover = [];
         let filtroAtual = 'todos';
         let filtrosMapa = FtthFilters.defaults();
+        let filtroLegenda = null;
         let painelCtoConteudoAtual = '';
         let ctoHoverTimer = null;
         let modoAdicionarCto = false;
@@ -2254,6 +2255,8 @@
         }
 
         function clientePassaFiltroTodos(cliente) {
+            if (filtroLegenda === 'adicional' && cliente.tipo !== 'Adicional') return false;
+            if ((filtroLegenda === 'clienteOnline' || filtroLegenda === 'clienteOffline') && cliente.tipo === 'Adicional') return false;
             if (!FtthFilters.clientMatches(cliente, filtrosMapa)) return false;
             const temCto = String(cliente.caixa_herm || '').trim() !== '';
             if (filtroTodosClientesAtual === 'semcto') return !temCto;
@@ -2425,6 +2428,8 @@
         }
 
         function ctoVisivelNoFiltro(cto) {
+            if (filtroLegenda === 'ctoOnline' && !(Number(cto.clientes_online) > 0)) return false;
+            if (filtroLegenda === 'ctoOffline' && !(Number(cto.clientes_offline) > 0)) return false;
             if (ctoUnicaVisivelId && String(cto.id) !== String(ctoUnicaVisivelId)) return false;
             if (!FtthFilters.ctoMatches(cto, filtrosMapa)) return false;
             if (todosClientesFixosAtivos && filtrosMapa.clienteCom && !filtrosMapa.clienteSem && !filtrosMapa.ctoSem) {
@@ -3254,6 +3259,7 @@
         document.addEventListener('keydown', tratarEscapeMapa);
 
         function sincronizarFiltrosMapa() {
+            document.querySelectorAll('[data-legend-filter]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.legendFilter === filtroLegenda)));
             document.querySelectorAll('[data-map-option]').forEach(input => { input.checked = !!filtrosMapa[input.dataset.mapOption]; });
             const visible = document.getElementById('filtroExibirClientes');
             if (visible) visible.checked = todosClientesFixosAtivos;
@@ -3268,7 +3274,8 @@
             document.getElementById('mapFilterSummary').textContent = ctoCount + ' CTOs • ' + (todosClientesFixosAtivos ? clientCount + ' clientes no mapa' : 'Clientes ocultos');
         }
 
-        function aplicarFiltrosMapa() {
+        function aplicarFiltrosMapa(preservarLegenda) {
+            if (preservarLegenda !== true) filtroLegenda = null;
             exibirClientesAntesSelecao = null;
             document.querySelectorAll('[data-map-option]').forEach(input => { filtrosMapa[input.dataset.mapOption] = input.checked; });
             const showClients = document.getElementById('filtroExibirClientes').checked;
@@ -3298,6 +3305,19 @@
             aplicarFiltrosMapa();
         }
 
+        document.querySelectorAll('[data-legend-filter]').forEach(button => button.addEventListener('click', () => {
+            const key = button.dataset.legendFilter;
+            filtroLegenda = filtroLegenda === key ? null : key;
+            filtrosMapa = FtthFilters.defaults();
+            todosClientesFixosAtivos = ['clienteOnline','clienteOffline','adicional'].includes(filtroLegenda);
+            if (filtroLegenda === 'clienteOnline') filtrosMapa.offline = false;
+            if (filtroLegenda === 'clienteOffline') filtrosMapa.online = false;
+            if (filtroLegenda === 'ctoSem') filtrosMapa.ctoCom = false;
+            if (filtroLegenda === 'ctoOnline' || filtroLegenda === 'ctoOffline') filtrosMapa.ctoSem = false;
+            fecharConsultaClienteMapa();
+            sincronizarFiltrosMapa();
+            aplicarFiltrosMapa(true);
+        }));
         document.querySelectorAll('[data-map-card]').forEach(card => card.addEventListener('click', () => {
             const mode = card.dataset.mapCard;
             filtrosMapa = FtthFilters.defaults();
