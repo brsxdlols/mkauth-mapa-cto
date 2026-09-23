@@ -131,3 +131,9 @@ body.ftth-map .map-shell { z-index: 0; }
     body.ftth-map .cto-add-modal footer { flex-shrink:0; padding:10px; border-top:1px solid #e5e7eb; background:white; }
     body.ftth-map .cto-add-modal footer button { min-height:42px; flex:1; }
 }
+
+/* O painel precisa rolar em qualquer largura, inclusive no desktop a 100%. */
+body.ftth-map .cto-map-panel { min-height:0; }
+body.ftth-map .cto-map-panel .cto-popup { height:100%; max-height:100%; min-height:0; overflow:hidden; display:flex; flex-direction:column; box-sizing:border-box; }
+body.ftth-map .cto-map-panel .cto-popup-header { flex:0 0 auto; }
+body.ftth-map .cto-map-panel .cto-popup-body { flex:1 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; scrollbar-gutter:stable; -webkit-overflow-scrolling:touch; }
