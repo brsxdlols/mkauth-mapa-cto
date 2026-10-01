@@ -161,3 +161,26 @@ body.ftth-map .cto-map-panel { container-type:size; }
  .cto-popup .cto-count-card { padding:3px; }
  .cto-popup .cto-edit { padding:5px; }
 }
+
+/* Barra superior compacta para reservar a maior parte da tela ao mapa. */
+body.ftth-map > .container { padding:5px 6px 6px; gap:5px; }
+body.ftth-map .header { padding:6px 10px; gap:8px; border-radius:10px; margin-bottom:0; }
+body.ftth-map .header h1 { font-size:20px; line-height:1.2; margin:0; }
+body.ftth-map .header .btn-voltar { padding:4px 9px; font-size:12px; line-height:1.25; border-width:1px; }
+body.ftth-map .content { padding:5px; }
+body.ftth-map .stats { gap:6px; margin-bottom:5px; }
+body.ftth-map .stat-card.map-stat-filter { padding:5px 8px; flex-direction:row; justify-content:center; gap:8px; min-height:34px; border-top-width:2px; }
+body.ftth-map .map-stat-filter .map-stat-value { font-size:18px; line-height:1.1; }
+body.ftth-map .map-stat-filter > span:last-child { font-size:11px; line-height:1.2; }
+body.ftth-map .controls { gap:6px; margin-bottom:4px; align-items:center; }
+body.ftth-map .controls .filter-btn, body.ftth-map .map-filter-menu summary { padding:4px 9px; min-height:28px; font-size:12px; line-height:1.25; border-width:1px; border-radius:6px; }
+body.ftth-map .map-filter-summary { font-size:11px; }
+body.ftth-map .cto-map-legend { gap:5px; margin:2px 0 5px; }
+body.ftth-map .cto-map-legend button { padding:3px 7px; min-height:24px; font-size:10px; gap:4px; }
+@media(max-width:600px) {
+ body.ftth-map .header h1 { font-size:18px; }
+ body.ftth-map .stat-card.map-stat-filter { padding:5px; gap:5px; min-height:36px; }
+ body.ftth-map .controls .filter-btn, body.ftth-map .map-filter-menu summary { min-height:34px; }
+ body.ftth-map .cto-map-legend button { min-height:30px; font-size:11px; }
+ body.ftth-map .header .btn-voltar { min-height:30px; display:inline-flex; align-items:center; }
+}
