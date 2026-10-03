@@ -405,7 +405,7 @@
                 });
                 const camadaSatelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
                     attribution: 'Tiles ? Esri',
-                    maxZoom: 19
+                    maxNativeZoom: 18, maxZoom: 19
                 });
                 (getCaixasMapMode() === 'satelite' ? camadaSatelite : camadaMapa).addTo(mapa);
                 L.control.layers({'Mapa': camadaMapa, 'Satelite': camadaSatelite}, null, {collapsed:false}).addTo(mapa);
