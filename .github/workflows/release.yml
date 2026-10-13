@@ -2,7 +2,7 @@ name: Publicar instaladores
 on:
   push:
     branches: [main]
-    paths: [VERSION]
+    paths: [VERSION, .github/workflows/release.yml]
   workflow_dispatch:
 permissions:
   contents: write
@@ -42,7 +42,8 @@ jobs:
           name="mkauth-mapa-cto-$RELEASE_VERSION"
           (cd dist && sha256sum -c "$name.run.sha256" "$name.tar.gz.sha256")
           tar -tzf "dist/$name.tar.gz" | grep -Fx "$name/addons/mapa-cto/src/cto/componente/maps/totals_permission.php"
-          awk 'found {print} /^__ARCHIVE_BELOW__$/ {found=1}' "dist/$name.run" > dist/embedded.tar.gz
+          line=$(awk '/^__ARCHIVE_BELOW__$/ {print NR+1; exit}' "dist/$name.run")
+          tail -n +"$line" "dist/$name.run" > dist/embedded.tar.gz
           cmp "dist/$name.tar.gz" dist/embedded.tar.gz
           cat > dist/notes.md <<'NOTES'
           O mapa de clientes respeita a permissão Clientes → Totais (`perm_numClientes`). Sem autorização, oculta Total, Online e Offline, mantendo marcadores e filtros funcionando.
