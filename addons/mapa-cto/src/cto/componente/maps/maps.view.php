@@ -317,11 +317,13 @@
 
     <div class="header-maps">
         <h1>🗺️ Mapa de Clientes</h1>
+        <?php if (!empty($mostrar_totais_clientes)): ?>
         <p style="margin: 10px 0 0 0; font-size: 0.9em;">
             <strong>Total:</strong> <span id="total-clientes"><?php echo count($clientes_data); ?></span> cliente(s) | 
             <strong style="color: #10b981;">🟢 Online:</strong> <span id="total-online"><?php echo $total_online; ?></span> | 
             <strong style="color: #ef4444;">🔴 Offline:</strong> <span id="total-offline"><?php echo $total_offline; ?></span>
         </p>
+        <?php endif; ?>
         <div class="filter-buttons">
             <button class="filter-btn active" data-filter="all" id="btn-todos">Todos</button>
             <button class="filter-btn" data-filter="online" id="btn-online">🟢 Online</button>
@@ -663,9 +665,9 @@
             });
 
             // Atualizar contadores
-            document.getElementById('total-clientes').textContent = visibleCount;
-            document.getElementById('total-online').textContent = visibleOnline;
-            document.getElementById('total-offline').textContent = visibleOffline;
+            if (document.getElementById('total-clientes')) document.getElementById('total-clientes').textContent = visibleCount;
+            if (document.getElementById('total-online')) document.getElementById('total-online').textContent = visibleOnline;
+            if (document.getElementById('total-offline')) document.getElementById('total-offline').textContent = visibleOffline;
 
             // Atualizar botões ativos
             document.querySelectorAll('.filter-btn').forEach(btn => {

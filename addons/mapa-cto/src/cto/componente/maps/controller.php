@@ -8,6 +8,8 @@ $component_base = dirname(__FILE__);
 $clientes_data = [];
 $total_online = 0;
 $total_offline = 0;
+$mostrar_totais_clientes = false;
+require_once __DIR__ . '/totals_permission.php';
 
 try {
     // Carregar banco de dados
@@ -18,6 +20,7 @@ try {
         
         // Verificar se conseguiu conexão
         if (isset($db_linker) && $db_linker->isConnected()) {
+            $mostrar_totais_clientes = mapaClientesPodeMostrarTotais($db_linker->getConnection(), isset($_SESSION) ? $_SESSION : array());
             // Buscar clientes com coordenadas e que estão ativados
             $sql = "SELECT sc.id, sc.nome, sc.coordenadas, sc.endereco, sc.login, sc.cli_ativado
                     FROM sis_cliente sc
