@@ -637,6 +637,7 @@
         @keyframes ctoPulse{0%{transform:scale(.75);box-shadow:0 0 0 0 rgba(245,158,11,.7)}70%{transform:scale(1.2);box-shadow:0 0 0 14px rgba(245,158,11,0)}100%{transform:scale(.75);box-shadow:0 0 0 0 rgba(245,158,11,0)}}
     </style>
     <style data-ftth-theme="1.1.35"><?php readfile(__DIR__ . '/../../../../assets/css/ftth-theme.css'); ?></style>
+    <script><?php readfile(__DIR__ . '/../../../../assets/js/cto-type-icons.js'); ?></script>
 </head>
 <body class="ftth-theme ftth-map">
     <div class="container">
@@ -1623,7 +1624,7 @@
             const lat = parseFloat(cto.latitude);
             const lng = parseFloat(cto.longitude);
             if (isNaN(lat) || isNaN(lng)) return;
-            const svg = markerSvgComNumero('#f59e0b', cto.nome);
+            const svg = markerSvgComNumero('#f59e0b', cto.nome, cto.tipo);
             if (MAP_PROVIDER === 'openstreet' && window.L) {
                 marcadorCtoDestaqueLista = L.marker([lat, lng], {
                     interactive: false,
@@ -1682,6 +1683,7 @@
                 </div>
             `;
             mapElement.appendChild(modal);
+            CtoTypeIcons.mount();
             bloquearWheelMapa(modal);
         }
 
@@ -2096,7 +2098,7 @@
             limparMarcadorAjusteCto();
             if (isNaN(lat) || isNaN(lng)) return;
             ajusteCtoPosicao = {lat, lng};
-            const svg = markerSvgComNumero('#f59e0b', modoAjustarCto ? modoAjustarCto.nome : 'CTO');
+            const svg = markerSvgComNumero('#f59e0b', modoAjustarCto ? modoAjustarCto.nome : 'CTO', modoAjustarCto ? modoAjustarCto.tipo : 'CTO');
             if (MAP_PROVIDER === 'openstreet' && window.L) {
                 marcadorAjusteCto = L.marker([lat, lng], {
                     draggable: true,
@@ -2408,11 +2410,7 @@
         }
 
         function subtituloTipoCto(cto) {
-            const tipo = String(cto.tipo || '').toUpperCase();
-            if (tipo === 'AP') return 'AP - Access Point Radio';
-            if (tipo === 'STA') return 'STA - Station Radio';
-            if (tipo === 'TO') return 'TO - Torre de Radio';
-            return 'CTO - Caixa de Terminacao Optica';
+            return CtoTypeIcons.label(cto.tipo);
         }
 
         function equipamentoLabelCto(cto) {
@@ -2458,14 +2456,8 @@
             </svg>`;
         }
 
-        function markerSvgComNumero(cor, nome) {
-            const numero = numeroDaCto(nome);
-            const texto = numero ? `<text x="17" y="18" text-anchor="middle" font-family="Arial" font-size="10" font-weight="700" fill="white">${escapeHtml(numero)}</text>` : '<circle cx="17" cy="14" r="4" fill="white"/>';
-            return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 38 32" width="38" height="32">
-                <rect x="4" y="4" width="30" height="22" rx="5" fill="${cor}" stroke="white" stroke-width="2"/>
-                <rect x="12" y="26" width="14" height="4" rx="1.5" fill="${cor}" stroke="white" stroke-width="1"/>
-                ${texto}
-            </svg>`;
+        function markerSvgComNumero(cor, nome, tipo) {
+            return CtoTypeIcons.svg(tipo || 'CTO', cor, numeroDaCto(nome));
         }
 
         function limparDestaquesRadio() {
@@ -2584,6 +2576,7 @@
                 </footer>
             `;
             mapElement.appendChild(modal);
+            CtoTypeIcons.mount();
             setTempMarkerPosition(lat, lng);
             const btn = document.getElementById('btnAdicionarCto');
             if (btn) btn.textContent = 'Adicionar CTO no mapa';
@@ -2694,7 +2687,7 @@
         function criarLeafletIconCto(cto) {
             return L.divIcon({
                 className: 'cto-leaflet-marker',
-                html: markerSvgComNumero(corMarcadorCto(cto), cto.nome),
+                html: markerSvgComNumero(corMarcadorCto(cto), cto.nome, cto.tipo),
                 iconSize: [38, 32],
                 iconAnchor: [19, 30],
                 popupAnchor: [0, -30]
@@ -2784,12 +2777,12 @@
                 }
 
                 // Criar SVG para o marcador
-                const svgMarker = markerSvgComNumero(cor, cto.nome);
+                const svgMarker = markerSvgComNumero(cor, cto.nome, cto.tipo);
 
                 const marker = new google.maps.Marker({
                     position: { lat: cto.latitude, lng: cto.longitude },
                     map: mapa,
-                    title: cto.nome,
+                    title: cto.nome + ' — ' + CtoTypeIcons.label(cto.tipo),
                     icon: {
                         url: 'data:image/svg+xml;base64,' + btoa(svgMarker),
                         scaledSize: new google.maps.Size(38, 32),
@@ -2938,8 +2931,8 @@
                 const lng = parseFloat(cto.longitude);
                 if (isNaN(lat) || isNaN(lng)) return;
 
-                const marker = L.marker([lat, lng], {icon: criarLeafletIconCto(cto), title: cto.nome}).addTo(mapa);
-                marker.bindTooltip(escapeHtml(cto.nome || ''), {direction: 'top', offset: [0, -48]});
+                const marker = L.marker([lat, lng], {icon: criarLeafletIconCto(cto), title: cto.nome + ' — ' + CtoTypeIcons.label(cto.tipo)}).addTo(mapa);
+                marker.bindTooltip(escapeHtml((cto.nome || '') + ' — ' + CtoTypeIcons.label(cto.tipo)), {direction: 'top', offset: [0, -48]});
                 marker.bindPopup(montarConteudoHover(cto), {
                     maxWidth: 760,
                     autoPan: true,

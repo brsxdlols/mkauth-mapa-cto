@@ -186,6 +186,7 @@
         }
     </style>
     <style data-ftth-theme="1.1.35"><?php readfile(__DIR__ . '/../../../../assets/css/ftth-theme.css'); ?></style>
+    <script><?php readfile(__DIR__ . '/../../../../assets/js/cto-type-icons.js'); ?></script>
 </head>
 <body class="ftth-theme">
     <div class="container">

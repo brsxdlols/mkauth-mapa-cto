@@ -28,6 +28,12 @@ jobs:
           php -l addons/mapa-cto/src/cto/componente/maps/maps.view.php
           php -l addons/mapa-cto/src/cto/componente/maps/totals_permission.php
           node tests/test-client-totals-filters.js
+          node tests/test-cto-type-icons.js
+          php -l addons/mapa-cto/src/cto/componente/mapadectos/mapadectos.view.php
+          php -l addons/mapa-cto/src/cto/componente/editar/editar.view.hhvm
+          php -l addons/mapa-cto/src/cto/componente/editar/editar.view.php
+          php -l addons/mapa-cto/src/cto/componente/adicionar/adicionar.view.hhvm
+          php -l addons/mapa-cto/src/cto/componente/adicionar/adicionar.view.php
           echo "RELEASE_VERSION=$version" >> "$GITHUB_ENV"
       - name: Gerar pacotes
         shell: pwsh
@@ -45,15 +51,7 @@ jobs:
           line=$(awk '/^__ARCHIVE_BELOW__$/ {print NR+1; exit}' "dist/$name.run")
           tail -n +"$line" "dist/$name.run" > dist/embedded.tar.gz
           cmp "dist/$name.tar.gz" dist/embedded.tar.gz
-          cat > dist/notes.md <<'NOTES'
-          O mapa de clientes respeita a permissão Clientes → Totais (`perm_numClientes`). Sem autorização, oculta Total, Online e Offline, mantendo marcadores e filtros funcionando.
-
-          Validado no Visual Net com backup: sintaxe PHP, hashes, permissão ativada/desativada/ausente, identidades atual e legada, renderização sintética e filtros JavaScript. Os testes SQL usam uma tabela temporária e não alteram clientes reais.
-
-          A regra controla a exibição dos contadores. A lista de clientes enviada ao navegador continua disponível para o mapa.
-
-          Para instalar, salve o arquivo `.run` no servidor MK-AUTH, confira o SHA256 e execute com `sh`. Não use `curl | bash`.
-          NOTES
+          cp RELEASE_NOTES.md dist/notes.md
           if gh release view "v$RELEASE_VERSION" >/dev/null 2>&1; then
             echo "Release já existe; publicação preservada."
             exit 0
