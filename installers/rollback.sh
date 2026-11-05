@@ -13,7 +13,7 @@ fail() { echo "ERRO: $*" >&2; exit 1; }
 [ -f "$BACKUP_DIR/addon.js" ] || fail "backup sem addon.js"
 
 find_addon_js() {
-    for file in "$ADMIN_DIR/scripts/addon.js" "$ADMIN_DIR/addon.js" "$ADMIN_DIR/assets/js/addon.js"; do
+    for file in "$ADMIN_DIR/addons/addon.js" "$ADMIN_DIR/scripts/addon.js" "$ADMIN_DIR/addon.js" "$ADMIN_DIR/assets/js/addon.js"; do
         if [ -f "$file" ]; then
             printf '%s\n' "$file"
             return 0
@@ -22,12 +22,24 @@ find_addon_js() {
     return 1
 }
 
-ADDON_JS=$(find_addon_js || true)
+if [ -f "$BACKUP_DIR/addon-js-path" ]; then
+    ADDON_JS=$(cat "$BACKUP_DIR/addon-js-path")
+    case "$ADDON_JS" in "$ADMIN_DIR"/*) ;; *) fail "caminho de addon.js fora do MK-AUTH" ;; esac
+else
+    ADDON_JS=$(find_addon_js || true)
+fi
 [ -n "$ADDON_JS" ] || fail "addon.js do MK-AUTH nao encontrado"
 
 rm -rf "$ADDON_DIR"
 if [ -d "$BACKUP_DIR/caixas" ]; then
     cp -a "$BACKUP_DIR/caixas" "$ADDON_DIR"
+fi
+if [ -f "$BACKUP_DIR/report-state" ]; then
+    REPORT_DIR="$ADMIN_DIR/addons/rel_cto_cad_cli"
+    rm -rf "$REPORT_DIR"
+    if [ -d "$BACKUP_DIR/rel_cto_cad_cli" ]; then
+        cp -a "$BACKUP_DIR/rel_cto_cad_cli" "$REPORT_DIR"
+    fi
 fi
 cp -a "$BACKUP_DIR/addon.js" "$ADDON_JS"
 

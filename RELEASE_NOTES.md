@@ -1,7 +1,5 @@
-Ícones diferentes para os 17 tipos de equipamento cadastrados, incluindo CTO, CEO, FTTH, FTTX e rádio. A prévia aparece abaixo do seletor de tipo no cadastro e na edição e muda automaticamente com a seleção. O mapa usa o mesmo desenho, preservando os números das caixas e as cores de status dos clientes.
+Instala o relatório de caixas junto com o Mapa de CTO, em `/admin/addons/rel_cto_cad_cli/`, incluindo clientes adicionais e a identificação das portas ocupadas. Cria o atalho Relatório de Caixas no menu Provedor pelo addon.js, sem duplicá-lo em reinstalações.
 
-Compatível com OpenStreetMap e Google Maps. Mantém filtros, seleção, clientes adicionais e as permissões existentes.
+Preserva o config.php de um relatório já instalado. Instalações novas reutilizam a conexão do Mapa; nenhuma credencial da Uplink é incluída no pacote. Faz backup dos dois addons e do menu; o rollback restaura também o relatório e funciona com addons/addon.js.
 
-Validado: sintaxe PHP e JavaScript, geração dos 17 ícones, cores de status, numeração, codificação SVG para Google Maps e prévia dinâmica no navegador. Aplicado na Smart Telecom com backup e conferência de hashes, sem alterar registros de caixas ou clientes.
-
-Para instalar, salve o arquivo `.run` no servidor MK-AUTH, confira o SHA256 e execute com `sh`. O instalador faz backup. Não use `curl | bash`.
+Validação: instalação inicial, atualização, reinstalação, preservação de configuração e rollback em ambiente temporário, PHP e testes isolados dos adicionais. Nenhum cadastro de cliente é modificado pelo instalador.

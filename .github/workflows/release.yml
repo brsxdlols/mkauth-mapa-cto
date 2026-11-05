@@ -34,6 +34,11 @@ jobs:
           php -l addons/mapa-cto/src/cto/componente/editar/editar.view.php
           php -l addons/mapa-cto/src/cto/componente/adicionar/adicionar.view.hhvm
           php -l addons/mapa-cto/src/cto/componente/adicionar/adicionar.view.php
+          php -l addons/rel_cto_cad_cli/index.php
+          php -l addons/rel_cto_cad_cli/report-clients.php
+          php -l addons/rel_cto_cad_cli/config.php
+          php -l addons/rel_cto_cad_cli/addons.class.php
+          sudo python3 tests/test-bundled-report-install.py
           echo "RELEASE_VERSION=$version" >> "$GITHUB_ENV"
       - name: Gerar pacotes
         shell: pwsh

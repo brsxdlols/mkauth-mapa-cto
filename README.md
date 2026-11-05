@@ -50,3 +50,7 @@ Use o backup informado no final da instalacao:
 sh installers/rollback.sh /root/backups/mkauth-mapa-cto-AAAAMMDD-HHMMSS-v1.0.0
 ```
 
+
+## Relatório de caixas
+
+A instalação inclui `rel_cto_cad_cli`, com principais e adicionais, e cria **Relatório de Caixas** no menu Provedor. O `config.php` existente é preservado. O backup e o rollback cobrem o relatório e o `addon.js`.
