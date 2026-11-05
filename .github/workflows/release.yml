@@ -39,6 +39,7 @@ jobs:
           php -l addons/rel_cto_cad_cli/config.php
           php -l addons/rel_cto_cad_cli/addons.class.php
           sudo python3 tests/test-bundled-report-install.py
+          sudo python3 tests/test-installer-symlinks.py
           echo "RELEASE_VERSION=$version" >> "$GITHUB_ENV"
       - name: Gerar pacotes
         shell: pwsh

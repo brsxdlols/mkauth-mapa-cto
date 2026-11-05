@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-VERSION="1.1.53"
+VERSION="1.1.54"
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 ROOT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 SOURCE_DIR="$ROOT_DIR/addons/mapa-cto"
@@ -43,14 +43,29 @@ done
 ADDON_JS=$(find_addon_js || true)
 [ -n "$ADDON_JS" ] || fail "addon.js do MK-AUTH nao encontrado"
 
-mkdir -p "$BACKUP_DIR" "$ADDONS_DIR"
+# Refuse directory links: replacing leaf files must not traverse another tree.
+for directory in "$ADDONS_DIR" "$ADDON_DIR" "$REPORT_DIR"; do
+    [ ! -L "$directory" ] || fail "diretorio simbolico nao suportado: $directory"
+done
+find "$REPORT_SOURCE" -type d | while IFS= read -r directory; do
+    relative=${directory#"$REPORT_SOURCE"}
+    [ ! -L "$REPORT_DIR$relative" ] || fail "diretorio simbolico no relatorio: $REPORT_DIR$relative"
+done
+
+
+mkdir -p "$BACKUP_ROOT" "$ADDONS_DIR"
+BACKUP_DIR=$(mktemp -d "$BACKUP_DIR.XXXXXX")
 if [ -d "$ADDON_DIR" ]; then
-    cp -a "$ADDON_DIR" "$BACKUP_DIR/caixas"
+    cp -a --remove-destination "$ADDON_DIR" "$BACKUP_DIR/caixas"
 fi
-cp -a "$ADDON_JS" "$BACKUP_DIR/addon.js"
+# Save both the menu content and the original link (if present).
+cp -aL --remove-destination "$ADDON_JS" "$BACKUP_DIR/addon.js"
+if [ -L "$ADDON_JS" ]; then
+    cp -a --remove-destination "$ADDON_JS" "$BACKUP_DIR/addon-js-link"
+fi
 printf '%s\n' "$ADDON_JS" > "$BACKUP_DIR/addon-js-path"
 if [ -d "$REPORT_DIR" ]; then
-    cp -a "$REPORT_DIR" "$BACKUP_DIR/rel_cto_cad_cli"
+    cp -a --remove-destination "$REPORT_DIR" "$BACKUP_DIR/rel_cto_cad_cli"
     printf 'existing\n' > "$BACKUP_DIR/report-state"
 else
     printf 'absent\n' > "$BACKUP_DIR/report-state"
@@ -58,15 +73,19 @@ fi
 
 rm -rf "$ADDON_DIR"
 mkdir -p "$ADDON_DIR"
-cp -a "$SOURCE_DIR"/. "$ADDON_DIR"/
+cp -a --remove-destination "$SOURCE_DIR"/. "$ADDON_DIR"/
 printf '%s\n' "$VERSION" > "$ADDON_DIR/VERSION"
 
 mkdir -p "$REPORT_DIR"
-cp -a "$REPORT_SOURCE"/. "$REPORT_DIR"/
+cp -a --remove-destination "$REPORT_SOURCE"/. "$REPORT_DIR"/
 if [ -f "$BACKUP_DIR/rel_cto_cad_cli/config.php" ]; then
-    cp -a "$BACKUP_DIR/rel_cto_cad_cli/config.php" "$REPORT_DIR/config.php"
+    cp -a --remove-destination "$BACKUP_DIR/rel_cto_cad_cli/config.php" "$REPORT_DIR/config.php"
 fi
+rm -f "$REPORT_DIR/VERSION"
 printf '%s\n' "$VERSION" > "$REPORT_DIR/VERSION"
+
+# Edit an independent file, never the referent of an addon.js symlink.
+cp -a --remove-destination "$BACKUP_DIR/addon.js" "$ADDON_JS"
 
 if grep -q 'GERENCIADOR FTTH - Caixas' "$ADDON_JS"; then
     sed -i '/GERENCIADOR FTTH - Caixas/,+2d' "$ADDON_JS"
@@ -106,7 +125,7 @@ cat >> "$ADDON_JS" <<'PICKER_SNIPPET'
 // MAPA CTO CLIENTE PICKER INICIO
 if (/\/admin\/cliente_(alt|ins)\.hhvm/.test(window.location.pathname)) {
     const mapaCtoClientePicker = document.createElement('script');
-    mapaCtoClientePicker.src = minha_url + 'addons/caixas/assets/js/client_cto_picker.js?v=1.1.53';
+    mapaCtoClientePicker.src = minha_url + 'addons/caixas/assets/js/client_cto_picker.js?v=1.1.54';
     mapaCtoClientePicker.async = true;
     document.body.appendChild(mapaCtoClientePicker);
 }

@@ -17,7 +17,7 @@ with tempfile.TemporaryDirectory(prefix='mkauth-report-install-') as directory:
     menu=addons/'addon.js';original=b'// unrelated addon\nadd_menu.provedor(\'{"plink":"other/","ptext":"Other"}\');\n'
     menu.write_bytes(original)
     invoke('install.sh',admin,temp/'fresh-backup')
-    check((addons/'caixas/VERSION').read_text().strip()=='1.1.53','fresh map installation')
+    check((addons/'caixas/VERSION').read_text().strip()=='1.1.54','fresh map installation')
     check((addons/'rel_cto_cad_cli/report-clients.php').is_file(),'fresh report installation')
     check('vertrigo' not in (addons/'rel_cto_cad_cli/config.php').read_text(),'fresh report contains no copied database password')
     text=menu.read_text();check(text.count('addons/rel_cto_cad_cli/')==1 and 'Other' in text,'report menu created without affecting unrelated entries')

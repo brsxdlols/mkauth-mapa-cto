@@ -29,19 +29,27 @@ else
     ADDON_JS=$(find_addon_js || true)
 fi
 [ -n "$ADDON_JS" ] || fail "addon.js do MK-AUTH nao encontrado"
+[ ! -L "$ADMIN_DIR/addons" ] || fail "diretorio addons simbolico nao suportado"
+[ ! -L "$ADDON_DIR" ] || fail "diretorio caixas simbolico nao suportado"
+[ ! -L "$ADMIN_DIR/addons/rel_cto_cad_cli" ] || fail "diretorio do relatorio simbolico nao suportado"
+
 
 rm -rf "$ADDON_DIR"
 if [ -d "$BACKUP_DIR/caixas" ]; then
-    cp -a "$BACKUP_DIR/caixas" "$ADDON_DIR"
+    cp -a --remove-destination "$BACKUP_DIR/caixas" "$ADDON_DIR"
 fi
 if [ -f "$BACKUP_DIR/report-state" ]; then
     REPORT_DIR="$ADMIN_DIR/addons/rel_cto_cad_cli"
     rm -rf "$REPORT_DIR"
     if [ -d "$BACKUP_DIR/rel_cto_cad_cli" ]; then
-        cp -a "$BACKUP_DIR/rel_cto_cad_cli" "$REPORT_DIR"
+        cp -a --remove-destination "$BACKUP_DIR/rel_cto_cad_cli" "$REPORT_DIR"
     fi
 fi
-cp -a "$BACKUP_DIR/addon.js" "$ADDON_JS"
+if [ -L "$BACKUP_DIR/addon-js-link" ]; then
+    cp -a --remove-destination "$BACKUP_DIR/addon-js-link" "$ADDON_JS"
+else
+    cp -a --remove-destination "$BACKUP_DIR/addon.js" "$ADDON_JS"
+fi
 
 printf 'Rollback concluido a partir de: %s\n' "$BACKUP_DIR"
 
