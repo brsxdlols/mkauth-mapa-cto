@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-VERSION="1.1.54"
+VERSION="1.1.55"
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 ROOT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 SOURCE_DIR="$ROOT_DIR/addons/mapa-cto"
@@ -36,7 +36,7 @@ find_addon_js() {
 [ -d "$SOURCE_DIR/src/cto/componente/mapadectos" ] || fail "pacote do Mapa CTO incompleto"
 
 [ -f "$REPORT_SOURCE/index.php" ] || fail "pacote sem relatorio de caixas"
-for file in index.php report-clients.php config.php addons.class.php; do
+for file in index.php report-clients.php report-model.php config.php addons.class.php; do
     php -l "$REPORT_SOURCE/$file" >/dev/null || fail "PHP invalido no relatorio: $file"
 done
 
@@ -125,7 +125,7 @@ cat >> "$ADDON_JS" <<'PICKER_SNIPPET'
 // MAPA CTO CLIENTE PICKER INICIO
 if (/\/admin\/cliente_(alt|ins)\.hhvm/.test(window.location.pathname)) {
     const mapaCtoClientePicker = document.createElement('script');
-    mapaCtoClientePicker.src = minha_url + 'addons/caixas/assets/js/client_cto_picker.js?v=1.1.54';
+    mapaCtoClientePicker.src = minha_url + 'addons/caixas/assets/js/client_cto_picker.js?v=1.1.55';
     mapaCtoClientePicker.async = true;
     document.body.appendChild(mapaCtoClientePicker);
 }
@@ -150,7 +150,7 @@ add_menu.provedor('{"plink": "' + minha_url + 'addons/rel_cto_cad_cli/", "ptext"
 // MAPA CTO RELATORIO CAIXAS FIM
 REPORT_MENU
 
-for file in index.php report-clients.php config.php addons.class.php; do
+for file in index.php report-clients.php report-model.php config.php addons.class.php; do
     php -l "$REPORT_DIR/$file" >/dev/null
 done
 grep -q 'addons/rel_cto_cad_cli/' "$ADDON_JS"

@@ -1,12 +1,18 @@
 <?php
 /** Unified report source. The additional username is its RADIUS identity. */
-function relCtoClientesQuery($link, $busca) {
+function relCtoClientesQuery($link, $busca, $scope = null) {
     $busca = mysqli_real_escape_string($link, (string)$busca);
+    $groupWhere = '';
+    if ($scope !== null && empty($scope['full'])) {
+        $groups = array();
+        foreach ($scope['groups'] as $group) $groups[] = "'" . mysqli_real_escape_string($link, $group) . "'";
+        $groupWhere = $groups ? ' AND c.grupo IN (' . implode(',', $groups) . ')' : ' AND 1=0';
+    }
     return "SELECT c.* FROM (
         SELECT 'cliente' AS tipo_registro, p.id AS registro_id,
                p.uuid_cliente, p.nome, p.caixa_herm, p.login,
                p.porta_olt, p.porta_splitter, p.endereco, p.numero,
-               p.bairro, p.armario_olt, p.login AS titular_login, p.nome AS titular_nome
+               p.bairro, p.armario_olt, p.login AS titular_login, p.nome AS titular_nome, p.grupo
         FROM sis_cliente p
         WHERE p.cli_ativado = 's' AND p.caixa_herm IS NOT NULL
         UNION ALL
@@ -17,16 +23,16 @@ function relCtoClientesQuery($link, $busca) {
                COALESCE(NULLIF(a.end_endereco, ''), p.endereco) AS endereco,
                COALESCE(NULLIF(a.end_numero, ''), p.numero) AS numero,
                COALESCE(NULLIF(a.end_bairro, ''), p.bairro) AS bairro,
-               a.armario_olt, p.login AS titular_login, p.nome AS titular_nome
+               a.armario_olt, p.login AS titular_login, p.nome AS titular_nome, p.grupo
         FROM sis_adicional a
         INNER JOIN sis_cliente p ON p.login = a.login
         WHERE p.cli_ativado = 's' AND a.caixa_herm IS NOT NULL
     ) c
-    WHERE c.nome LIKE '%$busca%' OR c.caixa_herm LIKE '%$busca%'
+    WHERE (c.nome LIKE '%$busca%' OR c.caixa_herm LIKE '%$busca%'
        OR c.login LIKE '%$busca%' OR c.porta_olt LIKE '%$busca%'
        OR c.porta_splitter LIKE '%$busca%' OR c.endereco LIKE '%$busca%'
        OR c.bairro LIKE '%$busca%' OR c.armario_olt LIKE '%$busca%'
-       OR c.titular_login LIKE '%$busca%' OR c.titular_nome LIKE '%$busca%'
+       OR c.titular_login LIKE '%$busca%' OR c.titular_nome LIKE '%$busca%') $groupWhere
     ORDER BY c.caixa_herm ASC, CAST(TRIM(c.porta_splitter) AS UNSIGNED) ASC,
              c.tipo_registro ASC, c.registro_id ASC";
 }
