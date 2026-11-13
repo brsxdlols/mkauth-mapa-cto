@@ -378,17 +378,41 @@
         }
     </style>
     <style data-ftth-theme="1.1.35"><?php readfile(__DIR__ . '/../../../../assets/css/ftth-theme.css'); ?></style>
+
+    <style id="viabilidade-layout-fix">
+        body.ftth-viabilidade .content { grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); }
+        body.ftth-viabilidade .sidebar { min-width: 0; overflow-x: hidden; overflow-y: auto; scrollbar-gutter: stable; }
+        body.ftth-viabilidade .ctos-list { max-height: none; overflow: visible; }
+        body.ftth-viabilidade .cto-item { min-width: 0; overflow-wrap: anywhere; }
+        body.ftth-viabilidade .cto-item:hover { transform: none; }
+        body.ftth-viabilidade .search-input-group { min-width: 0; }
+        body.ftth-viabilidade #enderecoInput { min-width: 0; width: 100%; }
+        body.ftth-viabilidade #buscarBtn { flex-shrink: 0; }
+        body.ftth-viabilidade .header { position: relative; padding-left: 180px; padding-right: 180px; }
+        body.ftth-viabilidade .header .voltar-btn { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); white-space: nowrap; }
+        body.ftth-viabilidade .map-container { min-width: 0; }
+        body.ftth-viabilidade .route-detail { gap: 10px; flex-wrap: wrap; }
+        @media (max-width: 800px) {
+            body.ftth-viabilidade .content { grid-template-columns: minmax(0, 1fr); }
+            body.ftth-viabilidade .sidebar { max-height: none; overflow: visible; padding: 20px; }
+            body.ftth-viabilidade .header { padding: 20px; text-align: left; }
+            body.ftth-viabilidade .header .voltar-btn { position: static; display: inline-block; transform: none; margin-bottom: 16px; }
+            body.ftth-viabilidade .map-container { height: 55vh; min-height: 320px; }
+            body.ftth-viabilidade #mapa { min-height: 0; }
+        }
+    </style>
 </head>
 <body class="ftth-theme ftth-viabilidade">
     <div class="container">
         <div class="header">
+            <a href="./" class="voltar-btn">← Voltar ao painel</a>
             <h1>🗺️ Viabilidade de Atendimento</h1>
             <p>Encontre a CTO mais próxima e visualize a rota até ela</p>
         </div>
 
         <div class="content">
             <div class="sidebar">
-                <a href="?_route=painel" class="voltar-btn">← Voltar</a>
+                
                 
                 <h2>Buscar Endereço</h2>
 

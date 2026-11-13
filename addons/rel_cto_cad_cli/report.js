@@ -12,6 +12,8 @@ function rows(box,filter,port){
     box.clients.forEach(function(c){if(!seen[c.key])list.push({port:c.port,state:c.port===null?'unassigned':'outside',client:c});});
     return list.filter(function(r){
         if(port!==null && r.port!==port)return false;
+        if(filter==='withClients')return box.clients.length>0;
+        if(filter==='principals')return !!r.client && r.client.type==='cliente';
         if(filter==='free')return r.state==='free';
         if(filter==='conflict')return r.state==='conflict';
         if(filter==='additional')return !!r.client && r.client.type==='adicional';
@@ -25,7 +27,7 @@ function matchBox(box,query,cto,olt){
     var hay=[box.name,box.address,box.type];box.clients.forEach(function(c){hay.push(c.login,c.name,c.address,c.neighborhood,c.olt,c.owner);});
     return !query || fold(hay.join(' ')).indexOf(fold(query.trim()))!==-1;
 }
-function summarize(boxes){var s={ctos:boxes.length,connections:0,additional:0,online:0,offline:0,free:0,capacity:0,principal:0,conflicts:0};boxes.forEach(function(b){if(b.stats)Object.keys(s).forEach(function(k){if(k!=='ctos')s[k]+=Number(b.stats[k])||0;});});return s;}
+function summarize(boxes){var s={ctos:boxes.length,withClients:0,connections:0,additional:0,online:0,offline:0,free:0,capacity:0,principal:0,conflicts:0};boxes.forEach(function(b){if(b.stats){if(b.clients.length)s.withClients++;Object.keys(s).forEach(function(k){if(k!=='ctos'&&k!=='withClients')s[k]+=Number(b.stats[k])||0;});}});return s;}
 var api={rows:rows,matchBox:matchBox,summarize:summarize};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
 if(typeof document==='undefined')return;
@@ -45,7 +47,7 @@ function metric(label,value,hint,filter,color,active){return '<button type="butt
 function renderSummary(boxes){
     var el=document.getElementById('report-summary');el.hidden=!data.canTotals;if(!data.canTotals)return;
     var s=summarize(boxes);
-    el.innerHTML=metric('CTOs',number(s.ctos),'Caixas encontradas','all','',state.filter==='all')+metric('Conexões',number(s.connections),number(s.principal)+' principais','all','',false)+metric('Adicionais',number(s.additional),'Conexões adicionais','additional','purple',state.filter==='additional')+metric('Portas livres',data.fullScope?number(s.free):'—',data.fullScope?'Capacidade cadastrada':'Ocupação parcial por grupo','free','green',state.filter==='free')+metric('Online',number(s.online),'Conexões ativas','online','green',state.filter==='online')+metric('Offline',number(s.offline),'Sem sessão ativa','offline','red',state.filter==='offline');
+    el.innerHTML=metric('CTOs',number(s.ctos),'Caixas encontradas','all','',state.filter==='all')+metric('CTOs com clientes',number(s.withClients),'Caixas com principais ou adicionais','withClients','',state.filter==='withClients')+metric('Clientes cadastrados nas CTOs',number(s.principal),'Clientes principais · adicionais à parte','principals','',state.filter==='principals')+metric('Conexões',number(s.connections),number(s.principal)+' principais','all','',false)+metric('Adicionais',number(s.additional),'Conexões adicionais','additional','purple',state.filter==='additional')+metric('Portas livres',data.fullScope?number(s.free):'—',data.fullScope?'Capacidade cadastrada':'Ocupação parcial por grupo','free','green',state.filter==='free')+metric('Online',number(s.online),'Conexões ativas','online','green',state.filter==='online')+metric('Offline',number(s.offline),'Sem sessão ativa','offline','red',state.filter==='offline');
     if(!data.fullScope){var free=el.querySelector('[data-filter="free"]');free.disabled=true;free.setAttribute('aria-disabled','true');}
 }
 function boxCard(b){
@@ -84,7 +86,7 @@ function render(){
     document.getElementById('report-more').hidden=page.length>=visible.length;
     document.getElementById('report-more').textContent='Mostrar mais CTOs'+(data.canTotals?' ('+number(visible.length-page.length)+' restantes)':'');
     document.getElementById('report-empty').hidden=visible.length>0;
-    var labels={all:'todos os registros',online:'somente online',offline:'somente offline',additional:'somente adicionais',free:'somente portas livres',conflict:'conflitos de porta'};
+    var labels={all:'todos os registros',withClients:'CTOs com clientes (inclui caixas não cadastradas)',principals:'clientes principais cadastrados nas CTOs',online:'somente online',offline:'somente offline',additional:'somente adicionais',free:'somente portas livres',conflict:'conflitos de porta'};
     document.getElementById('report-scope').textContent=(data.canTotals?number(visible.length)+' CTOs · ':'')+'Exibindo '+labels[state.filter]+(state.cto?' · '+byKey.get(state.cto).name:'')+(!data.fullScope?' · Acesso limitado aos seus grupos. Portas sem cliente visível não são consideradas livres.':'');
     document.getElementById('report-updated').textContent='Consultado em '+date(data.updatedAt)+' · '+number(data.elapsedMs||0)+' ms';
 }

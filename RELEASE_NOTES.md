@@ -1,9 +1,9 @@
-Relatório de caixas com cards de CTOs, conexões, adicionais, portas livres e status. Clique na CTO para abrir o modal com portas e clientes; filtre por CTO, OLT, online, offline, adicionais ou conflitos. A opção Só listagem mantém busca e tabela sem os cards.
+Novos cards CTOs com clientes e Clientes cadastrados nas CTOs, com filtros ao clicar. Clientes principais e adicionais permanecem separados; as contagens respeitam a permissão nativa de totais e os grupos do operador.
 
-Adicionais sem porta não ocupam capacidade. Conexões na mesma porta são preservadas e sinalizadas como conflito. Totais respeitam perm_totais e os registros respeitam os grupos do operador; ocupações não verificáveis em perfis restritos não aparecem como portas livres.
+Botão Voltar ao painel no relatório e card Relatório de caixas no acesso rápido do Gerenciamento FTTH. Painel compacto em desktop, com distribuição em duas linhas.
 
-Consultas de conexão e histórico agora são feitas em lote. Validado na KMNET com os mesmos 327 registros e 9 adicionais da consulta anterior, em 65–79 ms nas medições da carga de dados (não representa tempo HTTP completo).
+Viabilidade com uma única rolagem lateral, sem deslocamento horizontal dos cards, campos responsivos e botão Voltar no cabeçalho.
 
-Inclui os scripts nativos do topo e dos menus do MK-AUTH. Mantém a proteção de links simbólicos da v1.1.54, backup dos addons e do menu, preservação da configuração e rollback.
+Ilustração vetorial da rede com POP, racks, postes e casas em perspectiva, com pulsos na fibra nos dois sentidos. Respeita a preferência de movimento reduzido. Homologado na KMNET.
 
-Homologação aplicada somente na KMNET. Nenhuma alteração na Uplink. Prévia testada no navegador, em desktop e mobile; testes SQL usam tabelas temporárias, sem alterar clientes reais.
+Mantém as proteções de links simbólicos, backup e reversão do instalador.

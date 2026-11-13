@@ -27,7 +27,7 @@ with tempfile.TemporaryDirectory(prefix='mkauth-symlink-test-') as directory:
     first=temp/'first-backup';run('install.sh',admin,first)
     check(loader.read_bytes()==original and digest(loader)==loader_hash,'global loader content and SHA256 unchanged after upgrade')
     check(not (report/'addons.class.php').is_symlink(),'report bootstrap replaces destination symlink')
-    check(not (report/'VERSION').is_symlink() and (report/'VERSION').read_text().strip()=='1.1.55','VERSION symlink is replaced before writing')
+    check(not (report/'VERSION').is_symlink() and (report/'VERSION').read_text().strip()=='1.1.56','VERSION symlink is replaced before writing')
     check((report/'config.php').is_symlink() and digest(cfg)==cfg_hash,'existing config link preserved without writing referent')
     check(not menu.is_symlink() and digest(native_menu)==menu_hash,'menu link detached before editing; global menu unchanged')
     # Recreate the MK-AUTH loader link as happens during native maintenance.

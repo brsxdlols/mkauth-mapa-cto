@@ -32,3 +32,14 @@ assert(entry.includes("include __DIR__.'/../../topo.php'"));
 assert(entry.indexOf('js/jquery-3.6.0.min.js')<entry.indexOf('../../scripts/mk-auth.js'));
 assert(entry.includes('<script src="../../menu.js.php"></script>'));
 console.log('PASS: native header and menu dependencies preserved in load order.');
+
+const empty={...box,key:'empty',clients:[],ports:[],stats:{connections:0,principal:0,additional:0}};
+const onlyAdditional={...box,key:'extra',registered:false,clients:[clients[1]],ports:[],stats:{connections:1,principal:0,additional:1}};
+assert.equal(ui.summarize([box,empty,onlyAdditional]).withClients,2);
+assert.equal(ui.summarize([box,empty,onlyAdditional]).principal,2);
+assert.equal(ui.rows(box,'principals',null).length,2);
+assert.equal(ui.rows(onlyAdditional,'principals',null).length,0);
+assert.equal(ui.rows(empty,'withClients',null).length,0);
+assert.equal(ui.rows(onlyAdditional,'withClients',null).length,1);
+assert.equal(ui.summarize([limited]).withClients,0);
+console.log('PASS: occupied CTOs include additional-only references; principal counts exclude additions; restricted totals stay hidden.');

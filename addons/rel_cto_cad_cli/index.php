@@ -19,13 +19,13 @@ header('Cache-Control: no-store');
 ?>
 <!doctype html><html lang="pt-BR" class="has-navbar-fixed-top"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Relatório de Caixas</title><link rel="stylesheet" href="../../estilos/mk-auth.css"><link rel="stylesheet" href="report.css?v=1.1.55">
+<title>Relatório de Caixas</title><link rel="stylesheet" href="../../estilos/mk-auth.css"><link rel="stylesheet" href="report.css?v=1.1.56">
 <script src="js/jquery-3.6.0.min.js"></script>
 <script src="../../scripts/mk-auth.js"></script>
 </head><body>
 <?php include __DIR__.'/../../topo.php'; ?>
 <main id="cto-report" class="report-shell" aria-busy="true">
-<header class="report-heading"><div><p class="report-eyebrow">REDE ÓPTICA</p><h1>Relatório de caixas</h1><p>CTOs, portas e conexões em um só lugar.</p></div><nav class="report-actions" aria-label="Ações do relatório"><a class="report-button" href="../caixas/?_route=mapadectos">Abrir mapa</a><button class="report-button" type="button" id="report-reload">Atualizar</button><button class="report-button light" type="button" id="report-print">Imprimir</button></nav></header>
+<header class="report-heading"><div><p class="report-eyebrow">REDE ÓPTICA</p><h1>Relatório de caixas</h1><p>CTOs, portas e conexões em um só lugar.</p></div><nav class="report-actions" aria-label="Ações do relatório"><a class="report-button" href="../caixas/">← Voltar ao painel</a><a class="report-button" href="../caixas/?_route=mapadectos">Abrir mapa</a><button class="report-button" type="button" id="report-reload">Atualizar</button><button class="report-button light" type="button" id="report-print">Imprimir</button></nav></header>
 <section class="report-toolbar" aria-label="Busca e filtros">
 <label class="report-search">Buscar CTO, cliente ou login<input id="report-search" type="search" placeholder="Ex.: CAIXA 20 ou login do adicional" autocomplete="off"></label>
 <label>CTO<select id="report-cto"><option value="">Todas as CTOs</option></select></label>
@@ -43,7 +43,7 @@ header('Cache-Control: no-store');
 <dialog id="report-dialog" class="report-dialog" aria-labelledby="report-dialog-title"><header class="report-dialog-heading"><div><p class="report-eyebrow">DETALHES DA CTO</p><h2 id="report-dialog-title"></h2><p id="report-dialog-description"></p></div><button type="button" id="report-dialog-close" aria-label="Fechar detalhes">×</button></header><div id="report-dialog-body"></div></dialog>
 <?php if($reportError): ?><p class="report-error" role="alert"><?php echo htmlspecialchars($reportError,ENT_QUOTES,'UTF-8'); ?></p><?php endif; ?>
 <noscript><p class="report-error">Ative o JavaScript para usar os filtros e a listagem interativa.</p></noscript>
-<script id="report-data" type="application/json"><?php echo json_encode($reportData,JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_UNESCAPED_UNICODE); ?></script><script src="report.js?v=1.1.55"></script>
+<script id="report-data" type="application/json"><?php echo json_encode($reportData,JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_UNESCAPED_UNICODE); ?></script><script src="report.js?v=1.1.56"></script>
 <?php include __DIR__.'/../../baixo.php'; ?>
 <script src="../../menu.js.php"></script>
 </body></html>

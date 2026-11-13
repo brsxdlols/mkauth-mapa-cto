@@ -182,6 +182,20 @@ if (!empty($route) && in_array($route, ['inicio', 'adicionar', 'editar', 'backup
         @media (prefers-reduced-motion: reduce) { .action-card { transition: none; } }
     </style>
     <style data-ftth-theme="1.1.35"><?php readfile(__DIR__ . '/assets/css/ftth-theme.css'); ?></style>
+<style id="ftth-panel-layout-fix">
+@media (min-width: 901px) {
+ body.ftth-theme .actions-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+ body.ftth-theme .action-card { min-height: 128px; padding: 20px; gap: 16px; }
+ body.ftth-theme .header { margin-bottom: 20px; }
+ body.ftth-theme .stats-grid { margin-bottom: 22px; }
+ body.ftth-theme .ftth-network-art { margin: 18px auto 0; }
+ body.ftth-theme .ftth-network-art svg { max-height: 200px; }
+}
+@media (min-width: 901px) and (max-height: 800px) {
+ body.ftth-theme { padding: 20px; }
+ body.ftth-theme .ftth-network-art { display: none; }
+}
+</style>
 </head>
 
 <body class="ftth-theme">
@@ -348,6 +362,11 @@ if (!empty($route) && in_array($route, ['inicio', 'adicionar', 'editar', 'backup
             <a href="?_route=backup" class="action-card backup">
                 <span class="action-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v7c0 4 16 4 16 0V5M4 12v7c0 4 16 4 16 0v-7"/></svg></span>
                 <span class="action-title">Backup de Dados</span>
+                <span class="action-arrow" aria-hidden="true">↗</span>
+            </a>
+            <a href="../rel_cto_cad_cli/" class="action-card list">
+                <span class="action-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h4"/></svg></span>
+                <span class="action-title">Relatório de caixas</span>
                 <span class="action-arrow" aria-hidden="true">↗</span>
             </a>
             <a href="?_route=configurar" class="action-card settings">
