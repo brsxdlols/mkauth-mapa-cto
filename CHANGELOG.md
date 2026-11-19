@@ -1,3 +1,9 @@
+## v1.1.57 — 2026-11-19
+
+Relatório de caixas com fundo branco, alinhado aos demais addons do MK-AUTH. Mantém as cores dos cards e do cabeçalho. Atualiza a versão do CSS para recarregar o estilo após a instalação.
+
+Ajuste homologado na KMNET.
+
 ## v1.1.56 — 2026-11-13
 
 Novos cards CTOs com clientes e Clientes cadastrados nas CTOs, com filtros ao clicar. Clientes principais e adicionais permanecem separados; as contagens respeitam a permissão nativa de totais e os grupos do operador.
